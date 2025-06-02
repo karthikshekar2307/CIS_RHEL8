@@ -7827,53 +7827,53 @@
   - no_reboot_needed | bool
   - restrict_strategy | bool
 
-# - name: Ensure that System Accounts Are Locked - Create local_users Variable From getent_passwd Facts
-#   ansible.builtin.set_fact:
-#     local_users: '{{ ansible_facts.getent_passwd | dict2items }}'
-#   tags:
-#   - CCE-86112-0
-#   - NIST-800-53-AC-6
-#   - NIST-800-53-CM-6(a)
-#   - PCI-DSSv4-8.2.2
-#   - low_complexity
-#   - medium_disruption
-#   - medium_severity
-#   - no_password_auth_for_systemaccounts
-#   - no_reboot_needed
-#   - restrict_strategy
-#   when:
-#   - low_complexity | bool
-#   - medium_disruption | bool
-#   - medium_severity | bool
-#   - no_password_auth_for_systemaccounts | bool
-#   - no_reboot_needed | bool
-#   - restrict_strategy | bool
+- name: Ensure that System Accounts Are Locked - Create local_users Variable From getent_passwd Facts
+  ansible.builtin.set_fact:
+    local_users: '{{ ansible_facts.getent_passwd | dict2items }}'
+  tags:
+  - CCE-86112-0
+  - NIST-800-53-AC-6
+  - NIST-800-53-CM-6(a)
+  - PCI-DSSv4-8.2.2
+  - low_complexity
+  - medium_disruption
+  - medium_severity
+  - no_password_auth_for_systemaccounts
+  - no_reboot_needed
+  - restrict_strategy
+  when:
+  - low_complexity | bool
+  - medium_disruption | bool
+  - medium_severity | bool
+  - no_password_auth_for_systemaccounts | bool
+  - no_reboot_needed | bool
+  - restrict_strategy | bool
 
-# - name: Ensure that System Accounts Are Locked - Lock System Accounts
-#   ansible.builtin.user:
-#     name: '{{ item.key }}'
-#     password_lock: true
-#   loop: '{{ local_users }}'
-#   when:
-#   - low_complexity | bool
-#   - medium_disruption | bool
-#   - medium_severity | bool
-#   - no_password_auth_for_systemaccounts | bool
-#   - no_reboot_needed | bool
-#   - restrict_strategy | bool
-#   - item.value[1]|int < 1000
-#   - item.key not in ['root', 'halt', 'sync', 'shutdown', 'nfsnobody']
-#   tags:
-#   - CCE-86112-0
-#   - NIST-800-53-AC-6
-#   - NIST-800-53-CM-6(a)
-#   - PCI-DSSv4-8.2.2
-#   - low_complexity
-#   - medium_disruption
-#   - medium_severity
-#   - no_password_auth_for_systemaccounts
-#   - no_reboot_needed
-#   - restrict_strategy
+- name: Ensure that System Accounts Are Locked - Lock System Accounts
+  ansible.builtin.user:
+    name: '{{ item.key }}'
+    password_lock: true
+  loop: '{{ local_users }}'
+  when:
+  - low_complexity | bool
+  - medium_disruption | bool
+  - medium_severity | bool
+  - no_password_auth_for_systemaccounts | bool
+  - no_reboot_needed | bool
+  - restrict_strategy | bool
+  - item.value[1]|int < 1000
+  - item.key not in ['root', 'halt', 'sync', 'shutdown', 'nfsnobody']
+  tags:
+  - CCE-86112-0
+  - NIST-800-53-AC-6
+  - NIST-800-53-CM-6(a)
+  - PCI-DSSv4-8.2.2
+  - low_complexity
+  - medium_disruption
+  - medium_severity
+  - no_password_auth_for_systemaccounts
+  - no_reboot_needed
+  - restrict_strategy
 
 # - name: Ensure that System Accounts Do Not Run a Shell Upon Login - Get All Local Users From /etc/passwd
 #   ansible.builtin.getent:
@@ -7900,29 +7900,29 @@
 #   - no_shelllogin_for_systemaccounts | bool
 #   - restrict_strategy | bool
 
-# - name: Ensure that System Accounts Do Not Run a Shell Upon Login - Create local_users Variable From getent_passwd Facts
-#   ansible.builtin.set_fact:
-#     local_users: '{{ ansible_facts.getent_passwd | dict2items }}'
-#   tags:
-#   - CCE-80843-6
-#   - NIST-800-53-AC-6
-#   - NIST-800-53-CM-6(a)
-#   - NIST-800-53-CM-6(b)
-#   - NIST-800-53-CM-6.1(iv)
-#   - PCI-DSSv4-8.2.2
-#   - low_complexity
-#   - medium_disruption
-#   - medium_severity
-#   - no_reboot_needed
-#   - no_shelllogin_for_systemaccounts
-#   - restrict_strategy
-#   when:
-#   - low_complexity | bool
-#   - medium_disruption | bool
-#   - medium_severity | bool
-#   - no_reboot_needed | bool
-#   - no_shelllogin_for_systemaccounts | bool
-#   - restrict_strategy | bool
+- name: Ensure that System Accounts Do Not Run a Shell Upon Login - Create local_users Variable From getent_passwd Facts
+  ansible.builtin.set_fact:
+    local_users: '{{ ansible_facts.getent_passwd | dict2items }}'
+  tags:
+  - CCE-80843-6
+  - NIST-800-53-AC-6
+  - NIST-800-53-CM-6(a)
+  - NIST-800-53-CM-6(b)
+  - NIST-800-53-CM-6.1(iv)
+  - PCI-DSSv4-8.2.2
+  - low_complexity
+  - medium_disruption
+  - medium_severity
+  - no_reboot_needed
+  - no_shelllogin_for_systemaccounts
+  - restrict_strategy
+  when:
+  - low_complexity | bool
+  - medium_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - no_shelllogin_for_systemaccounts | bool
+  - restrict_strategy | bool
 
 - name: Ensure that System Accounts Do Not Run a Shell Upon Login -  Disable Login Shell for System Accounts
   ansible.builtin.user:
@@ -8116,51 +8116,51 @@
 #   - no_reboot_needed | bool
 #   - restrict_strategy | bool
 
-# - name: Create local_users variable from the getent output
-#   ansible.builtin.set_fact:
-#     local_users: '{{ ansible_facts.getent_passwd|dict2items }}'
-#   tags:
-#   - CCE-83424-2
-#   - DISA-STIG-RHEL-08-010750
-#   - accounts_user_interactive_home_directory_exists
-#   - low_complexity
-#   - low_disruption
-#   - medium_severity
-#   - no_reboot_needed
-#   - restrict_strategy
-#   when:
-#   - DISA_STIG_RHEL_08_010750 | bool
-#   - accounts_user_interactive_home_directory_exists | bool
-#   - low_complexity | bool
-#   - low_disruption | bool
-#   - medium_severity | bool
-#   - no_reboot_needed | bool
-#   - restrict_strategy | bool
+- name: Create local_users variable from the getent output
+  ansible.builtin.set_fact:
+    local_users: '{{ ansible_facts.getent_passwd|dict2items }}'
+  tags:
+  - CCE-83424-2
+  - DISA-STIG-RHEL-08-010750
+  - accounts_user_interactive_home_directory_exists
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+  - restrict_strategy
+  when:
+  - DISA_STIG_RHEL_08_010750 | bool
+  - accounts_user_interactive_home_directory_exists | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - restrict_strategy | bool
 
-# - name: Ensure interactive users have a home directory exists
-#   ansible.builtin.user:
-#     name: '{{ item.key }}'
-#     create_home: true
-#   loop: '{{ local_users }}'
-#   when:
-#   - DISA_STIG_RHEL_08_010750 | bool
-#   - accounts_user_interactive_home_directory_exists | bool
-#   - low_complexity | bool
-#   - low_disruption | bool
-#   - medium_severity | bool
-#   - no_reboot_needed | bool
-#   - restrict_strategy | bool
-#   - item.value[2]|int >= 1000
-#   - item.value[2]|int != 65534
-#   tags:
-#   - CCE-83424-2
-#   - DISA-STIG-RHEL-08-010750
-#   - accounts_user_interactive_home_directory_exists
-#   - low_complexity
-#   - low_disruption
-#   - medium_severity
-#   - no_reboot_needed
-#   - restrict_strategy
+- name: Ensure interactive users have a home directory exists
+  ansible.builtin.user:
+    name: '{{ item.key }}'
+    create_home: true
+  loop: '{{ local_users }}'
+  when:
+  - DISA_STIG_RHEL_08_010750 | bool
+  - accounts_user_interactive_home_directory_exists | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - restrict_strategy | bool
+  - item.value[2]|int >= 1000
+  - item.value[2]|int != 65534
+  tags:
+  - CCE-83424-2
+  - DISA-STIG-RHEL-08-010750
+  - accounts_user_interactive_home_directory_exists
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+  - restrict_strategy
 
 # - name: Get all local users from /etc/passwd
 #   ansible.builtin.getent:
@@ -8182,24 +8182,24 @@
 #   - no_reboot_needed | bool
 #   - restrict_strategy | bool
 
-# - name: Create local_users variable from the getent output
-#   ansible.builtin.set_fact:
-#     local_users: '{{ ansible_facts.getent_passwd|dict2items }}'
-#   tags:
-#   - CCE-87369-5
-#   - accounts_users_netrc_file_permissions
-#   - low_complexity
-#   - low_disruption
-#   - medium_severity
-#   - no_reboot_needed
-#   - restrict_strategy
-#   when:
-#   - accounts_users_netrc_file_permissions | bool
-#   - low_complexity | bool
-#   - low_disruption | bool
-#   - medium_severity | bool
-#   - no_reboot_needed | bool
-#   - restrict_strategy | bool
+- name: Create local_users variable from the getent output
+  ansible.builtin.set_fact:
+    local_users: '{{ ansible_facts.getent_passwd|dict2items }}'
+  tags:
+  - CCE-87369-5
+  - accounts_users_netrc_file_permissions
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+  - restrict_strategy
+  when:
+  - accounts_users_netrc_file_permissions | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - restrict_strategy | bool
 
 - name: Test for existence of .netrc file in home directories to avoid creating them, but only fixing permissions
   ansible.builtin.stat:
@@ -8267,69 +8267,69 @@
 #   - no_reboot_needed | bool
 #   - restrict_strategy | bool
 
-# - name: Create local_users variable from the getent output
-#   ansible.builtin.set_fact:
-#     local_users: '{{ ansible_facts.getent_passwd|dict2items }}'
-#   tags:
-#   - CCE-86131-0
-#   - file_ownership_home_directories
-#   - low_complexity
-#   - low_disruption
-#   - medium_severity
-#   - no_reboot_needed
-#   - restrict_strategy
-#   when:
-#   - file_ownership_home_directories | bool
-#   - low_complexity | bool
-#   - low_disruption | bool
-#   - medium_severity | bool
-#   - no_reboot_needed | bool
-#   - restrict_strategy | bool
+- name: Create local_users variable from the getent output
+  ansible.builtin.set_fact:
+    local_users: '{{ ansible_facts.getent_passwd|dict2items }}'
+  tags:
+  - CCE-86131-0
+  - file_ownership_home_directories
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+  - restrict_strategy
+  when:
+  - file_ownership_home_directories | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - restrict_strategy | bool
 
-# - name: Test for existence of home directories to avoid creating them, but only fixing ownership
-#   ansible.builtin.stat:
-#     path: '{{ item.value[4] }}'
-#   register: path_exists
-#   loop: '{{ local_users }}'
-#   when:
-#   - file_ownership_home_directories | bool
-#   - low_complexity | bool
-#   - low_disruption | bool
-#   - medium_severity | bool
-#   - no_reboot_needed | bool
-#   - restrict_strategy | bool
-#   - item.value[1]|int >= 1000
-#   - item.value[1]|int != 65534
-#   tags:
-#   - CCE-86131-0
-#   - file_ownership_home_directories
-#   - low_complexity
-#   - low_disruption
-#   - medium_severity
-#   - no_reboot_needed
-#   - restrict_strategy
+- name: Test for existence of home directories to avoid creating them, but only fixing ownership
+  ansible.builtin.stat:
+    path: '{{ item.value[4] }}'
+  register: path_exists
+  loop: '{{ local_users }}'
+  when:
+  - file_ownership_home_directories | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - restrict_strategy | bool
+  - item.value[1]|int >= 1000
+  - item.value[1]|int != 65534
+  tags:
+  - CCE-86131-0
+  - file_ownership_home_directories
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+  - restrict_strategy
 
-# - name: Ensure interactive local users are the owners of their respective home directories
-#   ansible.builtin.file:
-#     path: '{{ item.0.value[4] }}'
-#     owner: '{{ item.0.value[1] }}'
-#   loop: '{{ local_users|zip(path_exists.results)|list }}'
-#   when:
-#   - file_ownership_home_directories | bool
-#   - low_complexity | bool
-#   - low_disruption | bool
-#   - medium_severity | bool
-#   - no_reboot_needed | bool
-#   - restrict_strategy | bool
-#   - item.1.stat is defined and item.1.stat.exists
-#   tags:
-#   - CCE-86131-0
-#   - file_ownership_home_directories
-#   - low_complexity
-#   - low_disruption
-#   - medium_severity
-#   - no_reboot_needed
-#   - restrict_strategy
+- name: Ensure interactive local users are the owners of their respective home directories
+  ansible.builtin.file:
+    path: '{{ item.0.value[4] }}'
+    owner: '{{ item.0.value[1] }}'
+  loop: '{{ local_users|zip(path_exists.results)|list }}'
+  when:
+  - file_ownership_home_directories | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - restrict_strategy | bool
+  - item.1.stat is defined and item.1.stat.exists
+  tags:
+  - CCE-86131-0
+  - file_ownership_home_directories
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+  - restrict_strategy
 
 # - name: Ensure All User Initialization Files Have Mode 0740 Or Less Permissive - Gather User Info
 #   ansible.builtin.getent:
@@ -8426,77 +8426,77 @@
 #   - no_reboot_needed | bool
 #   - restrict_strategy | bool
 
-# - name: Create local_users variable from the getent output
-#   ansible.builtin.set_fact:
-#     local_users: '{{ ansible_facts.getent_passwd|dict2items }}'
-#   tags:
-#   - CCE-84038-9
-#   - DISA-STIG-RHEL-08-010730
-#   - file_permissions_home_directories
-#   - low_complexity
-#   - low_disruption
-#   - medium_severity
-#   - no_reboot_needed
-#   - restrict_strategy
-#   when:
-#   - DISA_STIG_RHEL_08_010730 | bool
-#   - file_permissions_home_directories | bool
-#   - low_complexity | bool
-#   - low_disruption | bool
-#   - medium_severity | bool
-#   - no_reboot_needed | bool
-#   - restrict_strategy | bool
+- name: Create local_users variable from the getent output
+  ansible.builtin.set_fact:
+    local_users: '{{ ansible_facts.getent_passwd|dict2items }}'
+  tags:
+  - CCE-84038-9
+  - DISA-STIG-RHEL-08-010730
+  - file_permissions_home_directories
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+  - restrict_strategy
+  when:
+  - DISA_STIG_RHEL_08_010730 | bool
+  - file_permissions_home_directories | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - restrict_strategy | bool
 
-# - name: Test for existence home directories to avoid creating them.
-#   ansible.builtin.stat:
-#     path: '{{ item.value[4] }}'
-#   register: path_exists
-#   loop: '{{ local_users }}'
-#   when:
-#   - DISA_STIG_RHEL_08_010730 | bool
-#   - file_permissions_home_directories | bool
-#   - low_complexity | bool
-#   - low_disruption | bool
-#   - medium_severity | bool
-#   - no_reboot_needed | bool
-#   - restrict_strategy | bool
-#   - item.value[1]|int >= 1000
-#   - item.value[1]|int != 65534
-#   tags:
-#   - CCE-84038-9
-#   - DISA-STIG-RHEL-08-010730
-#   - file_permissions_home_directories
-#   - low_complexity
-#   - low_disruption
-#   - medium_severity
-#   - no_reboot_needed
-#   - restrict_strategy
+- name: Test for existence home directories to avoid creating them.
+  ansible.builtin.stat:
+    path: '{{ item.value[4] }}'
+  register: path_exists
+  loop: '{{ local_users }}'
+  when:
+  - DISA_STIG_RHEL_08_010730 | bool
+  - file_permissions_home_directories | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - restrict_strategy | bool
+  - item.value[1]|int >= 1000
+  - item.value[1]|int != 65534
+  tags:
+  - CCE-84038-9
+  - DISA-STIG-RHEL-08-010730
+  - file_permissions_home_directories
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+  - restrict_strategy
 
-# - name: Ensure interactive local users have proper permissions on their respective home directories
-#   ansible.builtin.file:
-#     path: '{{ item.0.value[4] }}'
-#     mode: u-s,g-w-s,o=-
-#     follow: false
-#     recurse: false
-#   loop: '{{ local_users|zip(path_exists.results)|list }}'
-#   when:
-#   - DISA_STIG_RHEL_08_010730 | bool
-#   - file_permissions_home_directories | bool
-#   - low_complexity | bool
-#   - low_disruption | bool
-#   - medium_severity | bool
-#   - no_reboot_needed | bool
-#   - restrict_strategy | bool
-#   - item.1.stat is defined and item.1.stat.exists
-#   tags:
-#   - CCE-84038-9
-#   - DISA-STIG-RHEL-08-010730
-#   - file_permissions_home_directories
-#   - low_complexity
-#   - low_disruption
-#   - medium_severity
-#   - no_reboot_needed
-#   - restrict_strategy
+- name: Ensure interactive local users have proper permissions on their respective home directories
+  ansible.builtin.file:
+    path: '{{ item.0.value[4] }}'
+    mode: u-s,g-w-s,o=-
+    follow: false
+    recurse: false
+  loop: '{{ local_users|zip(path_exists.results)|list }}'
+  when:
+  - DISA_STIG_RHEL_08_010730 | bool
+  - file_permissions_home_directories | bool
+  - low_complexity | bool
+  - low_disruption | bool
+  - medium_severity | bool
+  - no_reboot_needed | bool
+  - restrict_strategy | bool
+  - item.1.stat is defined and item.1.stat.exists
+  tags:
+  - CCE-84038-9
+  - DISA-STIG-RHEL-08-010730
+  - file_permissions_home_directories
+  - low_complexity
+  - low_disruption
+  - medium_severity
+  - no_reboot_needed
+  - restrict_strategy
 
 - name: Get root paths which are not symbolic links
   stat:
