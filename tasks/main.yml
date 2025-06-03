@@ -905,32 +905,17 @@
     - level1
     - section1.2.5
 
-- name: "CIS 1.2.5 | Disable gpgcheck for AppStream RHUI repo due to missing signature (temporary workaround)"
-  ansible.builtin.replace:
-    path: /etc/yum.repos.d/redhat-rhui.repo
-    regexp: '^gpgcheck\s*=\s*1'
-    replace: 'gpgcheck=0'
-  when: "'rhel-8-appstream-rhui-rpms' in dnf_check.stdout"
-  tags:
-    - workaround
-
-- name: "CIS 1.2.5 | Remediation: Install available updates"
-  ansible.builtin.yum:
-    name: '*'
-    state: latest
-  register: updated_packages
-  notify: Reboot if Required
-  tags:
-    - level1
-    - section1.2.5
-
-
-- name: "CIS 1.2.5 | Audit: Check if system reboot is required"
-  ansible.builtin.shell: "dnf needs-restarting -r || true"
-  register: reboot_check
-  changed_when: false
+- name: CIS 1.2.5 | Ensure updates, patches, and additional security software are installed
+  ansible.builtin.shell: |
+    dnf update -y && dnf needs-restarting -r || true
+  args:
+    warn: false
+  register: cis_125_updates
+  changed_when: "'Nothing to do' not in cis_125_updates.stdout"
   failed_when: false
-  tags:
-    - level1
-    - section1.2.5
+  tags: 
+    - level1-server
+    - level1-workstation
+    - patching
+
 
