@@ -1000,3 +1000,17 @@
   changed_when: true
   failed_when: false
 
+- name: CIS 1.5.1.5 | Ensure SELinux mode is set to enforcing in config file
+  ansible.builtin.lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: 'SELINUX=enforcing'
+    backup: yes
+
+- name: CIS 1.5.1.5 | Ensure SELinux runtime mode is enforcing
+  ansible.builtin.command: setenforce 1
+  when: ansible_selinux.status != "enforcing"
+  changed_when: true
+  failed_when: false
+
+
