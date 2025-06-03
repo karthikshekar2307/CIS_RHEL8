@@ -373,4 +373,15 @@
   tags:
     - cis_1.1.2.1.1
 
+- name: Ensure /tmp is mounted with nodev option
+  mount:
+    path: /tmp
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,rw,nosuid,nodev,noexec,relatime,size=2G
+    state: mounted
+  tags:
+    - cis_1.1.2.1.2
+
+
 
