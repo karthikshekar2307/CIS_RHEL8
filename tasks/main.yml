@@ -1504,6 +1504,25 @@
     - level1-workstation
     - cis_1.8.10
 
+- name: "CIS 2.1.1 | Ensure time synchronization is in use"
+  block:
+
+    - name: "Check if chrony is installed"
+      command: rpm -q chrony
+      register: chrony_installed
+      failed_when: false
+      changed_when: false
+
+    - name: "Install chrony if not present"
+      ansible.builtin.yum:
+        name: chrony
+        state: present
+      when: chrony_installed.rc != 0
+
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_2.1.1
 
 
 
