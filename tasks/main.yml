@@ -403,4 +403,13 @@
   tags:
     - cis_1.1.2.1.4
 
+- name: Ensure /dev/shm is mounted as a separate tmpfs partition with secure options
+  mount:
+    path: /dev/shm
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,rw,nosuid,nodev,noexec,relatime,size=2G
+    state: mounted
+  tags:
+    - cis_1.1.2.2.1
 
