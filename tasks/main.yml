@@ -300,3 +300,53 @@
     - server
     - workstation
     - cis_1.1.1.7
+
+# 1.1.1.8 Ensure usb-storage kernel module is not available
+- name: Check if usb-storage kernel module is available
+  command: modinfo usb-storage
+  register: usb_storage_module
+  ignore_errors: true
+  tags:
+    - level1
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.8
+
+- name: Unload usb-storage kernel module if loaded
+  command: modprobe -r usb-storage
+  when: usb_storage_module.rc == 0
+  ignore_errors: true
+  tags:
+    - level1
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.8
+
+- name: Blacklist usb-storage kernel module
+  lineinfile:
+    path: /etc/modprobe.d/usb-storage.conf
+    line: "blacklist usb-storage"
+    create: yes
+  when: usb_storage_module.rc == 0
+  tags:
+    - level1
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.8
+
+- name: Prevent usb-storage kernel module from loading
+  lineinfile:
+    path: /etc/modprobe.d/usb-storage.conf
+    line: "install usb-storage /bin/false"
+    create: yes
+  when: usb_storage_module.rc == 0
+  tags:
+    - level1
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.8
+
