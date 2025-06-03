@@ -413,3 +413,12 @@
   tags:
     - cis_1.1.2.2.1
 
+- name: Ensure nodev is set on /dev/shm
+  mount:
+    path: /dev/shm
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,rw,nosuid,nodev,noexec,relatime
+    state: mounted
+  tags:
+    - cis_1.1.2.2.2
