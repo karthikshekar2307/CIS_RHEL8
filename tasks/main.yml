@@ -807,11 +807,6 @@
   when: repo_files.matched > 0
   notify: Reload DNF
 
-handlers:
-  - name: Reload DNF
-    ansible.builtin.command: dnf clean all
-    listen: Reload DNF
-
 - name: Audit gpgcheck in dnf.conf
   command: grep '^gpgcheck=' /etc/dnf/dnf.conf
   register: dnf_gpgcheck
