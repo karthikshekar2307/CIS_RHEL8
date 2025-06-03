@@ -782,3 +782,49 @@
   debug:
     msg: "{{ installed_gpg_keys.stdout_lines }}"
 
+- name: Ensure gpgcheck is set to 1 in /etc/dnf/dnf.conf
+  ansible.builtin.lineinfile:
+    path: /etc/dnf/dnf.conf
+    regexp: '^gpgcheck\s*='
+    line: 'gpgcheck=1'
+    insertafter: '^\[main\]'
+    backup: yes
+  notify: Reload DNF
+
+- name: Ensure gpgcheck is set to 1 in all yum repo files
+  ansible.builtin.find:
+    paths: /etc/yum.repos.d/
+    patterns: "*.repo"
+  register: repo_files
+
+- name: Fix gpgcheck entries in all repo files
+  ansible.builtin.replace:
+    path: "{{ item.path }}"
+    regexp: '^\s*gpgcheck\s*=\s*(0|[2-9]|[1-9][0-9]+|[a-zA-Z_]+)\b'
+    replace: 'gpgcheck=1'
+    backup: yes
+  loop: "{{ repo_files.files }}"
+  when: repo_files.matched > 0
+  notify: Reload DNF
+
+handlers:
+  - name: Reload DNF
+    ansible.builtin.command: dnf clean all
+    listen: Reload DNF
+
+- name: Audit gpgcheck in dnf.conf
+  command: grep '^gpgcheck=' /etc/dnf/dnf.conf
+  register: dnf_gpgcheck
+  changed_when: false
+
+- name: Audit gpgcheck in yum repo files
+  shell: grep -Prs -- '^\h*gpgcheck\h*=\h*(0|[2-9]|[1-9][0-9]+|[a-zA-Z_]+)\b' /etc/yum.repos.d/
+  register: repo_gpgcheck
+  ignore_errors: true
+  changed_when: false
+
+- name: Print audit findings
+  debug:
+    msg:
+      - "dnf.conf: {{ dnf_gpgcheck.stdout }}"
+      - "yum repo issues: {{ repo_gpgcheck.stdout_lines }}"
