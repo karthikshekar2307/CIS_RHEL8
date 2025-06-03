@@ -121,4 +121,49 @@
     - workstation
     - cis_1.1.1.3
 
+# 1.1.1.4 Ensure hfsplus kernel module is not available
+- name: Check if hfsplus kernel module is available
+  command: modinfo hfsplus
+  register: hfsplus_module
+  ignore_errors: true
+  tags:
+    - level1
+    - server
+    - workstation
+    - cis_1.1.1.4
+
+- name: Unload hfsplus kernel module if loaded
+  command: modprobe -r hfsplus
+  when: hfsplus_module.rc == 0
+  ignore_errors: true
+  tags:
+    - level1
+    - server
+    - workstation
+    - cis_1.1.1.4
+
+- name: Blacklist hfsplus module
+  lineinfile:
+    path: /etc/modprobe.d/hfsplus.conf
+    line: "blacklist hfsplus"
+    create: yes
+  when: hfsplus_module.rc == 0
+  tags:
+    - level1
+    - server
+    - workstation
+    - cis_1.1.1.4
+
+- name: Prevent hfsplus module from loading
+  lineinfile:
+    path: /etc/modprobe.d/hfsplus.conf
+    line: "install hfsplus /bin/false"
+    create: yes
+  when: hfsplus_module.rc == 0
+  tags:
+    - level1
+    - server
+    - workstation
+    - cis_1.1.1.4
+
 
