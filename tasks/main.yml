@@ -1173,6 +1173,12 @@
 - name: CIS 1.8.1 | Ensure GNOME Display Manager (GDM) is removed
   ansible.builtin.shell: dnf remove -y gdm
 
+- name: "Check if GDM is installed"
+  ansible.builtin.command: rpm -q gdm
+  register: gdm_installed
+  changed_when: false
+  failed_when: false
+
 - name: "CIS 1.8.2 | Ensure GDM login banner is configured"
   block:
     - name: "Ensure /etc/dconf/profile/gdm exists"
@@ -1185,7 +1191,6 @@
         owner: root
         group: root
         mode: '0644'
-      when: gdm_installed.rc == 0
 
     - name: "Ensure dconf directory exists"
       ansible.builtin.file:
@@ -1194,7 +1199,6 @@
         owner: root
         group: root
         mode: '0755'
-      when: gdm_installed.rc == 0
 
     - name: "Configure banner message"
       ansible.builtin.copy:
@@ -1206,19 +1210,12 @@
         owner: root
         group: root
         mode: '0644'
-      when: gdm_installed.rc == 0
 
     - name: "Run dconf update"
       ansible.builtin.command: dconf update
-      when: gdm_installed.rc == 0
 
   when: gdm_installed.rc == 0
 
-- name: "Check if GDM is installed"
-  ansible.builtin.command: rpm -q gdm
-  register: gdm_installed
-  changed_when: false
-  failed_when: false
 
 
 
