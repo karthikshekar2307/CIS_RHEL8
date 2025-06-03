@@ -818,8 +818,3 @@
   ignore_errors: true
   changed_when: false
 
-- name: Print audit findings
-  debug:
-    msg:
-      - "dnf.conf: {{ dnf_gpgcheck.stdout }}"
-      - "yum repo issues: {{ repo_gpgcheck.stdout_lines }}"
