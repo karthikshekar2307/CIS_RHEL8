@@ -256,3 +256,47 @@
     - workstation
     - cis_1.1.1.6
 
+# 1.1.1.7 Ensure udf kernel module is not available
+- name: Check if udf kernel module is available
+  command: modinfo udf
+  register: udf_module
+  ignore_errors: true
+  tags:
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.7
+
+- name: Unload udf kernel module if loaded
+  command: modprobe -r udf
+  when: udf_module.rc == 0
+  ignore_errors: true
+  tags:
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.7
+
+- name: Blacklist udf module
+  lineinfile:
+    path: /etc/modprobe.d/udf.conf
+    line: "blacklist udf"
+    create: yes
+  when: udf_module.rc == 0
+  tags:
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.7
+
+- name: Prevent udf module from loading
+  lineinfile:
+    path: /etc/modprobe.d/udf.conf
+    line: "install udf /bin/false"
+    create: yes
+  when: udf_module.rc == 0
+  tags:
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.7
