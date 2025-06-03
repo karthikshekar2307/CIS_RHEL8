@@ -964,4 +964,8 @@
     backup: yes
   #notify: Reload systemd-coredump
 
+- name: "CIS 1.5.1.1 | Ensure SELinux is installed"
+  ansible.builtin.package:
+    name: libselinux
+    state: present
 
