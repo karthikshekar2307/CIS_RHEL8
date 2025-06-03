@@ -896,4 +896,31 @@
     - level1
     - section1.2.4
 
+- name: "CIS 1.2.5 | Audit: Check for available package updates"
+  ansible.builtin.shell: "dnf check-update || true"
+  register: dnf_check
+  changed_when: false
+  failed_when: false
+  tags:
+    - level1
+    - section1.2.5
+
+- name: "CIS 1.2.5 | Remediation: Install available updates"
+  ansible.builtin.yum:
+    name: '*'
+    state: latest
+  register: updated_packages
+  notify: Reboot if Required
+  tags:
+    - level1
+    - section1.2.5
+
+- name: "CIS 1.2.5 | Audit: Check if system reboot is required"
+  ansible.builtin.shell: "dnf needs-restarting -r || true"
+  register: reboot_check
+  changed_when: false
+  failed_when: false
+  tags:
+    - level1
+    - section1.2.5
 
