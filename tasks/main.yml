@@ -942,5 +942,17 @@
     - ptrace
     - sysctl
 
+- name: "CIS 1.4.3 | Ensure core dump backtraces are disabled (ProcessSizeMax=0)"
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/coredump.conf
+    regexp: '^#?ProcessSizeMax='
+    line: 'ProcessSizeMax=0'
+    create: yes
+    backup: yes
+  notify: Reload systemd-coredump
+  tags:
+    - level1-server
+    - level1-workstation
+    - coredump
 
 
