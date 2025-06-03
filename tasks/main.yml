@@ -1173,8 +1173,9 @@
     dnf --setopt=gpgcheck=0 -y remove gdm
   register: gdm_remove
   changed_when: "'Removed:' in gdm_remove.stdout or gdm_remove.rc == 0"
-  failed_when: gdm_remove.rc != 0 and "'No match for argument: gdm' not in gdm_remove.stderr"
+  failed_when: "gdm_remove.rc != 0 and 'No match for argument: gdm' not in gdm_remove.stderr"
   tags:
     - level2
     - gdm
+
 
