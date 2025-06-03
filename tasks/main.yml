@@ -812,33 +812,55 @@
   register: dnf_gpgcheck
   changed_when: false
 
-- name: Check if repo_gpgcheck is enabled globally
-  ansible.builtin.command: grep ^repo_gpgcheck /etc/dnf/dnf.conf
-  register: repo_gpg_global
-  ignore_errors: true
-  changed_when: false
+- name: Ensure gpgcheck is set to 1 in global dnf.conf
+  ini_file:
+    path: /etc/dnf/dnf.conf
+    section: main
+    option: gpgcheck
+    value: '1'
+    state: present
+    backup: yes
 
-- name: Fail if global repo_gpgcheck is not enabled
-  ansible.builtin.fail:
-    msg: "Global setting 'repo_gpgcheck' is not set to 1 in /etc/dnf/dnf.conf"
-  when: repo_gpg_global.rc != 0 or "'repo_gpgcheck=1'" not in repo_gpg_global.stdout
+- name: Ensure gpgcheck is set to 1 in all yum repo files
+  find:
+    paths: /etc/yum.repos.d/
+    patterns: '*.repo'
+  register: yum_repo_files
 
-- name: Find repo files with repo_gpgcheck=0
-  shell: |
-    for repo in $(grep -l "repo_gpgcheck=0" /etc/yum.repos.d/*.repo 2>/dev/null); do
-      if ! grep -q "fedoraproject.org" "$repo"; then
-        echo "$repo"
-      fi
-    done
-  register: invalid_repo_files
-  changed_when: false
-  ignore_errors: true
+- name: Set gpgcheck=1 in each repo file
+  lineinfile:
+    path: "{{ item.path }}"
+    regexp: '^\s*gpgcheck\s*=\s*'
+    line: 'gpgcheck=1'
+    state: present
+    backup: yes
+  loop: "{{ yum_repo_files.files }}"
+  when: yum_repo_files.matched > 0
 
-- name: Fail if unsupported repo_gpgcheck=0 found
-  fail:
-    msg: "One or more repos have repo_gpgcheck=0 and are not in the exclusion list:\n{{ invalid_repo_files.stdout_lines | join('\n') }}"
-  when: invalid_repo_files.stdout != ""
+- name: Ensure repo_gpgcheck is set to 1 in global dnf.conf
+  ini_file:
+    path: /etc/dnf/dnf.conf
+    section: main
+    option: repo_gpgcheck
+    value: '1'
+    state: present
+    backup: yes
 
+- name: Ensure repo_gpgcheck is set to 1 in all yum repo files
+  find:
+    paths: /etc/yum.repos.d/
+    patterns: '*.repo'
+  register: yum_repo_files_for_repo_gpgcheck
+
+- name: Set repo_gpgcheck=1 in each repo file
+  lineinfile:
+    path: "{{ item.path }}"
+    regexp: '^\s*repo_gpgcheck\s*=\s*'
+    line: 'repo_gpgcheck=1'
+    state: present
+    backup: yes
+  loop: "{{ yum_repo_files_for_repo_gpgcheck.files }}"
+  when: yum_repo_files_for_repo_gpgcheck.matched > 0
 
 
 
