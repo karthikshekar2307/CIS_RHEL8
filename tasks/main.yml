@@ -1483,6 +1483,27 @@
     - level1-workstation
     - cis_1.8.9
 
+- name: "CIS 1.8.10 | Ensure XDMCP is not enabled"
+  block:
+    - name: "Check if GDM is installed"
+      command: rpm -q gdm
+      register: gdm_installed
+      failed_when: false
+      changed_when: false
+
+    - name: "Ensure XDMCP Enable=true is not set in /etc/gdm/custom.conf"
+      lineinfile:
+        path: /etc/gdm/custom.conf
+        regexp: '^\s*Enable\s*=\s*true'
+        state: absent
+        backup: yes
+      when: gdm_installed.rc == 0
+      notify: reload gdm
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_1.8.10
+
 
 
 
