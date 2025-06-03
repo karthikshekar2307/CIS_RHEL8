@@ -789,7 +789,7 @@
     line: 'gpgcheck=1'
     insertafter: '^\[main\]'
     backup: yes
-  notify: Reload DNF
+  #notify: Reload DNF
 
 - name: Ensure gpgcheck is set to 1 in all yum repo files
   ansible.builtin.find:
@@ -805,7 +805,7 @@
     backup: yes
   loop: "{{ repo_files.files }}"
   when: repo_files.matched > 0
-  notify: Reload DNF
+  #notify: Reload DNF
 
 - name: Audit gpgcheck in dnf.conf
   command: grep '^gpgcheck=' /etc/dnf/dnf.conf
