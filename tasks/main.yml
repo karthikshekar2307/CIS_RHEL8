@@ -1129,3 +1129,12 @@
     owner: root
     group: root
     mode: '0644'
+
+- name: CIS 1.7.3 | Set remote login warning banner in /etc/issue.net
+  copy:
+    dest: /etc/issue.net
+    content: |
+      Authorized users only. All activity may be monitored and reported.
+    owner: root
+    group: root
+    mode: '0644'
