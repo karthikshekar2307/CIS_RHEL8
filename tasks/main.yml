@@ -443,98 +443,117 @@
   tags:
     - cis_1.1.2.2.4
 
-- name: Mount /home on its own partition
-  mount:
-    path: /home
-    src: "/dev/vg_main/lv_home"
-    fstype: ext4
-    opts: defaults,rw,nosuid,nodev,noexec,relatime
-    state: mounted
-  tags:
-    - cis_1.1.2.3.1
+# - name: Mount /home on its own partition
+#   mount:
+#     path: /home
+#     src: "/dev/vg_main/lv_home"
+#     fstype: ext4
+#     opts: defaults,rw,nosuid,nodev,noexec,relatime
+#     state: mounted
+#   tags:
+#     - cis_1.1.2.3.1
 
-- name: Ensure /home is mounted with nodev
-  mount:
-    path: /home
-    src: /dev/vg_main/lv_home
-    fstype: ext4
-    opts: defaults,rw,nosuid,nodev,noexec,relatime
-    state: mounted
-  tags:
-    - cis_1.1.2.3.2
+# - name: Ensure /home is mounted with nodev
+#   mount:
+#     path: /home
+#     src: /dev/vg_main/lv_home
+#     fstype: ext4
+#     opts: defaults,rw,nosuid,nodev,noexec,relatime
+#     state: mounted
+#   tags:
+#     - cis_1.1.2.3.2
 
-- name: Ensure /home is mounted with nosuid
-  mount:
-    path: /home
-    src: /dev/vg_main/lv_home
-    fstype: ext4
-    opts: defaults,rw,nosuid,nodev,noexec,relatime
-    state: mounted
-  tags:
-    - cis_1.1.2.3.3
+# - name: Ensure /home is mounted with nosuid
+#   mount:
+#     path: /home
+#     src: /dev/vg_main/lv_home
+#     fstype: ext4
+#     opts: defaults,rw,nosuid,nodev,noexec,relatime
+#     state: mounted
+#   tags:
+#     - cis_1.1.2.3.3
 
-- name: Mount /var as a separate partition
-  mount:
-    path: /var
-    src: /dev/xvdf1
-    fstype: ext4
-    opts: defaults,nosuid,nodev,noexec,relatime
-    state: mounted
-    dump: 0
-    passno: 2
+# - name: Mount /var as a separate partition
+#   mount:
+#     path: /var
+#     src: /dev/xvdf1
+#     fstype: ext4
+#     opts: defaults,nosuid,nodev,noexec,relatime
+#     state: mounted
+#     dump: 0
+#     passno: 2
 
-- name: Ensure nodev option is set on /var
-  mount:
-    path: /var
-    src: /dev/xvdf1
-    fstype: ext4
-    opts: defaults,rw,nosuid,nodev,noexec,relatime
-    state: mounted
-    dump: 0
-    passno: 2
+# - name: Ensure nodev option is set on /var
+#   mount:
+#     path: /var
+#     src: /dev/xvdf1
+#     fstype: ext4
+#     opts: defaults,rw,nosuid,nodev,noexec,relatime
+#     state: mounted
+#     dump: 0
+#     passno: 2
 
-- name: Ensure mount point exists for /var/tmp
-  file:
+# - name: Ensure mount point exists for /var/tmp
+#   file:
+#     path: /var/tmp
+#     state: directory
+#     mode: '1777'
+
+# - name: Mount /var/tmp with secure options
+#   mount:
+#     path: /var/tmp
+#     src: /dev/xvdf1           # Replace with your actual device
+#     fstype: ext4
+#     opts: defaults,nodev,nosuid,noexec,relatime
+#     state: mounted
+#     dump: 0
+#     passno: 0
+
+# - name: Persist mount in /etc/fstab
+#   mount:
+#     path: /var/tmp
+#     src: /dev/xvdf1           # Replace with your actual device
+#     fstype: ext4
+#     opts: defaults,nodev,nosuid,noexec,relatime
+#     state: present
+#     dump: 0
+#     passno: 0
+
+# - name: Ensure /var/tmp is mounted with nodev option
+#   mount:
+#     path: /var/tmp
+#     src: /dev/xvdf1               # 🔁 Replace with the correct device
+#     fstype: ext4                  # 🔁 Adjust if you're using a different filesystem
+#     opts: defaults,nodev,nosuid,noexec,relatime
+#     state: mounted
+#     dump: 0
+#     passno: 0
+
+# - name: Ensure /var/tmp fstab entry is present with nodev option
+#   mount:
+#     path: /var/tmp
+#     src: /dev/xvdf1               # 🔁 Replace as needed
+#     fstype: ext4
+#     opts: defaults,nodev,nosuid,noexec,relatime
+#     state: present
+#     dump: 0
+#     passno: 0
+
+- name: Remount /var/tmp with noexec option if already mounted
+  mount:
     path: /var/tmp
-    state: directory
-    mode: '1777'
+    fstype: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='fstype') | first | default('ext4') }}"
+    opts: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='options') | first | default([]) 
+             | union(['noexec']) 
+             | union(['nodev']) 
+             | union(['nosuid']) 
+             | unique | join(',') }}"
+    state: remounted
 
-- name: Mount /var/tmp with secure options
-  mount:
-    path: /var/tmp
-    src: /dev/xvdf1           # Replace with your actual device
-    fstype: ext4
-    opts: defaults,nodev,nosuid,noexec,relatime
-    state: mounted
-    dump: 0
-    passno: 0
+- name: Ensure /var/tmp entry in /etc/fstab has noexec, nodev, nosuid
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^([^#\s]+\s+/var/tmp\s+[^#\s]+\s+)([^#\s]+)'
+    line: '\1defaults,nodev,nosuid,noexec,relatime'
+    backrefs: yes
 
-- name: Persist mount in /etc/fstab
-  mount:
-    path: /var/tmp
-    src: /dev/xvdf1           # Replace with your actual device
-    fstype: ext4
-    opts: defaults,nodev,nosuid,noexec,relatime
-    state: present
-    dump: 0
-    passno: 0
-
-- name: Ensure /var/tmp is mounted with nodev option
-  mount:
-    path: /var/tmp
-    src: /dev/xvdf1               # 🔁 Replace with the correct device
-    fstype: ext4                  # 🔁 Adjust if you're using a different filesystem
-    opts: defaults,nodev,nosuid,noexec,relatime
-    state: mounted
-    dump: 0
-    passno: 0
-
-- name: Ensure /var/tmp fstab entry is present with nodev option
-  mount:
-    path: /var/tmp
-    src: /dev/xvdf1               # 🔁 Replace as needed
-    fstype: ext4
-    opts: defaults,nodev,nosuid,noexec,relatime
-    state: present
-    dump: 0
-    passno: 0
