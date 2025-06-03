@@ -1032,3 +1032,12 @@
     name: mcstrans
     state: absent
   when: "'mcstrans' in ansible_facts.packages"
+
+- name: CIS 1.5.1.8 | Check if setroubleshoot is installed
+  ansible.builtin.package_facts:
+
+- name: CIS 1.5.1.8 | Remove setroubleshoot if installed
+  ansible.builtin.package:
+    name: setroubleshoot
+    state: absent
+  when: "'setroubleshoot' in ansible_facts.packages"
