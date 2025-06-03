@@ -916,5 +916,18 @@
     - level1-workstation
     - patching
 
+- name: "CIS 1.4.1 | Ensure ASLR is enabled (kernel.randomize_va_space = 2)"
+  ansible.posix.sysctl:
+    name: kernel.randomize_va_space
+    value: '2'
+    sysctl_set: true
+    state: present
+    reload: yes
+  tags:
+    - level1-server
+    - level1-workstation
+    - sysctl
+    - aslr
+
 
 
