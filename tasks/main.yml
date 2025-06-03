@@ -1353,41 +1353,41 @@
   ansible.builtin.command: dconf update
   when: dconf_lock_dir is defined
 
+- name: "CIS 1.8.6 | Check if GDM is installed"
+  command: rpm -q gdm
+  register: gdm_installed
+  failed_when: false
+  changed_when: false
+
 - name: "CIS 1.8.6 | Ensure GDM automatic mounting of removable media is disabled"
-  block:
-    - name: "Check if GDM is installed"
-      command: rpm -q gdm
-      register: gdm_installed
-      ignore_errors: true
+  shell: |
+    GDM_PROFILE="local"
+    GDM_DB_DIR="/etc/dconf/db/${GDM_PROFILE}.d"
+    GDM_PROFILE_FILE="/etc/dconf/profile/user"
 
-    - name: "Disable automount and automount-open settings for GDM"
-      shell: |
-        GDM_PROFILE="local"
-        GDM_DB_DIR="/etc/dconf/db/${GDM_PROFILE}.d"
-        GDM_PROFILE_FILE="/etc/dconf/profile/user"
+    mkdir -p "${GDM_DB_DIR}"
 
-        mkdir -p "${GDM_DB_DIR}"
+    if [ ! -f "${GDM_PROFILE_FILE}" ]; then
+      echo -e "user-db:user\nsystem-db:${GDM_PROFILE}" > "${GDM_PROFILE_FILE}"
+    fi
 
-        if [ ! -f "${GDM_PROFILE_FILE}" ]; then
-          echo -e "user-db:user\nsystem-db:${GDM_PROFILE}" > "${GDM_PROFILE_FILE}"
-        fi
+    KEY_FILE="${GDM_DB_DIR}/00-media-automount"
 
-        KEY_FILE="${GDM_DB_DIR}/00-media-automount"
+    {
+      echo "[org/gnome/desktop/media-handling]"
+      echo "automount=false"
+      echo "automount-open=false"
+    } > "$KEY_FILE"
 
-        {
-          echo "[org/gnome/desktop/media-handling]"
-          echo "automount=false"
-          echo "automount-open=false"
-        } > "$KEY_FILE"
-
-        dconf update
-      when: gdm_installed.rc == 0
-      args:
-        executable: /bin/bash
+    dconf update
+  when: gdm_installed.rc == 0
+  args:
+    executable: /bin/bash
   tags:
     - level1-server
     - level2-workstation
     - cis_1.8.6
+
 
 
 
