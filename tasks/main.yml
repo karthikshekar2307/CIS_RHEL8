@@ -964,13 +964,14 @@
     backup: yes
   #notify: Reload systemd-coredump
 
-- name: CIS 1.5.1.1 | Ensure SELinux is installed
-  ansible.builtin.command: >
-    bash -c 'rpm -q libselinux || dnf install -y libselinux --nogpgcheck'
-  args:
-    warn: false
-  register: selinux_install
-  changed_when: "'Installed:' in selinux_install.stdout or selinux_install.rc == 0"
-  failed_when: selinux_install.rc != 0 and 'Nothing to do' not in selinux_install.stdout
+- name: CIS 1.5.1.1 | Ensure SELinux is installed using bash fallback
+  ansible.builtin.shell: |
+    if ! rpm -q libselinux >/dev/null 2>&1; then
+      dnf install -y libselinux --nogpgcheck
+    fi
+  register: selinux_install_result
+  changed_when: selinux_install_result.rc == 0
+  failed_when: selinux_install_result.rc != 0
+
 
 
