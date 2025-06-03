@@ -482,3 +482,13 @@
     state: mounted
     dump: 0
     passno: 2
+
+- name: Ensure nodev option is set on /var
+  mount:
+    path: /var
+    src: /dev/xvdf1
+    fstype: ext4
+    opts: defaults,rw,nosuid,nodev,noexec,relatime
+    state: mounted
+    dump: 0
+    passno: 2
