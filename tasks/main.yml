@@ -1388,6 +1388,31 @@
     - level2-workstation
     - cis_1.8.6
 
+- name: "CIS 1.8.7 | Lock GDM automount and automount-open settings"
+  shell: |
+    # Set dconf profile name (default is 'local', adjust if needed)
+    GDM_PROFILE="local"
+    DB_DIR="/etc/dconf/db/${GDM_PROFILE}.d"
+    LOCKS_DIR="${DB_DIR}/locks"
+    LOCK_FILE="${LOCKS_DIR}/00-media-automount"
+
+    # Ensure locks directory exists
+    mkdir -p "${LOCKS_DIR}"
+
+    # Create or update the lock file
+    grep -q "/org/gnome/desktop/media-handling/automount" "${LOCK_FILE}" 2>/dev/null || echo "/org/gnome/desktop/media-handling/automount" >> "${LOCK_FILE}"
+    grep -q "/org/gnome/desktop/media-handling/automount-open" "${LOCK_FILE}" 2>/dev/null || echo "/org/gnome/desktop/media-handling/automount-open" >> "${LOCK_FILE}"
+
+    # Update dconf database
+    dconf update
+  args:
+    executable: /bin/bash
+  when: gdm_installed.rc == 0
+  tags:
+    - level1-server
+    - level2-workstation
+    - cis_1.8.7
+
 
 
 
