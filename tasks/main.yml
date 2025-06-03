@@ -472,3 +472,13 @@
     state: mounted
   tags:
     - cis_1.1.2.3.3
+
+- name: Mount /var as a separate partition
+  mount:
+    path: /var
+    src: /dev/xvdf1
+    fstype: ext4
+    opts: defaults,nosuid,nodev,noexec,relatime
+    state: mounted
+    dump: 0
+    passno: 2
