@@ -862,5 +862,29 @@
   loop: "{{ yum_repo_files_for_repo_gpgcheck.files }}"
   when: yum_repo_files_for_repo_gpgcheck.matched > 0
 
+- name: Ensure repo_gpgcheck is set to 1 in global dnf.conf
+  ini_file:
+    path: /etc/dnf/dnf.conf
+    section: main
+    option: repo_gpgcheck
+    value: '1'
+    state: present
+    backup: yes
+
+- name: Ensure repo_gpgcheck is set to 1 in all yum repo files
+  find:
+    paths: /etc/yum.repos.d/
+    patterns: '*.repo'
+  register: yum_repo_files_for_repo_gpgcheck
+
+- name: Set repo_gpgcheck=1 in each repo file
+  lineinfile:
+    path: "{{ item.path }}"
+    regexp: '^\s*repo_gpgcheck\s*=\s*'
+    line: 'repo_gpgcheck=1'
+    state: present
+    backup: yes
+  loop: "{{ yum_repo_files_for_repo_gpgcheck.files }}"
+  when: yum_repo_files_for_repo_gpgcheck.matched > 0
 
 
