@@ -1260,6 +1260,53 @@
 
   when: gdm_installed.rc == 0
 
+- name: "Check if GDM is installed"
+  ansible.builtin.command: rpm -q gdm
+  register: gdm_installed
+  changed_when: false
+  failed_when: false
+
+- name: "CIS 1.8.4 | Ensure GDM screen locks when the user is idle"
+  block:
+
+    - name: "Ensure /etc/dconf/profile/gdm exists"
+      ansible.builtin.copy:
+        dest: /etc/dconf/profile/gdm
+        content: |
+          user-db:user
+          system-db:gdm
+          file-db:/usr/share/gdm/greeter-dconf-defaults
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: "Ensure /etc/dconf/db/gdm.d exists"
+      ansible.builtin.file:
+        path: /etc/dconf/db/gdm.d
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: "Set idle-delay and lock-delay in GDM keyfile"
+      ansible.builtin.copy:
+        dest: /etc/dconf/db/gdm.d/00-screensaver
+        content: |
+          [org/gnome/desktop/session]
+          # Number of seconds of inactivity before the screen goes blank
+          idle-delay=uint32 900
+
+          [org/gnome/desktop/screensaver]
+          # Number of seconds after the screen is blank before locking the screen
+          lock-delay=uint32 5
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: "Update dconf database"
+      ansible.builtin.command: dconf update
+
+  when: gdm_installed.rc == 0
 
 
 
