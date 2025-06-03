@@ -37,3 +37,43 @@
       debug:
         msg: "cramfs module not available or 'modinfo' command failed — skipping tasks"
 
+- name: "1.1.1.2 | Ensure freevxfs kernel module is not available (Automated)"
+  block:
+
+    - name: Check if freevxfs kernel module is available
+      command: modinfo freevxfs
+      register: freevxfs_module
+      ignore_errors: true
+      changed_when: false
+
+    - name: Unload freevxfs kernel module if loaded
+      ansible.builtin.shell: "modprobe -r freevxfs"
+      when: "'freevxfs_module' in vars and freevxfs_module.rc == 0"
+      ignore_errors: true
+
+    - name: Blacklist freevxfs module
+      ansible.builtin.lineinfile:
+        path: /etc/modprobe.d/freevxfs.conf
+        line: "blacklist freevxfs"
+        create: yes
+        mode: '0644'
+        owner: root
+        group: root
+      when: "'freevxfs_module' in vars and freevxfs_module.rc == 0"
+
+    - name: Prevent freevxfs module from loading
+      ansible.builtin.lineinfile:
+        path: /etc/modprobe.d/freevxfs.conf
+        line: "install freevxfs /bin/false"
+        create: yes
+        mode: '0644'
+        owner: root
+        group: root
+      when: "'freevxfs_module' in vars and freevxfs_module.rc == 0"
+
+  rescue:
+    - name: Fallback info if freevxfs_module was not defined
+      debug:
+        msg: "freevxfs module not available or 'modinfo' command failed — skipping tasks"
+
+
