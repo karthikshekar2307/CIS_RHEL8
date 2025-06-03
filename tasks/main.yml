@@ -1146,3 +1146,11 @@
     group: root
     mode: '0644'
     state: file
+
+- name: CIS 1.7.5 | Ensure /etc/issue has correct permissions and ownership
+  file:
+    path: /etc/issue
+    owner: root
+    group: root
+    mode: '0644'
+    state: file
