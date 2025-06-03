@@ -1165,13 +1165,13 @@
     mode: '0644'
     state: file
 
-- name: CIS 1.8.1 | Ensure GNOME Display Manager (GDM) is removed
-  package:
-    name: gdm
-    state: absent
-
 # - name: CIS 1.8.1 | Ensure GNOME Display Manager (GDM) is removed
-#   ansible.builtin.shell: dnf remove -y gdm
+#   package:
+#     name: gdm
+#     state: absent
+
+- name: CIS 1.8.1 | Ensure GNOME Display Manager (GDM) is removed
+  ansible.builtin.shell: dnf remove -y gdm
 
 - name: "CIS 1.8.2 | Ensure GDM login banner is configured"
   block:
