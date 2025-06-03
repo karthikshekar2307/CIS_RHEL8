@@ -1170,9 +1170,55 @@
     name: gdm
     state: absent
 
-- name: CIS 1.8.1 | Ensure GNOME Display Manager (GDM) is removed
-  ansible.builtin.shell: dnf remove -y gdm
+# - name: CIS 1.8.1 | Ensure GNOME Display Manager (GDM) is removed
+#   ansible.builtin.shell: dnf remove -y gdm
 
+- name: "CIS 1.8.2 | Ensure GDM login banner is configured"
+  block:
+    - name: "Ensure /etc/dconf/profile/gdm exists"
+      ansible.builtin.copy:
+        dest: /etc/dconf/profile/gdm
+        content: |
+          user-db:user
+          system-db:gdm
+          file-db:/usr/share/gdm/greeter-dconf-defaults
+        owner: root
+        group: root
+        mode: '0644'
+      when: gdm_installed.rc == 0
+
+    - name: "Ensure dconf directory exists"
+      ansible.builtin.file:
+        path: /etc/dconf/db/gdm.d/
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      when: gdm_installed.rc == 0
+
+    - name: "Configure banner message"
+      ansible.builtin.copy:
+        dest: /etc/dconf/db/gdm.d/01-banner-message
+        content: |
+          [org/gnome/login-screen]
+          banner-message-enable=true
+          banner-message-text='Authorized users only. All activity may be monitored and reported.'
+        owner: root
+        group: root
+        mode: '0644'
+      when: gdm_installed.rc == 0
+
+    - name: "Run dconf update"
+      ansible.builtin.command: dconf update
+      when: gdm_installed.rc == 0
+
+  when: gdm_installed.rc == 0
+
+- name: "Check if GDM is installed"
+  ansible.builtin.command: rpm -q gdm
+  register: gdm_installed
+  changed_when: false
+  failed_when: false
 
 
 
