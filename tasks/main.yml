@@ -963,6 +963,14 @@
     create: yes
     backup: yes
   #notify: Reload systemd-coredump
+  
+- name: "Disable GPG check for RHUI AppStream repo temporarily"
+  ansible.builtin.replace:
+    path: /etc/yum.repos.d/redhat-rhui.repo
+    regexp: '^gpgcheck=1'
+    replace: 'gpgcheck=0'
+  when: ansible_facts['distribution'] == "RedHat"
+
 
 - name: "CIS 1.5.1.1 | Ensure SELinux is installed"
   ansible.builtin.package:
