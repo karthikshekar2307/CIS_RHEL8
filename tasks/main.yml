@@ -211,4 +211,48 @@
     - workstation
     - cis_1.1.1.5
 
+# 1.1.1.6 Ensure squashfs kernel module is not available
+- name: Check if squashfs kernel module is available
+  command: modinfo squashfs
+  register: squashfs_module
+  ignore_errors: true
+  tags:
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.6
+
+- name: Unload squashfs kernel module if loaded
+  command: modprobe -r squashfs
+  when: squashfs_module.rc == 0
+  ignore_errors: true
+  tags:
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.6
+
+- name: Blacklist squashfs module
+  lineinfile:
+    path: /etc/modprobe.d/squashfs.conf
+    line: "blacklist squashfs"
+    create: yes
+  when: squashfs_module.rc == 0
+  tags:
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.6
+
+- name: Prevent squashfs module from loading
+  lineinfile:
+    path: /etc/modprobe.d/squashfs.conf
+    line: "install squashfs /bin/false"
+    create: yes
+  when: squashfs_module.rc == 0
+  tags:
+    - level2
+    - server
+    - workstation
+    - cis_1.1.1.6
 
