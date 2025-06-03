@@ -1154,3 +1154,11 @@
     group: root
     mode: '0644'
     state: file
+
+- name: CIS 1.7.6 | Ensure /etc/issue.net has correct permissions and ownership
+  file:
+    path: /etc/issue.net
+    owner: root
+    group: root
+    mode: '0644'
+    state: file
