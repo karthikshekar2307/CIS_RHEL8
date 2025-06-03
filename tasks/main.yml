@@ -442,3 +442,13 @@
     state: mounted
   tags:
     - cis_1.1.2.2.4
+
+- name: Mount /home on its own partition
+  mount:
+    path: /home
+    src: "/dev/vg_main/lv_home"
+    fstype: ext4
+    opts: defaults,rw,nosuid,nodev,noexec,relatime
+    state: mounted
+  tags:
+    - cis_1.1.2.3.1
