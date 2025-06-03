@@ -557,3 +557,36 @@
     line: '\1defaults,nodev,nosuid,noexec,relatime'
     backrefs: yes
 
+- name: Check if /var/log is on a separate partition
+  command: findmnt -n /var/log
+  register: varlog_mount
+  changed_when: false
+  failed_when: varlog_mount.rc != 0
+  ignore_errors: true
+
+- name: Fail if /var/log is not a separate partition
+  fail:
+    msg: "/var/log is not a separate partition. Please configure it manually and re-run."
+  when: varlog_mount.rc != 0
+
+- name: Extract filesystem type for /var/log
+  set_fact:
+    varlog_fstype: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | first | default('ext4') }}"
+
+- name: Extract existing mount options for /var/log
+  set_fact:
+    varlog_options: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
+
+- name: Ensure /var/log is remounted with secure mount options
+  mount:
+    path: /var/log
+    fstype: "{{ varlog_fstype }}"
+    opts: "{{ varlog_options | union(['noexec', 'nodev', 'nosuid']) | unique | join(',') }}"
+    state: remounted
+
+- name: Ensure /etc/fstab entry for /var/log has secure options
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^([^#\s]+\s+/var/log\s+[^#\s]+\s+)([^#\s]+)'
+    line: '\1defaults,nodev,nosuid,noexec,relatime'
+    backrefs: yes
