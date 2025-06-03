@@ -929,5 +929,18 @@
     - sysctl
     - aslr
 
+- name: "CIS 1.4.2 | Ensure ptrace_scope is restricted (kernel.yama.ptrace_scope = 1)"
+  ansible.posix.sysctl:
+    name: kernel.yama.ptrace_scope
+    value: "1"
+    sysctl_set: true
+    state: present
+    reload: yes
+  tags:
+    - level1-server
+    - level1-workstation
+    - ptrace
+    - sysctl
+
 
 
