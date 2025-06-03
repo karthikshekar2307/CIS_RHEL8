@@ -452,3 +452,13 @@
     state: mounted
   tags:
     - cis_1.1.2.3.1
+
+- name: Ensure /home is mounted with nodev
+  mount:
+    path: /home
+    src: /dev/vg_main/lv_home
+    fstype: ext4
+    opts: defaults,rw,nosuid,nodev,noexec,relatime
+    state: mounted
+  tags:
+    - cis_1.1.2.3.2
