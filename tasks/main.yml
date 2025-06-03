@@ -987,3 +987,16 @@
     state: present
     backup: yes
 
+- name: CIS 1.5.1.4 | Ensure SELinux mode is not disabled in config file
+  ansible.builtin.lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: 'SELINUX=enforcing'
+    backup: yes
+
+- name: CIS 1.5.1.4 | Set SELinux running mode to enforcing
+  ansible.builtin.command: setenforce 1
+  when: ansible_selinux.status == "permissive"
+  changed_when: true
+  failed_when: false
+
