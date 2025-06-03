@@ -1449,6 +1449,40 @@
     - level1-workstation
     - cis_1.8.8
 
+- name: "CIS 1.8.9 | Ensure GDM autorun-never is not overridden"
+  shell: |
+    GP_NAME="local"
+    GP_DIR="/etc/dconf/db/${GP_NAME}.d"
+    LOCKS_DIR="${GP_DIR}/locks"
+    LOCK_FILE="${LOCKS_DIR}/00-media-autorun"
+
+    # Identify actual directory if setting already exists
+    if grep -Prilsq -- '^\s*autorun-never\s*=' /etc/dconf/db/*.d; then
+      GP_NAME="$(grep -Prils -- '^\s*autorun-never\s*=' /etc/dconf/db/*.d | head -n1 | awk -F'/' '{split($(NF-1), a, "."); print a[1]}')"
+      GP_DIR="/etc/dconf/db/${GP_NAME}.d"
+      LOCKS_DIR="${GP_DIR}/locks"
+      LOCK_FILE="${LOCKS_DIR}/00-media-autorun"
+    fi
+
+    # Create the locks directory if not exists
+    mkdir -p "$LOCKS_DIR"
+
+    # Ensure lock line exists
+    grep -Fxq "/org/gnome/desktop/media-handling/autorun-never" "$LOCK_FILE" 2>/dev/null || {
+      echo "# Lock desktop media-handling autorun-never setting" >> "$LOCK_FILE"
+      echo "/org/gnome/desktop/media-handling/autorun-never" >> "$LOCK_FILE"
+    }
+
+    # Update dconf
+    dconf update
+  args:
+    executable: /bin/bash
+  when: gdm_installed.rc == 0
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_1.8.9
+
 
 
 
