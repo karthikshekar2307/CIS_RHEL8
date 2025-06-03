@@ -9,7 +9,7 @@
 
     - name: Unload cramfs kernel module if loaded
       ansible.builtin.shell: "modprobe -r cramfs"
-      when: "'cramfs' in ansible_facts.modules"
+      when: "'cramfs_module' in vars and cramfs_module.rc == 0"
       ignore_errors: true
 
     - name: Blacklist cramfs module
@@ -20,6 +20,7 @@
         mode: '0644'
         owner: root
         group: root
+      when: "'cramfs_module' in vars and cramfs_module.rc == 0"
 
     - name: Prevent cramfs module from loading
       ansible.builtin.lineinfile:
@@ -29,10 +30,10 @@
         mode: '0644'
         owner: root
         group: root
+      when: "'cramfs_module' in vars and cramfs_module.rc == 0"
 
-  when: cramfs_module.rc == 0
-  tags:
-    - cis
-    - cis_1.1.1.1
-    - filesystem
-    - kernel_module
+  rescue:
+    - name: Fallback info if cramfs_module was not defined
+      debug:
+        msg: "cramfs module not available or 'modinfo' command failed — skipping tasks"
+
