@@ -949,10 +949,11 @@
     line: 'ProcessSizeMax=0'
     create: yes
     backup: yes
-  notify: Reload systemd-coredump
+  #notify: Reload systemd-coredump
   tags:
     - level1-server
     - level1-workstation
     - coredump
+
 
 
