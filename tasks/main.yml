@@ -906,16 +906,15 @@
     - section1.2.5
 
 - name: CIS 1.2.5 | Ensure updates, patches, and additional security software are installed
-  ansible.builtin.shell: |
+  shell: |
     dnf update -y && dnf needs-restarting -r || true
-  args:
-    warn: false
   register: cis_125_updates
-  changed_when: "'Nothing to do' not in cis_125_updates.stdout"
+  changed_when: cis_125_updates.rc != 0 or ('Nothing to do' not in cis_125_updates.stdout | default(''))
   failed_when: false
-  tags: 
+  tags:
     - level1-server
     - level1-workstation
     - patching
+
 
 
