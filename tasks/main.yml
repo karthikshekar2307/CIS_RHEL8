@@ -1413,6 +1413,41 @@
     - level2-workstation
     - cis_1.8.7
 
+- name: "CIS 1.8.8 | Ensure GDM autorun-never is enabled"
+  shell: |
+    GP_NAME="local"
+    KFILE="/etc/dconf/db/${GP_NAME}.d/00-media-autorun"
+    GPDIR="/etc/dconf/db/${GP_NAME}.d"
+    GPFILE="/etc/dconf/profile/user"
+
+    # Create profile file if not present
+    if ! grep -Pq "^\s*system-db:${GP_NAME}\b" $GPFILE 2>/dev/null; then
+      echo -e "\nuser-db:user" >> $GPFILE
+      echo "system-db:${GP_NAME}" >> $GPFILE
+    fi
+
+    # Ensure dconf directory exists
+    mkdir -p "$GPDIR"
+
+    # Create or update autorun-never entry
+    if grep -Pqs '^\s*autorun-never\s*=\s*true\b' "$KFILE"; then
+      echo "autorun-never already set to true"
+    elif grep -Psq '^\s*autorun-never' "$KFILE"; then
+      sed -ri 's/(^\s*autorun-never\s*=\s*)(\S+)(\s*.*)$/\1true\3/' "$KFILE"
+    else
+      grep -Psq '^\s*\[org/gnome/desktop/media-handling\]' "$KFILE" || echo '[org/gnome/desktop/media-handling]' >> "$KFILE"
+      sed -ri '/^\s*\[org\/gnome\/desktop\/media-handling\]/a autorun-never=true' "$KFILE"
+    fi
+
+    # Update dconf database
+    dconf update
+  args:
+    executable: /bin/bash
+  when: gdm_installed.rc == 0
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_1.8.8
 
 
 
