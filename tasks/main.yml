@@ -422,3 +422,13 @@
     state: mounted
   tags:
     - cis_1.1.2.2.2
+
+- name: Ensure nosuid is set on /dev/shm
+  mount:
+    path: /dev/shm
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,rw,nosuid,nodev,noexec,relatime
+    state: mounted
+  tags:
+    - cis_1.1.2.2.3
