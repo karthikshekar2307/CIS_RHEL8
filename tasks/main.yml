@@ -492,3 +492,30 @@
     state: mounted
     dump: 0
     passno: 2
+
+- name: Ensure mount point exists for /var/tmp
+  file:
+    path: /var/tmp
+    state: directory
+    mode: '1777'
+
+- name: Mount /var/tmp with secure options
+  mount:
+    path: /var/tmp
+    src: /dev/xvdf1           # Replace with your actual device
+    fstype: ext4
+    opts: defaults,nodev,nosuid,noexec,relatime
+    state: mounted
+    dump: 0
+    passno: 0
+
+- name: Persist mount in /etc/fstab
+  mount:
+    path: /var/tmp
+    src: /dev/xvdf1           # Replace with your actual device
+    fstype: ext4
+    opts: defaults,nodev,nosuid,noexec,relatime
+    state: present
+    dump: 0
+    passno: 0
+
