@@ -1308,6 +1308,49 @@
 
   when: gdm_installed.rc == 0
 
+- name: "Check if GDM is installed"
+  ansible.builtin.command: rpm -q gdm
+  register: gdm_installed
+  changed_when: false
+  failed_when: false
+
+- name: "Get dconf db directory containing idle-delay"
+  ansible.builtin.shell: |
+    grep -Psril '^\h*idle-delay\h*=\h*uint32\h+\d+\b' /etc/dconf/db/*/ | head -n 1
+  register: idle_delay_keyfile
+  changed_when: false
+  failed_when: false
+  when: gdm_installed.rc == 0
+
+- name: "Extract dconf db directory"
+  ansible.builtin.set_fact:
+    dconf_lock_dir: "{{ idle_delay_keyfile.stdout | regex_replace('/[^/]+$', '') }}"
+  when: idle_delay_keyfile.stdout != ""
+
+- name: "Ensure locks directory exists"
+  ansible.builtin.file:
+    path: "{{ dconf_lock_dir }}/locks"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  when: dconf_lock_dir is defined
+
+- name: "Create lock file to prevent override of idle-delay and lock-delay"
+  ansible.builtin.copy:
+    dest: "{{ dconf_lock_dir }}/locks/00-screensaver"
+    content: |
+      # Lock desktop screensaver settings
+      /org/gnome/desktop/session/idle-delay
+      /org/gnome/desktop/screensaver/lock-delay
+    owner: root
+    group: root
+    mode: '0644'
+  when: dconf_lock_dir is defined
+
+- name: "Run dconf update"
+  ansible.builtin.command: dconf update
+  when: dconf_lock_dir is defined
 
 
 
