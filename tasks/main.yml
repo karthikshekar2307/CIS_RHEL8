@@ -1078,3 +1078,22 @@
     msg: "System needs to be rebooted to fully apply updated crypto policy."
   when: crypto_policy_sha1 is changed
 
+- name: CIS 1.6.4 | Create NO-WEAKMAC policy module to disable MACs less than 128 bits
+  ansible.builtin.copy:
+    dest: /etc/crypto-policies/policies/modules/NO-WEAKMAC.pmod
+    content: |
+      # This is a subpolicy to disable weak MACs (<128-bit)
+      mac = -*-64
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: CIS 1.6.4 | Apply crypto policy with NO-WEAKMAC subpolicy
+  ansible.builtin.command: update-crypto-policies --set DEFAULT:NO-SHA1:NO-SSHCBC:NO-WEAKMAC
+  register: apply_crypto_policy
+  changed_when: "'DEFAULT:NO-SHA1:NO-SSHCBC:NO-WEAKMAC' not in apply_crypto_policy.stdout"
+
+- name: CIS 1.6.4 | Notify reboot is required to apply new crypto policy
+  ansible.builtin.debug:
+    msg: "System must be rebooted to fully apply NO-WEAKMAC cryptographic settings."
+  when: apply_crypto_policy is changed
