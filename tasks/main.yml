@@ -1138,3 +1138,11 @@
     owner: root
     group: root
     mode: '0644'
+
+- name: CIS 1.7.4 | Ensure /etc/motd has correct permissions and ownership
+  file:
+    path: /etc/motd
+    owner: root
+    group: root
+    mode: '0644'
+    state: file
