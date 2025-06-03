@@ -1325,7 +1325,8 @@
 - name: "Extract dconf db directory"
   ansible.builtin.set_fact:
     dconf_lock_dir: "{{ idle_delay_keyfile.stdout | regex_replace('/[^/]+$', '') }}"
-  when: idle_delay_keyfile.stdout != ""
+  when: idle_delay_keyfile is defined and (idle_delay_keyfile.stdout | default('')) != ""
+
 
 - name: "Ensure locks directory exists"
   ansible.builtin.file:
