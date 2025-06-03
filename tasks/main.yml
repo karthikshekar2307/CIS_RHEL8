@@ -1121,3 +1121,11 @@
     msg: "System reboot is required to fully apply updated crypto policy (NO-SHA1, NO-SSHCBC, NO-WEAKMAC)."
   when: apply_crypto_policy is changed
 
+- name: CIS 1.7.2 | Set local login warning banner in /etc/issue
+  copy:
+    dest: /etc/issue
+    content: |
+      Authorized users only. All activity may be monitored and reported.
+    owner: root
+    group: root
+    mode: '0644'
