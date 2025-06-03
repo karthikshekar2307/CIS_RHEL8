@@ -1524,5 +1524,34 @@
     - level1-workstation
     - cis_2.1.1
 
+- name: "CIS 2.1.2 | Ensure chrony is configured"
+  block:
+
+    - name: "Check if chrony.conf has server or pool entries"
+      command: grep -Prs -- '^\s*(server|pool)\s+[^#\n\r]+' /etc/chrony.conf
+      register: chrony_configured
+      failed_when: false
+      changed_when: false
+
+    - name: "Configure chrony with remote NTP servers if missing"
+      blockinfile:
+        path: /etc/chrony.conf
+        marker: "# {mark} ANSIBLE MANAGED BLOCK: CIS 2.1.2 NTP Configuration"
+        block: |
+          server time1.google.com iburst
+          server time2.google.com iburst
+          server time3.google.com iburst
+      when: chrony_configured.rc != 0
+
+    - name: "Ensure chronyd service is enabled and running"
+      service:
+        name: chronyd
+        state: started
+        enabled: true
+
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_2.1.2
 
 
