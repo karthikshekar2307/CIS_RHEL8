@@ -383,5 +383,14 @@
   tags:
     - cis_1.1.2.1.2
 
+- name: Ensure /tmp is mounted with nosuid option
+  mount:
+    path: /tmp
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,rw,nosuid,nodev,noexec,relatime,size=2G
+    state: mounted
+  tags:
+    - cis_1.1.2.1.3
 
 
