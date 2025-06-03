@@ -955,5 +955,13 @@
     - level1-workstation
     - coredump
 
+- name: "CIS 1.4.4 | Ensure core dump storage is disabled (Storage=none)"
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/coredump.conf
+    regexp: '^#?Storage='
+    line: 'Storage=none'
+    create: yes
+    backup: yes
+  #notify: Reload systemd-coredump
 
 
