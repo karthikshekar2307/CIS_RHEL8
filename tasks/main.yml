@@ -1172,12 +1172,8 @@
 
 - name: CIS 1.8.1 | Ensure GNOME Display Manager (GDM) is removed
   ansible.builtin.shell: dnf remove -y gdm
-  register: gdm_remove
-  changed_when: "'Removed:' in gdm_remove.stdout or gdm_remove.rc == 0"
-  failed_when: "gdm_remove.rc != 0 and 'No match for argument: gdm' not in gdm_remove.stderr"
-  tags:
-    - level2
-    - gdm
+
+
 
 
 
