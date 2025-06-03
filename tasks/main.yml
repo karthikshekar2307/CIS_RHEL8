@@ -166,4 +166,49 @@
     - workstation
     - cis_1.1.1.4
 
+# 1.1.1.5 Ensure jffs2 kernel module is not available
+- name: Check if jffs2 kernel module is available
+  command: modinfo jffs2
+  register: jffs2_module
+  ignore_errors: true
+  tags:
+    - level1
+    - server
+    - workstation
+    - cis_1.1.1.5
+
+- name: Unload jffs2 kernel module if loaded
+  command: modprobe -r jffs2
+  when: jffs2_module.rc == 0
+  ignore_errors: true
+  tags:
+    - level1
+    - server
+    - workstation
+    - cis_1.1.1.5
+
+- name: Blacklist jffs2 module
+  lineinfile:
+    path: /etc/modprobe.d/jffs2.conf
+    line: "blacklist jffs2"
+    create: yes
+  when: jffs2_module.rc == 0
+  tags:
+    - level1
+    - server
+    - workstation
+    - cis_1.1.1.5
+
+- name: Prevent jffs2 module from loading
+  lineinfile:
+    path: /etc/modprobe.d/jffs2.conf
+    line: "install jffs2 /bin/false"
+    create: yes
+  when: jffs2_module.rc == 0
+  tags:
+    - level1
+    - server
+    - workstation
+    - cis_1.1.1.5
+
 
