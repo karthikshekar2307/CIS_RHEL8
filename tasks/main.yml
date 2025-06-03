@@ -1056,4 +1056,25 @@
   ansible.builtin.command: update-crypto-policies
   when: legacy_crypto_policy_check.rc == 0
 
+- name: CIS 1.6.2 | Create NO-SHA1 policy module to disable SHA1
+  ansible.builtin.copy:
+    dest: /etc/crypto-policies/policies/modules/NO-SHA1.pmod
+    content: |
+      # This is a subpolicy dropping the SHA1 hash and signature support
+      hash = -SHA1
+      sign = -*-SHA1
+      sha1_in_certs = 0
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: CIS 1.6.2 | Apply crypto policy with NO-SHA1 module
+  ansible.builtin.command: update-crypto-policies --set DEFAULT:NO-SHA1
+  register: crypto_policy_sha1
+  changed_when: "'DEFAULT:NO-SHA1' not in crypto_policy_sha1.stdout"
+
+- name: CIS 1.6.2 | Reboot system to activate crypto policy (manual or controlled)
+  ansible.builtin.debug:
+    msg: "System needs to be rebooted to fully apply updated crypto policy."
+  when: crypto_policy_sha1 is changed
 
