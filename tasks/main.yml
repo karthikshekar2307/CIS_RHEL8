@@ -519,3 +519,22 @@
     dump: 0
     passno: 0
 
+- name: Ensure /var/tmp is mounted with nodev option
+  mount:
+    path: /var/tmp
+    src: /dev/xvdf1               # 🔁 Replace with the correct device
+    fstype: ext4                  # 🔁 Adjust if you're using a different filesystem
+    opts: defaults,nodev,nosuid,noexec,relatime
+    state: mounted
+    dump: 0
+    passno: 0
+
+- name: Ensure /var/tmp fstab entry is present with nodev option
+  mount:
+    path: /var/tmp
+    src: /dev/xvdf1               # 🔁 Replace as needed
+    fstype: ext4
+    opts: defaults,nodev,nosuid,noexec,relatime
+    state: present
+    dump: 0
+    passno: 0
