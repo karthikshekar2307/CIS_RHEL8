@@ -887,4 +887,13 @@
   loop: "{{ yum_repo_files_for_repo_gpgcheck.files }}"
   when: yum_repo_files_for_repo_gpgcheck.matched > 0
 
+- name: "CIS 1.2.4 | Audit: Ensure package manager repositories are configured"
+  ansible.builtin.shell: "dnf repolist --quiet | grep -E '^[a-zA-Z0-9_-]+\\s+.+\\s+[0-9]+'"
+  register: repo_check
+  changed_when: false
+  failed_when: repo_check.stdout_lines | length == 0
+  tags:
+    - level1
+    - section1.2.4
+
 
