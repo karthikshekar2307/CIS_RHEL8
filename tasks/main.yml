@@ -1045,8 +1045,8 @@
 - name: CIS 1.6.1 | Check if system-wide crypto policy is LEGACY
   ansible.builtin.command: grep -Pi '^\h*LEGACY\b' /etc/crypto-policies/config
   register: legacy_crypto_policy_check
-  ignore_errors: true
   changed_when: false
+  failed_when: false
 
 - name: CIS 1.6.1 | Remediate if system-wide crypto policy is LEGACY
   ansible.builtin.command: update-crypto-policies --set DEFAULT
@@ -1055,4 +1055,5 @@
 - name: CIS 1.6.1 | Ensure crypto policy changes are applied
   ansible.builtin.command: update-crypto-policies
   when: legacy_crypto_policy_check.rc == 0
+
 
