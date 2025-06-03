@@ -350,3 +350,27 @@
     - workstation
     - cis_1.1.1.8
 
+# 1.1.2.1.1 Ensure /tmp is a separate partition using tmpfs
+- name: Ensure systemd tmp.mount is unmasked
+  command: systemctl unmask tmp.mount
+  ignore_errors: true
+  tags:
+    - cis_1.1.2.1.1
+
+- name: Ensure /tmp mount directory exists
+  file:
+    path: /tmp
+    state: directory
+    mode: '1777'
+
+- name: Add /tmp entry to /etc/fstab
+  mount:
+    path: /tmp
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,rw,nosuid,nodev,noexec,relatime,size=2G
+    state: mounted
+  tags:
+    - cis_1.1.2.1.1
+
+
