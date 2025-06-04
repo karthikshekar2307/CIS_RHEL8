@@ -1554,4 +1554,25 @@
     - level1-workstation
     - cis_2.1.2
 
+- name: "CIS 2.1.3 | Ensure chrony is not run as the root user"
+  block:
+
+    - name: "Ensure chronyd OPTIONS is set to run as 'chrony' user"
+      lineinfile:
+        path: /etc/sysconfig/chronyd
+        regexp: '^OPTIONS='
+        line: 'OPTIONS="-u chrony"'
+        create: yes
+        backup: yes
+
+    - name: "Reload or restart chronyd service"
+      systemd:
+        name: chronyd
+        state: restarted
+        daemon_reload: yes
+
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_2.1.3
 
