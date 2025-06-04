@@ -2212,3 +2212,54 @@
   tags:
     - level1-server
     - cis_2.2.17
+
+- name: "CIS 2.2.18 | Ensure web server services (httpd, nginx) are not in use"
+  block:
+
+    - name: "Check if httpd package is installed"
+      command: rpm -q httpd
+      register: httpd_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Check if nginx package is installed"
+      command: rpm -q nginx
+      register: nginx_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove httpd and nginx if installed"
+      yum:
+        name:
+          - httpd
+          - nginx
+        state: absent
+      when: httpd_installed.rc == 0 or nginx_installed.rc == 0
+
+    - name: "Stop and mask httpd.socket, httpd.service, and nginx.service if packages are present for dependency"
+      block:
+        - name: "Stop web server services"
+          systemd:
+            name: "{{ item }}"
+            state: stopped
+            enabled: false
+          loop:
+            - httpd.socket
+            - httpd.service
+            - nginx.service
+          ignore_errors: true
+
+        - name: "Mask web server services"
+          systemd:
+            name: "{{ item }}"
+            masked: true
+          loop:
+            - httpd.socket
+            - httpd.service
+            - nginx.service
+          ignore_errors: true
+      when: httpd_installed.rc == 0 or nginx_installed.rc == 0
+
+  tags:
+    - level1-server
+    - cis_2.2.18
