@@ -2066,3 +2066,18 @@
   tags:
     - level1-server
     - cis_2.2.13
+
+- name: "CIS 2.2.14 | Ensure SNMP services are not in use"
+  block:
+
+    - name: "Check if net-snmp package is installed"
+      command: rpm -q net-snmp
+      register: snmp_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove net-snmp package if installed"
+      yum:
+        name: net-snmp
+        state: absent
+      when: snmp_in_
