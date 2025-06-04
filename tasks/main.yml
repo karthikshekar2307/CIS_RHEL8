@@ -2674,16 +2674,27 @@
     group: root
     mode: '0644'
 
-- name: CIS 3.3.2 - Apply runtime setting: net.ipv4.conf.all.send_redirects
+- name: "CIS 3.3.2 - Disable ICMP redirect sending (persistent config)"
+  copy:
+    dest: /etc/sysctl.d/60-cis-send-redirects.conf
+    content: |
+      net.ipv4.conf.all.send_redirects = 0
+      net.ipv4.conf.default.send_redirects = 0
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "CIS 3.3.2 - Apply runtime setting: net.ipv4.conf.all.send_redirects"
   sysctl:
     name: net.ipv4.conf.all.send_redirects
     value: '0'
     state: present
     reload: yes
 
-- name: CIS 3.3.2 - Apply runtime setting: net.ipv4.conf.default.send_redirects
+- name: "CIS 3.3.2 - Apply runtime setting: net.ipv4.conf.default.send_redirects"
   sysctl:
     name: net.ipv4.conf.default.send_redirects
     value: '0'
     state: present
     reload: yes
+
