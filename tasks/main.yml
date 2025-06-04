@@ -2263,3 +2263,38 @@
   tags:
     - level1-server
     - cis_2.2.18
+
+- name: "CIS 2.2.19 | Ensure xinetd services are not in use"
+  block:
+
+    - name: "Check if xinetd package is installed"
+      command: rpm -q xinetd
+      register: xinetd_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove xinetd package if installed"
+      yum:
+        name: xinetd
+        state: absent
+      when: xinetd_installed.rc == 0
+
+    - name: "Stop and mask xinetd.service if required as a dependency"
+      block:
+        - name: "Stop xinetd.service"
+          systemd:
+            name: xinetd.service
+            state: stopped
+            enabled: false
+          ignore_errors: true
+
+        - name: "Mask xinetd.service"
+          systemd:
+            name: xinetd.service
+            masked: true
+          ignore_errors: true
+      when: xinetd_installed.rc == 0
+
+  tags:
+    - level1-server
+    - cis_2.2.19
