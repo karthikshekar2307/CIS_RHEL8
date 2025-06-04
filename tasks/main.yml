@@ -2820,9 +2820,14 @@
     state: present
     reload: yes
 
-- name: CIS 3.3.8 - Persistently disable source routed packets
+# Gather sysctl facts (required for conditional IPv6 checks)
+- name: Gather sysctl facts
+  ansible.posix.sysctl_facts:
+
+# CIS 3.3.8 - Persistently disable source routed packet acceptance
+- name: CIS 3.3.8 - Set persistent settings to reject source-routed packets
   copy:
-    dest: /etc/sysctl.d/60-cis-accept_source_route.conf
+    dest: /etc/sysctl.d/60-cis-accept-source-route.conf
     content: |
       net.ipv4.conf.all.accept_source_route = 0
       net.ipv4.conf.default.accept_source_route = 0
@@ -2832,6 +2837,7 @@
     group: root
     mode: '0644'
 
+# CIS 3.3.8 - Apply runtime settings for IPv4
 - name: CIS 3.3.8 - Apply runtime net.ipv4.conf.all.accept_source_route
   sysctl:
     name: net.ipv4.conf.all.accept_source_route
@@ -2846,13 +2852,14 @@
     state: present
     reload: yes
 
+# CIS 3.3.8 - Apply runtime settings for IPv6 (only if IPv6 is enabled)
 - name: CIS 3.3.8 - Apply runtime net.ipv6.conf.all.accept_source_route (if IPv6 enabled)
   sysctl:
     name: net.ipv6.conf.all.accept_source_route
     value: '0'
     state: present
     reload: yes
-  when: ansible_facts['sysctl']['net.ipv6.conf.all.disable_ipv6'] == '0'
+  when: ansible_facts.sysctl['net.ipv6.conf.all.disable_ipv6'] == '0'
 
 - name: CIS 3.3.8 - Apply runtime net.ipv6.conf.default.accept_source_route (if IPv6 enabled)
   sysctl:
@@ -2860,12 +2867,12 @@
     value: '0'
     state: present
     reload: yes
-  when: ansible_facts['sysctl']['net.ipv6.conf.all.disable_ipv6'] == '0'
+  when: ansible_facts.sysctl['net.ipv6.conf.all.disable_ipv6'] == '0'
 
-
-- name: CIS 3.3.9 - Persistently enable logging of suspicious packets
+# CIS 3.3.9 - Persistently enable logging of suspicious (martian) packets
+- name: CIS 3.3.9 - Set persistent settings to log suspicious packets
   copy:
-    dest: /etc/sysctl.d/60-cis-log_martians.conf
+    dest: /etc/sysctl.d/60-cis-log-martians.conf
     content: |
       net.ipv4.conf.all.log_martians = 1
       net.ipv4.conf.default.log_martians = 1
@@ -2873,6 +2880,7 @@
     group: root
     mode: '0644'
 
+# CIS 3.3.9 - Apply runtime settings
 - name: CIS 3.3.9 - Apply runtime net.ipv4.conf.all.log_martians
   sysctl:
     name: net.ipv4.conf.all.log_martians
@@ -2886,5 +2894,3 @@
     value: '1'
     state: present
     reload: yes
-
-
