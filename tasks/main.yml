@@ -2325,16 +2325,15 @@
     executable: /bin/bash
 
 
-- name: Ensure Postfix is configured for local-only mode (inet_interfaces = loopback-only)
+- name: Configure Postfix to listen only on loopback
   lineinfile:
     path: /etc/postfix/main.cf
-    regexp: '^inet_interfaces\s*='
     line: 'inet_interfaces = loopback-only'
-    state: present
+    regexp: '^inet_interfaces\s*='
     insertafter: '^#.*RECEIVING MAIL'
+    state: present
     backup: yes
-  notify: Restart postfix
-  when: ansible_facts.packages.postfix is defined
+
 
 - name: Ensure Postfix service is enabled and running
   service:
