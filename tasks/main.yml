@@ -1943,3 +1943,44 @@
     - level1-server
     - level1-workstation
     - cis_2.2.10
+
+- name: "CIS 2.2.11 | Ensure print server services (CUPS) are not in use"
+  block:
+
+    - name: "Check if cups package is installed"
+      command: rpm -q cups
+      register: cups_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove cups package if installed"
+      yum:
+        name: cups
+        state: absent
+      when: cups_installed.rc == 0
+
+    - name: "Stop and mask cups.socket and cups.service if package is required"
+      block:
+        - name: "Stop cups.socket and cups.service"
+          systemd:
+            name: "{{ item }}"
+            state: stopped
+            enabled: false
+          loop:
+            - cups.socket
+            - cups.service
+          ignore_errors: true
+
+        - name: "Mask cups.socket and cups.service"
+          systemd:
+            name: "{{ item }}"
+            masked: true
+          loop:
+            - cups.socket
+            - cups.service
+          ignore_errors: true
+      when: cups_installed.rc == 0
+
+  tags:
+    - level1-server
+    - cis_2.2.11
