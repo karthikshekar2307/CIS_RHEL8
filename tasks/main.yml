@@ -2729,3 +2729,45 @@
     value: '1'
     state: present
     reload: yes
+
+- - name: "CIS 3.3.5 - Persistently disable ICMP redirect acceptance"
+  copy:
+    dest: /etc/sysctl.d/60-cis-accept-redirects.conf
+    content: |
+      net.ipv4.conf.all.accept_redirects = 0
+      net.ipv4.conf.default.accept_redirects = 0
+      net.ipv6.conf.all.accept_redirects = 0
+      net.ipv6.conf.default.accept_redirects = 0
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "CIS 3.3.5 - Apply runtime setting: net.ipv4.conf.all.accept_redirects"
+  sysctl:
+    name: net.ipv4.conf.all.accept_redirects
+    value: '0'
+    state: present
+    reload: yes
+
+- name: "CIS 3.3.5 - Apply runtime setting: net.ipv4.conf.default.accept_redirects"
+  sysctl:
+    name: net.ipv4.conf.default.accept_redirects
+    value: '0'
+    state: present
+    reload: yes
+
+- name: "CIS 3.3.5 - Apply runtime setting: net.ipv6.conf.all.accept_redirects"
+  sysctl:
+    name: net.ipv6.conf.all.accept_redirects
+    value: '0'
+    state: present
+    reload: yes
+  when: ansible_facts['sysctl']['net.ipv6.conf.all.disable_ipv6'] is defined and ansible_facts['sysctl']['net.ipv6.conf.all.disable_ipv6'] == '0'
+
+- name: "CIS 3.3.5 - Apply runtime setting: net.ipv6.conf.default.accept_redirects"
+  sysctl:
+    name: net.ipv6.conf.default.accept_redirects
+    value: '0'
+    state: present
+    reload: yes
+  when: ansible_facts['sysctl']['net.ipv6.conf.all.disable_ipv6'] is defined and ansible_facts['sysctl']['net.ipv6.conf.all.disable_ipv6'] == '0'
