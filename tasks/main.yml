@@ -2820,81 +2820,117 @@
     state: present
     reload: yes
 
-# Gather sysctl facts using setup module (for IPv6 checks)
-- name: Gather sysctl facts using setup module
-  setup:
-    filter: ansible_sysctl
+# CIS 3.3.8 - Ensure source routed packets are not accepted
 
-# CIS 3.3.8 - Disable source routed packets (persistent)
-- name: CIS 3.3.8 - Persistently disable source routed packets (IPv4 & IPv6)
-  copy:
-    dest: /etc/sysctl.d/60-cis-accept-source-route.conf
-    content: |
-      net.ipv4.conf.all.accept_source_route = 0
-      net.ipv4.conf.default.accept_source_route = 0
-      net.ipv6.conf.all.accept_source_route = 0
-      net.ipv6.conf.default.accept_source_route = 0
-    owner: root
-    group: root
-    mode: '0644'
-
-# CIS 3.3.8 - Apply runtime: net.ipv4.conf.all.accept_source_route
-- name: CIS 3.3.8 - Apply runtime net.ipv4.conf.all.accept_source_route
-  sysctl:
+# Step 1: Apply runtime sysctl settings for IPv4
+- name: CIS 3.3.8 - Apply runtime: net.ipv4.conf.all.accept_source_route
+  ansible.posix.sysctl:
     name: net.ipv4.conf.all.accept_source_route
     value: '0'
     state: present
     reload: yes
 
-# CIS 3.3.8 - Apply runtime: net.ipv4.conf.default.accept_source_route
-- name: CIS 3.3.8 - Apply runtime net.ipv4.conf.default.accept_source_route
-  sysctl:
+- name: CIS 3.3.8 - Apply runtime: net.ipv4.conf.default.accept_source_route
+  ansible.posix.sysctl:
     name: net.ipv4.conf.default.accept_source_route
     value: '0'
     state: present
     reload: yes
 
-# CIS 3.3.8 - Apply runtime: net.ipv6.conf.all.accept_source_route (if IPv6 enabled)
+# Step 2: Apply persistent settings for IPv4
+- name: CIS 3.3.8 - Persist net.ipv4.conf.all.accept_source_route
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.d/60-netipv4_sysctl.conf
+    regexp: '^net\.ipv4\.conf\.all\.accept_source_route'
+    line: 'net.ipv4.conf.all.accept_source_route = 0'
+    create: yes
+    mode: '0644'
+
+- name: CIS 3.3.8 - Persist net.ipv4.conf.default.accept_source_route
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.d/60-netipv4_sysctl.conf
+    regexp: '^net\.ipv4\.conf\.default\.accept_source_route'
+    line: 'net.ipv4.conf.default.accept_source_route = 0'
+    create: yes
+    mode: '0644'
+
+# Step 3: Gather runtime sysctl values to check if IPv6 is enabled
+- name: CIS 3.3.8 - Gather sysctl values to determine if IPv6 is enabled
+  ansible.builtin.command: sysctl -a
+  register: sysctl_output
+  changed_when: false
+
+- name: CIS 3.3.8 - Set fact to detect if IPv6 is disabled
+  ansible.builtin.set_fact:
+    ipv6_disabled: "{{ 'net.ipv6.conf.all.disable_ipv6 = 1' in sysctl_output.stdout }}"
+
+# Step 4: Apply runtime sysctl settings for IPv6 if enabled
 - name: CIS 3.3.8 - Apply runtime net.ipv6.conf.all.accept_source_route (if IPv6 enabled)
-  sysctl:
+  ansible.posix.sysctl:
     name: net.ipv6.conf.all.accept_source_route
     value: '0'
     state: present
     reload: yes
-  when: ansible_sysctl['net.ipv6.conf.all.disable_ipv6'] == '0'
+  when: not ipv6_disabled
 
-# CIS 3.3.8 - Apply runtime: net.ipv6.conf.default.accept_source_route (if IPv6 enabled)
-- name: CIS 3.3.8 - Apply runtime net.ipv6.conf.default.accept_source_route
-  sysctl:
+- name: CIS 3.3.8 - Apply runtime net.ipv6.conf.default.accept_source_route (if IPv6 enabled)
+  ansible.posix.sysctl:
     name: net.ipv6.conf.default.accept_source_route
     value: '0'
     state: present
     reload: yes
-  when: ansible_sysctl['net.ipv6.conf.all.disable_ipv6'] == '0'
+  when: not ipv6_disabled
 
-# CIS 3.3.9 - Ensure suspicious packets are logged (persistent)
-- name: CIS 3.3.9 - Persistently enable martian packet logging
-  copy:
-    dest: /etc/sysctl.d/60-cis-log-martians.conf
-    content: |
-      net.ipv4.conf.all.log_martians = 1
-      net.ipv4.conf.default.log_martians = 1
-    owner: root
-    group: root
+# Step 5: Apply persistent settings for IPv6 if enabled
+- name: CIS 3.3.8 - Persist net.ipv6.conf.all.accept_source_route (if IPv6 enabled)
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.d/60-netipv6_sysctl.conf
+    regexp: '^net\.ipv6\.conf\.all\.accept_source_route'
+    line: 'net.ipv6.conf.all.accept_source_route = 0'
+    create: yes
     mode: '0644'
+  when: not ipv6_disabled
 
-# CIS 3.3.9 - Apply runtime: net.ipv4.conf.all.log_martians
+- name: CIS 3.3.8 - Persist net.ipv6.conf.default.accept_source_route (if IPv6 enabled)
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.d/60-netipv6_sysctl.conf
+    regexp: '^net\.ipv6\.conf\.default\.accept_source_route'
+    line: 'net.ipv6.conf.default.accept_source_route = 0'
+    create: yes
+    mode: '0644'
+  when: not ipv6_disabled
+
+
+# CIS 3.3.9 - Ensure suspicious packets are logged
+
+# Step 1: Apply runtime sysctl settings
 - name: CIS 3.3.9 - Apply runtime net.ipv4.conf.all.log_martians
-  sysctl:
+  ansible.posix.sysctl:
     name: net.ipv4.conf.all.log_martians
     value: '1'
     state: present
     reload: yes
 
-# CIS 3.3.9 - Apply runtime: net.ipv4.conf.default.log_martians
 - name: CIS 3.3.9 - Apply runtime net.ipv4.conf.default.log_martians
-  sysctl:
+  ansible.posix.sysctl:
     name: net.ipv4.conf.default.log_martians
     value: '1'
     state: present
     reload: yes
+
+# Step 2: Apply persistent settings
+- name: CIS 3.3.9 - Persist net.ipv4.conf.all.log_martians
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.d/60-netipv4_sysctl.conf
+    regexp: '^net\.ipv4\.conf\.all\.log_martians'
+    line: 'net.ipv4.conf.all.log_martians = 1'
+    create: yes
+    mode: '0644'
+
+- name: CIS 3.3.9 - Persist net.ipv4.conf.default.log_martians
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.d/60-netipv4_sysctl.conf
+    regexp: '^net\.ipv4\.conf\.default\.log_martians'
+    line: 'net.ipv4.conf.default.log_martians = 1'
+    create: yes
+    mode: '0644'
