@@ -1871,3 +1871,39 @@
     - level1-server
     - level1-workstation
     - cis_2.2.8
+
+- name: "CIS 2.2.9 | Ensure NFS services are not in use"
+  block:
+
+    - name: "Check if nfs-utils package is installed"
+      command: rpm -q nfs-utils
+      register: nfs_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove nfs-utils package if installed"
+      yum:
+        name: nfs-utils
+        state: absent
+      when: nfs_installed.rc == 0
+
+    - name: "Stop and mask nfs-server service if package is required"
+      block:
+        - name: "Stop nfs-server.service"
+          systemd:
+            name: nfs-server.service
+            state: stopped
+            enabled: false
+          ignore_errors: true
+
+        - name: "Mask nfs-server.service"
+          systemd:
+            name: nfs-server.service
+            masked: true
+          ignore_errors: true
+      when: nfs_installed.rc == 0
+
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_2.2.9
