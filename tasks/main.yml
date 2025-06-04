@@ -2578,3 +2578,21 @@
   register: unload_dccp
   failed_when: false
   changed_when: unload_dccp.rc == 0
+
+- name: CIS 3.2.2 - Prevent TIPC kernel module from loading
+  copy:
+    dest: /etc/modprobe.d/tipc.conf
+    content: |
+      install tipc /bin/false
+      blacklist tipc
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: CIS 3.2.2 - Unload tipc module if currently loaded
+  shell: modprobe -r tipc
+  args:
+    executable: /bin/bash
+  register: unload_tipc
+  failed_when: false
+  changed_when: unload_tipc.rc == 0
