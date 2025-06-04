@@ -2411,3 +2411,25 @@
     executable: /bin/bash
   ignore_errors: true
 
+- name: Ensure NIS client is not installed (ypbind)
+  package:
+    name: ypbind
+    state: absent
+  ignore_errors: true  # Useful in air-gapped or repo-issue environments
+
+- name: Check if ypbind is installed
+  shell: rpm -q ypbind
+  register: nis_check
+  ignore_errors: true
+
+- name: Report NIS client installation status
+  debug:
+    msg: "{{ nis_check.stdout if nis_check.rc == 0 else 'ypbind is not installed' }}"
+
+- name: Remove ypbind with --nogpgcheck (RHUI workaround)
+  shell: dnf remove -y ypbind --nogpgcheck
+  args:
+    executable: /bin/bash
+  ignore_errors: true
+
+
