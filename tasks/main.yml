@@ -1907,3 +1907,39 @@
     - level1-server
     - level1-workstation
     - cis_2.2.9
+
+- name: "CIS 2.2.10 | Ensure NIS server services are not in use"
+  block:
+
+    - name: "Check if ypserv package is installed"
+      command: rpm -q ypserv
+      register: ypserv_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove ypserv package if installed"
+      yum:
+        name: ypserv
+        state: absent
+      when: ypserv_installed.rc == 0
+
+    - name: "Stop and mask ypserv.service if package is required"
+      block:
+        - name: "Stop ypserv.service"
+          systemd:
+            name: ypserv.service
+            state: stopped
+            enabled: false
+          ignore_errors: true
+
+        - name: "Mask ypserv.service"
+          systemd:
+            name: ypserv.service
+            masked: true
+          ignore_errors: true
+      when: ypserv_installed.rc == 0
+
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_2.2.10
