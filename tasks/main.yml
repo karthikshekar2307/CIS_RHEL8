@@ -2614,3 +2614,21 @@
   register: unload_rds
   failed_when: false
   changed_when: unload_rds.rc == 0
+
+- name: CIS 3.2.4 - Prevent SCTP kernel module from loading
+  copy:
+    dest: /etc/modprobe.d/sctp.conf
+    content: |
+      install sctp /bin/false
+      blacklist sctp
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: CIS 3.2.4 - Unload SCTP module if currently loaded
+  shell: modprobe -r sctp
+  args:
+    executable: /bin/bash
+  register: unload_sctp
+  failed_when: false
+  changed_when: unload_sctp.rc == 0
