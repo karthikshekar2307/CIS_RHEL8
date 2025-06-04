@@ -1751,3 +1751,37 @@
     - level1-server
     - level1-workstation
     - cis_2.2.5
+
+- name: "CIS 2.2.6 | Ensure samba file server services are not in use"
+  block:
+
+    - name: "Check if samba package is installed"
+      command: rpm -q samba
+      register: samba_installed
+      ignore_errors: yes
+      changed_when: false
+
+    - name: "Remove samba package if installed"
+      yum:
+        name: samba
+        state: absent
+      when: samba_installed.rc == 0
+
+    - name: "Stop and mask smb.service if samba package is installed and cannot be removed"
+      block:
+        - name: "Stop smb.service"
+          systemd:
+            name: smb.service
+            state: stopped
+            enabled: false
+
+        - name: "Mask smb.service"
+          systemd:
+            name: smb.service
+            masked: true
+      when: samba_installed.rc == 0
+
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_2.2.6
