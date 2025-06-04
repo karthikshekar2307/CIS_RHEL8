@@ -2080,4 +2080,24 @@
       yum:
         name: net-snmp
         state: absent
-      when: snmp_in_
+      when: snmp_installed.rc == 0
+
+    - name: "Stop and mask snmpd.service if package is required"
+      block:
+        - name: "Stop snmpd.service"
+          systemd:
+            name: snmpd.service
+            state: stopped
+            enabled: false
+          ignore_errors: true
+
+        - name: "Mask snmpd.service"
+          systemd:
+            name: snmpd.service
+            masked: true
+          ignore_errors: true
+      when: snmp_installed.rc == 0
+
+  tags:
+    - level1-server
+    - cis_2.2.14
