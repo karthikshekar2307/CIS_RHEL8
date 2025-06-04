@@ -1717,3 +1717,37 @@
     - level1-server
     - level1-workstation
     - cis_2.2.4
+
+- name: "CIS 2.2.5 | Ensure dnsmasq services are not in use"
+  block:
+
+    - name: "Check if dnsmasq package is installed"
+      command: rpm -q dnsmasq
+      register: dnsmasq_installed
+      ignore_errors: yes
+      changed_when: false
+
+    - name: "Remove dnsmasq package if installed"
+      yum:
+        name: dnsmasq
+        state: absent
+      when: dnsmasq_installed.rc == 0
+
+    - name: "Stop and mask dnsmasq.service if package is installed and cannot be removed"
+      block:
+        - name: "Stop dnsmasq.service"
+          systemd:
+            name: dnsmasq.service
+            state: stopped
+            enabled: false
+
+        - name: "Mask dnsmasq.service"
+          systemd:
+            name: dnsmasq.service
+            masked: true
+      when: dnsmasq_installed.rc == 0
+
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_2.2.5
