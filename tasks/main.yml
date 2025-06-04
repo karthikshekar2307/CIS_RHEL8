@@ -2390,4 +2390,24 @@
   debug:
     msg: "{{ ftp_check.stdout if ftp_check.rc == 0 else 'FTP is not installed' }}"
 
+- name: Ensure LDAP client is not installed (openldap-clients)
+  package:
+    name: openldap-clients
+    state: absent
+  ignore_errors: true  # Handles missing repos or package gracefully
+
+- name: Check if openldap-clients is installed
+  shell: rpm -q openldap-clients
+  register: ldap_check
+  ignore_errors: true
+
+- name: Report LDAP client installation status
+  debug:
+    msg: "{{ ldap_check.stdout if ldap_check.rc == 0 else 'openldap-clients is not installed' }}"
+
+- name: Remove openldap-clients with --nogpgcheck (RHUI workaround)
+  shell: dnf remove -y openldap-clients --nogpgcheck
+  args:
+    executable: /bin/bash
+  ignore_errors: true
 
