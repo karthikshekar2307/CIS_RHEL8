@@ -2596,3 +2596,21 @@
   register: unload_tipc
   failed_when: false
   changed_when: unload_tipc.rc == 0
+
+- name: CIS 3.2.3 - Prevent RDS kernel module from loading
+  copy:
+    dest: /etc/modprobe.d/rds.conf
+    content: |
+      install rds /bin/false
+      blacklist rds
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: CIS 3.2.3 - Unload rds module if currently loaded
+  shell: modprobe -r rds
+  args:
+    executable: /bin/bash
+  register: unload_rds
+  failed_when: false
+  changed_when: unload_rds.rc == 0
