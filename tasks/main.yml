@@ -1984,3 +1984,44 @@
   tags:
     - level1-server
     - cis_2.2.11
+
+- name: "CIS 2.2.12 | Ensure rpcbind services are not in use"
+  block:
+
+    - name: "Check if rpcbind package is installed"
+      command: rpm -q rpcbind
+      register: rpcbind_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove rpcbind package if installed"
+      yum:
+        name: rpcbind
+        state: absent
+      when: rpcbind_installed.rc == 0
+
+    - name: "Stop and mask rpcbind.socket and rpcbind.service if package is required"
+      block:
+        - name: "Stop rpcbind.socket and rpcbind.service"
+          systemd:
+            name: "{{ item }}"
+            state: stopped
+            enabled: false
+          loop:
+            - rpcbind.socket
+            - rpcbind.service
+          ignore_errors: true
+
+        - name: "Mask rpcbind.socket and rpcbind.service"
+          systemd:
+            name: "{{ item }}"
+            masked: true
+          loop:
+            - rpcbind.socket
+            - rpcbind.service
+          ignore_errors: true
+      when: rpcbind_installed.rc == 0
+
+  tags:
+    - level1-server
+    - cis_2.2.12
