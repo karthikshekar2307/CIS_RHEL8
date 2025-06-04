@@ -2560,3 +2560,21 @@
     masked: true
   when: bluez_status.rc == 0
   ignore_errors: true
+
+- name: CIS 3.2.1 - Prevent DCCP kernel module from loading
+  copy:
+    dest: /etc/modprobe.d/dccp.conf
+    content: |
+      install dccp /bin/false
+      blacklist dccp
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: CIS 3.2.1 - Unload dccp module if loaded
+  shell: modprobe -r dccp
+  args:
+    executable: /bin/bash
+  register: unload_dccp
+  failed_when: false
+  changed_when: unload_dccp.rc == 0
