@@ -2713,3 +2713,19 @@
     value: '1'
     state: present
     reload: yes
+
+- name: "CIS 3.3.4 - Persistently ignore broadcast ICMP requests"
+  copy:
+    dest: /etc/sysctl.d/60-cis-ignore-broadcast-icmp.conf
+    content: |
+      net.ipv4.icmp_echo_ignore_broadcasts = 1
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "CIS 3.3.4 - Apply runtime setting: net.ipv4.icmp_echo_ignore_broadcasts"
+  sysctl:
+    name: net.ipv4.icmp_echo_ignore_broadcasts
+    value: '1'
+    state: present
+    reload: yes
