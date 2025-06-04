@@ -2341,4 +2341,35 @@
     state: started
     enabled: yes
   when: ansible_facts.packages.postfix is defined
+- name: Audit listening services and ports (ss -plntu)
+  shell: ss -plntu > /var/log/listening_ports_audit.log
+  args:
+    executable: /bin/bash
+  register: ss_output
 
+- name: Show listening services for manual review
+  debug:
+    var: ss_output.stdout_lines
+
+- name: Stop and mask unapproved service
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+    masked: true
+  loop:
+    - telnet.socket
+    - telnet.service
+    - cups.service
+    - avahi-daemon.service
+  ignore_errors: yes  # in case some services aren't installed
+
+- name: Remove unapproved packages (if not needed by dependencies)
+  package:
+    name: "{{ item }}"
+    state: absent
+  loop:
+    - telnet
+    - cups
+    - avahi
+  ignore_errors: yes
