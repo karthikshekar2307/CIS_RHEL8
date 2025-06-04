@@ -2318,6 +2318,12 @@
     - level2-server
     - cis_2.2.20
 
+- name: Install postfix using yum
+  shell: |
+    yum install -y postfix
+  args:
+    warn: false
+
 - name: Ensure Postfix is configured for local-only mode (inet_interfaces = loopback-only)
   lineinfile:
     path: /etc/postfix/main.cf
