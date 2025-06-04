@@ -1576,3 +1576,30 @@
     - level1-workstation
     - cis_2.1.3
 
+- name: "CIS 2.2.1 | Ensure autofs services are not in use"
+  block:
+
+    - name: "Check if autofs is installed"
+      command: rpm -q autofs
+      register: autofs_installed
+      ignore_errors: yes
+      changed_when: false
+
+    - name: "Remove autofs package if installed"
+      yum:
+        name: autofs
+        state: absent
+      when: autofs_installed.rc == 0
+
+    - name: "Stop autofs service if it exists"
+      systemd:
+        name: autofs
+        state: stopped
+        enabled: false
+        masked: true
+      when: autofs_installed.rc == 0
+
+  tags:
+    - level1-server
+    - level2-workstation
+    - cis_2.2.1
