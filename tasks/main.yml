@@ -2298,3 +2298,22 @@
   tags:
     - level1-server
     - cis_2.2.19
+
+- name: "CIS 2.2.20 | Ensure X window server services are not in use"
+  block:
+
+    - name: "Check if xorg-x11-server-common package is installed"
+      command: rpm -q xorg-x11-server-common
+      register: xorg_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove xorg-x11-server-common package if installed"
+      yum:
+        name: xorg-x11-server-common
+        state: absent
+      when: xorg_installed.rc == 0
+
+  tags:
+    - level2-server
+    - cis_2.2.20
