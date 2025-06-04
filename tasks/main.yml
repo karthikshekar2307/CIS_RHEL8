@@ -2318,29 +2318,21 @@
     - level2-server
     - cis_2.2.20
 
-- name: "CIS 2.2.21 | Ensure mail transfer agents are configured for local-only mode"
-  block:
+- name: Ensure Postfix is configured for local-only mode (inet_interfaces = loopback-only)
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^inet_interfaces\s*='
+    line: 'inet_interfaces = loopback-only'
+    state: present
+    insertafter: '^#.*RECEIVING MAIL'
+    backup: yes
+  notify: Restart postfix
+  when: ansible_facts.packages.postfix is defined
 
-    - name: "Ensure postfix is installed"
-      package:
-        name: postfix
-        state: present
+- name: Ensure Postfix service is enabled and running
+  service:
+    name: postfix
+    state: started
+    enabled: yes
+  when: ansible_facts.packages.postfix is defined
 
-    - name: "Ensure 'inet_interfaces = loopback-only' is set in /etc/postfix/main.cf"
-      lineinfile:
-        path: /etc/postfix/main.cf
-        regexp: '^inet_interfaces\s*='
-        line: 'inet_interfaces = loopback-only'
-        insertafter: '^#.*RECEIVING MAIL'
-        create: yes
-        backup: yes
-
-    - name: "Restart postfix service"
-      service:
-        name: postfix
-        state: restarted
-        enabled: yes
-
-  tags:
-    - level1-server
-    - cis_2.2.21
