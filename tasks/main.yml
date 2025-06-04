@@ -2177,3 +2177,38 @@
   tags:
     - level1-server
     - cis_2.2.16
+
+- name: "CIS 2.2.17 | Ensure web proxy server services (Squid) are not in use"
+  block:
+
+    - name: "Check if squid package is installed"
+      command: rpm -q squid
+      register: squid_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove squid package if installed"
+      yum:
+        name: squid
+        state: absent
+      when: squid_installed.rc == 0
+
+    - name: "Stop and mask squid.service if package is required for dependency"
+      block:
+        - name: "Stop squid.service"
+          systemd:
+            name: squid.service
+            state: stopped
+            enabled: false
+          ignore_errors: true
+
+        - name: "Mask squid.service"
+          systemd:
+            name: squid.service
+            masked: true
+          ignore_errors: true
+      when: squid_installed.rc == 0
+
+  tags:
+    - level1-server
+    - cis_2.2.17
