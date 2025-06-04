@@ -2632,3 +2632,28 @@
   register: unload_sctp
   failed_when: false
   changed_when: unload_sctp.rc == 0
+
+- name: CIS 3.3.1 - Ensure IPv4 and IPv6 IP forwarding is disabled in sysctl configuration
+  copy:
+    dest: /etc/sysctl.d/60-cis-ipforward.conf
+    content: |
+      net.ipv4.ip_forward = 0
+      net.ipv6.conf.all.forwarding = 0
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: CIS 3.3.1 - Apply runtime setting for net.ipv4.ip_forward
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '0'
+    state: present
+    reload: yes
+
+- name: CIS 3.3.1 - Apply runtime setting for net.ipv6.conf.all.forwarding (if IPv6 is enabled)
+  sysctl:
+    name: net.ipv6.conf.all.forwarding
+    value: '0'
+    state: present
+    reload: yes
+  when: ansible_facts['sysctl']['net.ipv6.conf.all.disable_ipv6'] == '0'
