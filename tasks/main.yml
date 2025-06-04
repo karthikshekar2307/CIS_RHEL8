@@ -2523,3 +2523,38 @@
   shell: grub2-mkconfig -o /boot/grub2/grub.cfg
   when: ansible_facts['distribution'] == "RedHat"
 
+- name: CIS 3.1.2 - Disable wireless kernel modules
+  block:
+    - name: Create blacklist and prevent loading for wireless modules
+      copy:
+        dest: "/etc/modprobe.d/{{ item }}.conf"
+        content: |
+          install {{ item }} /bin/false
+          blacklist {{ item }}
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - iwlwifi
+        - ath9k
+        - ath10k_pci
+        - brcmfmac
+        - rt2800pci
+        - rtl8723be
+        - rtl8188ee
+        - b43
+
+    - name: Unload wireless modules if currently loaded
+      shell: "modprobe -r {{ item }}"
+      args:
+        warn: false
+      loop:
+        - iwlwifi
+        - ath9k
+        - ath10k_pci
+        - brcmfmac
+        - rt2800pci
+        - rtl8723be
+        - rtl8188ee
+        - b43
+      ignore_errors: true
