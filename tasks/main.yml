@@ -2771,3 +2771,28 @@
     state: present
     reload: yes
   when: ansible_facts['sysctl']['net.ipv6.conf.all.disable_ipv6'] is defined and ansible_facts['sysctl']['net.ipv6.conf.all.disable_ipv6'] == '0'
+
+- name: CIS 3.3.6 - Persistently disable secure ICMP redirects
+  copy:
+    dest: /etc/sysctl.d/60-cis-secure-redirects.conf
+    content: |
+      net.ipv4.conf.all.secure_redirects = 0
+      net.ipv4.conf.default.secure_redirects = 0
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: CIS 3.3.6 - Apply runtime setting: net.ipv4.conf.all.secure_redirects
+  sysctl:
+    name: net.ipv4.conf.all.secure_redirects
+    value: '0'
+    state: present
+    reload: yes
+
+- name: CIS 3.3.6 - Apply runtime setting: net.ipv4.conf.default.secure_redirects
+  sysctl:
+    name: net.ipv4.conf.default.secure_redirects
+    value: '0'
+    state: present
+    reload: yes
+
