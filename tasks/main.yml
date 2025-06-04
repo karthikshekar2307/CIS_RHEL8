@@ -2483,3 +2483,43 @@
     executable: /bin/bash
   ignore_errors: true
 
+- name: Check if IPv6 is enabled
+  shell: |
+    if grep -Pqs '^\h*0\b' /sys/module/ipv6/parameters/disable; then
+      echo "IPv6 is enabled"
+    else
+      echo "IPv6 is not enabled"
+    fi
+  register: ipv6_status
+
+- name: Report IPv6 status
+  debug:
+    msg: "{{ ipv6_status.stdout }}"
+
+- name: Disable IPv6 via sysctl
+  sysctl:
+    name: net.ipv6.conf.all.disable_ipv6
+    value: '1'
+    state: present
+    sysctl_set: yes
+    reload: yes
+
+- name: Disable IPv6 on default interface
+  sysctl:
+    name: net.ipv6.conf.default.disable_ipv6
+    value: '1'
+    state: present
+    sysctl_set: yes
+    reload: yes
+
+- name: Disable IPv6 in GRUB
+  lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX='
+    line: 'GRUB_CMDLINE_LINUX="ipv6.disable=1"'
+    backrefs: yes
+
+- name: Regenerate GRUB config
+  shell: grub2-mkconfig -o /boot/grub2/grub.cfg
+  when: ansible_facts['distribution'] == "RedHat"
+
