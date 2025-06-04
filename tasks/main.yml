@@ -2365,13 +2365,13 @@
   ignore_errors: true
   failed_when: false
 
-
-- name: Remove unapproved packages (if not needed by dependencies)
-  package:
-    name: "{{ item }}"
-    state: absent
+- name: Remove unapproved packages (ignore GPG)
+  shell: dnf remove -y {{ item }} --nogpgcheck
   loop:
     - telnet
     - cups
     - avahi
-  ignore_errors: yes
+  args:
+    executable: /bin/bash
+  ignore_errors: true
+
