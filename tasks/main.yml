@@ -2462,4 +2462,24 @@
     executable: /bin/bash
   ignore_errors: true
 
+- name: Ensure TFTP client is not installed
+  package:
+    name: tftp
+    state: absent
+  ignore_errors: true
+
+- name: Check if tftp is installed
+  shell: rpm -q tftp
+  register: tftp_check
+  ignore_errors: true
+
+- name: Report tftp client installation status
+  debug:
+    msg: "{{ tftp_check.stdout if tftp_check.rc == 0 else 'tftp is not installed' }}"
+
+- name: Remove tftp with --nogpgcheck (RHUI workaround)
+  shell: dnf remove -y tftp --nogpgcheck
+  args:
+    executable: /bin/bash
+  ignore_errors: true
 
