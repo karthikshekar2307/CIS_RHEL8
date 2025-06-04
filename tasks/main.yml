@@ -2375,3 +2375,19 @@
     executable: /bin/bash
   ignore_errors: true
 
+- name: Ensure FTP client is not installed
+  package:
+    name: ftp
+    state: absent
+  ignore_errors: true  # Prevent task failure if repo metadata is broken
+
+- name: Check if FTP is installed
+  shell: rpm -q ftp
+  register: ftp_check
+  ignore_errors: true
+
+- name: Report FTP package status
+  debug:
+    msg: "{{ ftp_check.stdout if ftp_check.rc == 0 else 'FTP is not installed' }}"
+
+
