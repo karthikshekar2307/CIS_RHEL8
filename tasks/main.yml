@@ -2025,3 +2025,44 @@
   tags:
     - level1-server
     - cis_2.2.12
+
+- name: "CIS 2.2.13 | Ensure rsync services are not in use"
+  block:
+
+    - name: "Check if rsync-daemon package is installed"
+      command: rpm -q rsync-daemon
+      register: rsyncd_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove rsync-daemon package if installed"
+      yum:
+        name: rsync-daemon
+        state: absent
+      when: rsyncd_installed.rc == 0
+
+    - name: "Stop and mask rsyncd.socket and rsyncd.service if package is required"
+      block:
+        - name: "Stop rsyncd.socket and rsyncd.service"
+          systemd:
+            name: "{{ item }}"
+            state: stopped
+            enabled: false
+          loop:
+            - rsyncd.socket
+            - rsyncd.service
+          ignore_errors: true
+
+        - name: "Mask rsyncd.socket and rsyncd.service"
+          systemd:
+            name: "{{ item }}"
+            masked: true
+          loop:
+            - rsyncd.socket
+            - rsyncd.service
+          ignore_errors: true
+      when: rsyncd_installed.rc == 0
+
+  tags:
+    - level1-server
+    - cis_2.2.13
