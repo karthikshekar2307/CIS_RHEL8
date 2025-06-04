@@ -2432,4 +2432,34 @@
     executable: /bin/bash
   ignore_errors: true
 
+- name: Ensure Telnet client is not installed
+  package:
+    name: telnet
+    state: absent
+  ignore_errors: true
+
+- name: Check if telnet is installed
+  shell: rpm -q telnet
+  register: telnet_check
+  ignore_errors: true
+
+- name: Report telnet client installation status
+  debug:
+    msg: "{{ telnet_check.stdout if telnet_check.rc == 0 else 'telnet is not installed' }}"
+
+- name: Check if telnet is installed
+  shell: rpm -q telnet
+  register: telnet_check
+  ignore_errors: true
+
+- name: Report telnet client installation status
+  debug:
+    msg: "{{ telnet_check.stdout if telnet_check.rc == 0 else 'telnet is not installed' }}"
+
+- name: Remove telnet with --nogpgcheck (for RHUI issues)
+  shell: dnf remove -y telnet --nogpgcheck
+  args:
+    executable: /bin/bash
+  ignore_errors: true
+
 
