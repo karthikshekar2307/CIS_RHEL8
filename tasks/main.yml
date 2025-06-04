@@ -2136,3 +2136,44 @@
   tags:
     - level1-server
     - cis_2.2.15
+
+- name: "CIS 2.2.16 | Ensure TFTP server services are not in use"
+  block:
+
+    - name: "Check if tftp-server package is installed"
+      command: rpm -q tftp-server
+      register: tftp_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove tftp-server package if installed"
+      yum:
+        name: tftp-server
+        state: absent
+      when: tftp_installed.rc == 0
+
+    - name: "Stop and mask tftp.socket and tftp.service if package is required"
+      block:
+        - name: "Stop tftp.socket and tftp.service"
+          systemd:
+            name: "{{ item }}"
+            state: stopped
+            enabled: false
+          loop:
+            - tftp.socket
+            - tftp.service
+          ignore_errors: true
+
+        - name: "Mask tftp.socket and tftp.service"
+          systemd:
+            name: "{{ item }}"
+            masked: true
+          loop:
+            - tftp.socket
+            - tftp.service
+          ignore_errors: true
+      when: tftp_installed.rc == 0
+
+  tags:
+    - level1-server
+    - cis_2.2.16
