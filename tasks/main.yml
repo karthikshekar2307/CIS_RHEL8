@@ -2101,3 +2101,38 @@
   tags:
     - level1-server
     - cis_2.2.14
+
+- name: "CIS 2.2.15 | Ensure Telnet server services are not in use"
+  block:
+
+    - name: "Check if telnet-server package is installed"
+      command: rpm -q telnet-server
+      register: telnet_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove telnet-server package if installed"
+      yum:
+        name: telnet-server
+        state: absent
+      when: telnet_installed.rc == 0
+
+    - name: "Stop and mask telnet.socket if package is required"
+      block:
+        - name: "Stop telnet.socket"
+          systemd:
+            name: telnet.socket
+            state: stopped
+            enabled: false
+          ignore_errors: true
+
+        - name: "Mask telnet.socket"
+          systemd:
+            name: telnet.socket
+            masked: true
+          ignore_errors: true
+      when: telnet_installed.rc == 0
+
+  tags:
+    - level1-server
+    - cis_2.2.15
