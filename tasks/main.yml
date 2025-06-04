@@ -1643,3 +1643,43 @@
     - level1-server
     - level2-workstation
     - cis_2.2.2
+
+- name: "CIS 2.2.3 | Ensure DHCP server services are not in use"
+  block:
+
+    - name: "Check if dhcp-server is installed"
+      command: rpm -q dhcp-server
+      register: dhcp_installed
+      ignore_errors: yes
+      changed_when: false
+
+    - name: "Remove dhcp-server package if installed"
+      yum:
+        name: dhcp-server
+        state: absent
+      when: dhcp_installed.rc == 0
+
+    - name: "Stop and mask dhcpd and dhcpd6 services if dhcp-server is installed"
+      block:
+        - name: "Stop dhcpd and dhcpd6 services"
+          systemd:
+            name: "{{ item }}"
+            state: stopped
+            enabled: false
+          loop:
+            - dhcpd.service
+            - dhcpd6.service
+
+        - name: "Mask dhcpd and dhcpd6 services"
+          systemd:
+            name: "{{ item }}"
+            masked: true
+          loop:
+            - dhcpd.service
+            - dhcpd6.service
+      when: dhcp_installed.rc == 0
+
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_2.2.3
