@@ -1819,3 +1819,55 @@
     - level1-server
     - level1-workstation
     - cis_2.2.7
+
+- name: "CIS 2.2.8 | Ensure message access server services are not in use"
+  block:
+
+    - name: "Check if dovecot package is installed"
+      command: rpm -q dovecot
+      register: dovecot_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Check if cyrus-imapd package is installed"
+      command: rpm -q cyrus-imapd
+      register: cyrus_installed
+      ignore_errors: true
+      changed_when: false
+
+    - name: "Remove dovecot and cyrus-imapd packages if installed"
+      yum:
+        name:
+          - dovecot
+          - cyrus-imapd
+        state: absent
+      when: dovecot_installed.rc == 0 or cyrus_installed.rc == 0
+
+    - name: "Stop and mask dovecot and cyrus-imapd services if packages are required"
+      block:
+        - name: "Stop dovecot and cyrus-imapd services"
+          systemd:
+            name: "{{ item }}"
+            state: stopped
+            enabled: false
+          loop:
+            - dovecot.socket
+            - dovecot.service
+            - cyrus-imapd.service
+          ignore_errors: true
+
+        - name: "Mask dovecot and cyrus-imapd services"
+          systemd:
+            name: "{{ item }}"
+            masked: true
+          loop:
+            - dovecot.socket
+            - dovecot.service
+            - cyrus-imapd.service
+          ignore_errors: true
+      when: dovecot_installed.rc == 0 or cyrus_installed.rc == 0
+
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_2.2.8
