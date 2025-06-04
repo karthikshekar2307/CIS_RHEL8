@@ -1785,3 +1785,37 @@
     - level1-server
     - level1-workstation
     - cis_2.2.6
+
+- name: "CIS 2.2.7 | Ensure ftp server services are not in use"
+  block:
+
+    - name: "Check if vsftpd package is installed"
+      command: rpm -q vsftpd
+      register: vsftpd_installed
+      ignore_errors: yes
+      changed_when: false
+
+    - name: "Remove vsftpd package if installed"
+      yum:
+        name: vsftpd
+        state: absent
+      when: vsftpd_installed.rc == 0
+
+    - name: "Stop and mask vsftpd.service if vsftpd package is installed and not removed"
+      block:
+        - name: "Stop vsftpd.service"
+          systemd:
+            name: vsftpd.service
+            state: stopped
+            enabled: false
+
+        - name: "Mask vsftpd.service"
+          systemd:
+            name: vsftpd.service
+            masked: true
+      when: vsftpd_installed.rc == 0
+
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_2.2.7
