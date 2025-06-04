@@ -2796,5 +2796,28 @@
     state: present
     reload: yes
 
+- name: CIS 3.3.7 - Persistently enable reverse path filtering
+  copy:
+    dest: /etc/sysctl.d/60-cis-rpfilter.conf
+    content: |
+      net.ipv4.conf.all.rp_filter = 1
+      net.ipv4.conf.default.rp_filter = 1
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: CIS 3.3.7 - Apply runtime setting net.ipv4.conf.all.rp_filter
+  sysctl:
+    name: net.ipv4.conf.all.rp_filter
+    value: '1'
+    state: present
+    reload: yes
+
+- name: CIS 3.3.7 - Apply runtime setting net.ipv4.conf.default.rp_filter
+  sysctl:
+    name: net.ipv4.conf.default.rp_filter
+    value: '1'
+    state: present
+    reload: yes
 
 
