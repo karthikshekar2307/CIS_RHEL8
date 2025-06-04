@@ -2351,7 +2351,7 @@
   debug:
     var: ss_output.stdout_lines
 
-- name: Stop and mask unapproved service
+- name: Stop and mask unapproved service if exists
   systemd:
     name: "{{ item }}"
     state: stopped
@@ -2362,7 +2362,9 @@
     - telnet.service
     - cups.service
     - avahi-daemon.service
-  ignore_errors: yes  # in case some services aren't installed
+  ignore_errors: true
+  failed_when: false
+
 
 - name: Remove unapproved packages (if not needed by dependencies)
   package:
