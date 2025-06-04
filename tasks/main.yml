@@ -2730,7 +2730,7 @@
     state: present
     reload: yes
 
-- - name: "CIS 3.3.5 - Persistently disable ICMP redirect acceptance"
+- name: "CIS 3.3.5 - Persistently disable ICMP redirect acceptance"
   copy:
     dest: /etc/sysctl.d/60-cis-accept-redirects.conf
     content: |
