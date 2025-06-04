@@ -1683,3 +1683,37 @@
     - level1-server
     - level1-workstation
     - cis_2.2.3
+
+- name: "CIS 2.2.4 | Ensure DNS server services are not in use"
+  block:
+
+    - name: "Check if bind package is installed"
+      command: rpm -q bind
+      register: bind_installed
+      ignore_errors: yes
+      changed_when: false
+
+    - name: "Remove bind package if installed"
+      yum:
+        name: bind
+        state: absent
+      when: bind_installed.rc == 0
+
+    - name: "Stop and mask named.service if bind is installed and cannot be removed"
+      block:
+        - name: "Stop named.service"
+          systemd:
+            name: named.service
+            state: stopped
+            enabled: false
+
+        - name: "Mask named.service"
+          systemd:
+            name: named.service
+            masked: true
+      when: bind_installed.rc == 0
+
+  tags:
+    - level1-server
+    - level1-workstation
+    - cis_2.2.4
