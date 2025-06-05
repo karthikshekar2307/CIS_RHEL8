@@ -3447,3 +3447,44 @@
       ansible.builtin.service:
         name: sshd
         state: reloaded
+
+- name: "CIS 4.2.5 - Ensure sshd Banner is configured"
+  block:
+    - name: Ensure /etc/issue.net exists with legal warning
+      ansible.builtin.copy:
+        dest: /etc/issue.net
+        content: |
+          WARNING: Unauthorized access to this system is prohibited.
+          All activity will be monitored and reported.
+
+    - name: Configure Banner in sshd_config above any Include
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^Banner'
+        line: 'Banner /etc/issue.net'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: Reload SSH service to apply Banner config
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
+
+
+- name: "CIS 4.2.6 - Ensure only strong SSH Ciphers are used"
+  block:
+    - name: Add line to disable weak SSH ciphers above any Include
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^Ciphers'
+        line: 'Ciphers -3des-cbc,aes128-cbc,aes192-cbc,aes256-cbc,rijndael-cbc@lysator.liu.se'
+        insertafter: '^#?Port.*'
+        state: present
+        backup: yes
+
+    - name: Reload SSH service to apply cipher config
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
