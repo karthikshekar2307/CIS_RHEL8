@@ -3918,3 +3918,27 @@
   register: faillock_check_system
   failed_when: faillock_check_system.rc != 0
   changed_when: false
+
+- name: "CIS 4.4.2.3 - Enable 'with-pwquality' feature in authselect"
+  ansible.builtin.command: authselect enable-feature with-pwquality
+  register: pwquality_feature
+  changed_when: "'with-pwquality' in pwquality_feature.stdout"
+
+- name: "CIS 4.4.2.3 - Apply authselect changes"
+  ansible.builtin.command: authselect apply-changes
+
+- name: "CIS 4.4.2.3 - Verify pam_pwquality.so is present in password-auth"
+  ansible.builtin.shell: >
+    grep -Pq '\bpam_pwquality\.so\b'
+    /etc/authselect/custom/custom-profile/password-auth
+  register: pwquality_check_password
+  failed_when: pwquality_check_password.rc != 0
+  changed_when: false
+
+- name: "CIS 4.4.2.3 - Verify pam_pwquality.so is present in system-auth"
+  ansible.builtin.shell: >
+    grep -Pq '\bpam_pwquality\.so\b'
+    /etc/authselect/custom/custom-profile/system-auth
+  register: pwquality_check_system
+  failed_when: pwquality_check_system.rc != 0
+  changed_when: false
