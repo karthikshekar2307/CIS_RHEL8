@@ -3243,3 +3243,18 @@
         path: /etc/cron.hourly
         mode: '0700'
         state: directory
+
+- name: CIS 4.1.1.5 - Ensure permissions on /etc/cron.weekly are configured
+  block:
+    - name: Ensure /etc/cron.weekly is owned by root
+      ansible.builtin.file:
+        path: /etc/cron.weekly
+        owner: root
+        group: root
+        state: directory
+
+    - name: Ensure /etc/cron.weekly has 0700 permissions
+      ansible.builtin.file:
+        path: /etc/cron.weekly
+        mode: '0700'
+        state: directory
