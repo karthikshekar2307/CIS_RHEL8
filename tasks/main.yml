@@ -3789,3 +3789,16 @@
     owner: root
     group: root
     mode: '0600'
+
+- name: "CIS 4.3.5 - Remove !authenticate from /etc/sudoers and /etc/sudoers.d/*"
+  ansible.builtin.replace:
+    path: "{{ item }}"
+    regexp: '\!authenticate'
+    replace: ''
+    validate: '/usr/sbin/visudo -cf %s'
+  loop: >
+    {{
+      ['/etc/sudoers'] +
+      lookup('ansible.builtin.fileglob', '/etc/sudoers.d/*', errors='ignore')
+    }}
+  when: ansible_facts['os_family'] == 'RedHat'
