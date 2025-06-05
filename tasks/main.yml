@@ -3566,3 +3566,20 @@
       ansible.builtin.service:
         name: sshd
         state: reloaded
+
+- name: "CIS 4.2.11 - Ensure sshd KexAlgorithms is configured to disable weak algorithms"
+  block:
+    - name: "Add or update KexAlgorithms line to disable weak algorithms"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^KexAlgorithms'
+        line: 'KexAlgorithms -diffie-hellman-group1-sha1,diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: Reload sshd to apply updated KexAlgorithms setting
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
