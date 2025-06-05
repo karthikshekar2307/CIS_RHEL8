@@ -3425,3 +3425,25 @@
         mode: '0644'
       loop: "{{ ssh_public_keys.files }}"
       when: ssh_public_keys.matched > 0
+
+- name: CIS 4.2.4 - Restrict SSH access to specific users using AllowUsers
+  block:
+    - name: Ensure admin user exists
+      ansible.builtin.user:
+        name: adminuser
+        state: present
+
+    - name: Insert AllowUsers before any Include directives in sshd_config
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^AllowUsers'
+        line: 'AllowUsers adminuser'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: Ensure SSHD is reloaded to apply config
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
