@@ -2934,3 +2934,19 @@
     line: 'net.ipv4.conf.default.log_martians = 1'
     create: yes
     mode: '0644'
+
+# CIS 3.3.10 - Ensure tcp_syncookies is enabled (runtime and persistent)
+
+- name: "CIS 3.3.10 - Apply runtime: net.ipv4.tcp_syncookies"
+  ansible.posix.sysctl:
+    name: net.ipv4.tcp_syncookies
+    value: '1'
+    state: present
+    reload: yes
+
+- name: "CIS 3.3.10 - Ensure net.ipv4.tcp_syncookies is set persistently"
+  copy:
+    dest: /etc/sysctl.d/60-netipv4_sysctl.conf
+    content: |
+      net.ipv4.tcp_syncookies = 1
+  #notify: Reload sysctl
