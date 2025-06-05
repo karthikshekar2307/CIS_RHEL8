@@ -3754,16 +3754,12 @@
     #     name: sshd
     #     state: reloaded
 
-- name: "CIS 4.3.1 - Ensure sudo is installed using dnf with --nogpgcheck"
+- name: "CIS 4.3.1 - Check if sudo is installed"
   ansible.builtin.command: rpm -q sudo
-  args:
-    warn: false
   register: sudo_check
   ignore_errors: true
-
-- name: "Install sudo using dnf with --nogpgcheck if not installed"
-  ansible.builtin.command: dnf install -y sudo --nogpgcheck
-  when: sudo_check.rc != 0
+  args:
+    warn: false
 
 
 - name: "CIS 4.3.2 - Ensure sudo commands use pty"
