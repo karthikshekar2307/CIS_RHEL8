@@ -3443,10 +3443,10 @@
         create: yes
         backup: yes
 
-    - name: Ensure SSHD is reloaded to apply config
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: Ensure SSHD is reloaded to apply config
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.5 - Ensure sshd Banner is configured"
   block:
@@ -3467,10 +3467,10 @@
         create: yes
         backup: yes
 
-    - name: Reload SSH service to apply Banner config
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: Reload SSH service to apply Banner config
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 
 - name: "CIS 4.2.6 - Ensure only strong SSH Ciphers are used"
@@ -3484,10 +3484,10 @@
         state: present
         backup: yes
 
-    - name: Reload SSH service to apply cipher config
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: Reload SSH service to apply cipher config
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.7 - Ensure sshd ClientAliveInterval and ClientAliveCountMax are configured"
   block:
@@ -3511,10 +3511,10 @@
         create: yes
         backup: yes
 
-    - name: Reload SSHD to apply keepalive configuration
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: Reload SSHD to apply keepalive configuration
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.8 - Ensure sshd DisableForwarding is enabled"
   block:
@@ -3528,10 +3528,10 @@
         create: yes
         backup: yes
 
-    - name: Reload sshd to apply DisableForwarding configuration
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: Reload sshd to apply DisableForwarding configuration
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.9 - Ensure sshd HostbasedAuthentication is disabled"
   block:
@@ -3545,10 +3545,10 @@
         create: yes
         backup: yes
 
-    - name: Reload sshd to apply HostbasedAuthentication configuration
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: Reload sshd to apply HostbasedAuthentication configuration
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.10 - Ensure sshd IgnoreRhosts is enabled"
   block:
@@ -3740,3 +3740,49 @@
     #   ansible.builtin.service:
     #     name: sshd
     #     state: reloaded
+- name: "CIS 4.2.22 - Ensure sshd CRYPTO_POLICY is not set in /etc/sysconfig/sshd"
+  block:
+    - name: "Comment out CRYPTO_POLICY variable in /etc/sysconfig/sshd if present"
+      ansible.builtin.replace:
+        path: /etc/sysconfig/sshd
+        regexp: '^\s*(CRYPTO_POLICY\s*=.*)$'
+        replace: '# \1'
+        backup: yes
+
+    # - name: "Reload sshd to apply changes"
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
+
+- name: "CIS 4.3.1 - Ensure sudo is installed"
+  ansible.builtin.package:
+    name: sudo
+    state: present
+
+- name: "CIS 4.3.2 - Ensure sudo commands use pty"
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/01_cis_use_pty
+    create: yes
+    mode: '0440'
+    owner: root
+    group: root
+    line: 'Defaults use_pty'
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: "CIS 4.3.3 - Ensure sudo log file is configured"
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/02_cis_sudo_logfile
+    create: yes
+    mode: '0440'
+    owner: root
+    group: root
+    line: 'Defaults logfile="/var/log/sudo.log"'
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: "CIS 4.3.3 - Ensure sudo log file exists"
+  ansible.builtin.file:
+    path: /var/log/sudo.log
+    state: touch
+    owner: root
+    group: root
+    mode: '0600'
