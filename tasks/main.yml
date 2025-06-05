@@ -3942,3 +3942,27 @@
   register: pwquality_check_system
   failed_when: pwquality_check_system.rc != 0
   changed_when: false
+
+- name: "CIS 4.4.2.4 - Enable 'with-pwhistory' feature in authselect"
+  ansible.builtin.command: authselect enable-feature with-pwhistory
+  register: pwhistory_feature
+  changed_when: "'with-pwhistory' in pwhistory_feature.stdout"
+
+- name: "CIS 4.4.2.4 - Apply authselect changes"
+  ansible.builtin.command: authselect apply-changes
+
+- name: "CIS 4.4.2.4 - Verify pam_pwhistory.so is present in password-auth"
+  ansible.builtin.shell: >
+    grep -Pq '\bpam_pwhistory\.so\b'
+    /etc/authselect/custom/custom-profile/password-auth
+  register: pwhistory_check_password
+  failed_when: pwhistory_check_password.rc != 0
+  changed_when: false
+
+- name: "CIS 4.4.2.4 - Verify pam_pwhistory.so is present in system-auth"
+  ansible.builtin.shell: >
+    grep -Pq '\bpam_pwhistory\.so\b'
+    /etc/authselect/custom/custom-profile/system-auth
+  register: pwhistory_check_system
+  failed_when: pwhistory_check_system.rc != 0
+  changed_when: false
