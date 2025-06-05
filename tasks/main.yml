@@ -3315,11 +3315,11 @@
     - name: Check if 'daemon' group exists
       ansible.builtin.getent:
         database: group
-      register: getent_group_info
+      register: getent_groups
 
     - name: Set group variable for 'at' permission files
-      ansible.builtin.set_fact:
-        at_group: "{{ 'daemon' if 'daemon' in getent_group_info.getent_group else 'root' }}"
+      set_fact:
+        at_group: "{{ 'daemon' if getent_groups.ansible_facts.getent_group['daemon'] is defined else 'root' }}"
 
     - name: Ensure /etc/at.allow exists with correct permissions
       ansible.builtin.file:
