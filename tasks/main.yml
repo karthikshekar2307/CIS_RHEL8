@@ -2950,3 +2950,41 @@
     content: |
       net.ipv4.tcp_syncookies = 1
   #notify: Reload sysctl
+
+# CIS 3.3.11 - Ensure IPv6 router advertisements are not accepted (if IPv6 is enabled)
+
+- name: "CIS 3.3.11 - Check if IPv6 is enabled"
+  ansible.builtin.slurp:
+    src: /sys/module/ipv6/parameters/disable
+  register: ipv6_status
+
+- name: "CIS 3.3.11 - Set runtime: net.ipv6.conf.all.accept_ra"
+  ansible.posix.sysctl:
+    name: net.ipv6.conf.all.accept_ra
+    value: '0'
+    state: present
+    reload: yes
+  when: ipv6_status['content'] | b64decode | trim == '0'
+
+- name: "CIS 3.3.11 - Set runtime: net.ipv6.conf.default.accept_ra"
+  ansible.posix.sysctl:
+    name: net.ipv6.conf.default.accept_ra
+    value: '0'
+    state: present
+    reload: yes
+  when: ipv6_status['content'] | b64decode | trim == '0'
+
+- name: "CIS 3.3.11 - Persist IPv6 accept_ra settings"
+  copy:
+    dest: /etc/sysctl.d/60-netipv6_sysctl.conf
+    content: |
+      net.ipv6.conf.all.accept_ra = 0
+      net.ipv6.conf.default.accept_ra = 0
+    owner: root
+    group: root
+    mode: '0644'
+  when: ipv6_status['content'] | b64decode | trim == '0'
+
+- name: "CIS 3.3.11 - Reload sysctl for IPv6 settings"
+  ansible.builtin.command: sysctl --system
+  when: ipv6_status['content'] | b64decode | trim == '0'
