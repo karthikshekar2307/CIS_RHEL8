@@ -3309,4 +3309,33 @@
       when: ansible_facts['os_family'] == "Debian" or ansible_facts['distribution'] == "Ubuntu"
       ignore_errors: true
 
+- name: CIS 4.1.2.1 - Ensure 'at' is restricted to authorized users
+  block:
+    - name: Determine appropriate group for /etc/at.allow and /etc/at.deny
+      ansible.builtin.getent:
+        database: group
+        key: daemon
+      register: daemon_group
+
+    - name: Set group variable for 'at' permission files
+      set_fact:
+        at_group: "{{ 'daemon' if daemon_group.found else 'root' }}"
+
+    - name: Ensure /etc/at.allow exists with correct permissions
+      ansible.builtin.file:
+        path: /etc/at.allow
+        state: touch
+        owner: root
+        group: "{{ at_group }}"
+        mode: '0640'
+
+    - name: Ensure /etc/at.deny has correct permissions if it exists
+      ansible.builtin.file:
+        path: /etc/at.deny
+        state: file
+        owner: root
+        group: "{{ at_group }}"
+        mode: '0640'
+      when: ansible.builtin.stat(path='/etc/at.deny').stat.exists
+
 
