@@ -3755,8 +3755,7 @@
     #     state: reloaded
 
 - name: "CIS 4.3.1 - Ensure sudo is installed using dnf with --nogpgcheck"
-  ansible.builtin.command: dnf install -y sudo --nogpgcheck
-  args:
+  ansible.builtin.command: rpm -q sudo
     warn: false
 
 
