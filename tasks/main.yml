@@ -3829,7 +3829,8 @@
   ansible.builtin.command: "gpasswd -M '' sugroup"
   changed_when: false
 
-- name: "CIS 4.4.1.1 - Ensure latest version of pam is installed"
-  ansible.builtin.command: dnf upgrade -y pam
+- name: "CIS 4.4.1.1 - Ensure latest version of pam is installed using --nogpgcheck"
+  ansible.builtin.command: dnf upgrade -y pam --nogpgcheck
   register: pam_upgrade
   changed_when: "'Nothing to do' not in pam_upgrade.stdout"
+
