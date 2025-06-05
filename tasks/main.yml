@@ -3488,3 +3488,30 @@
       ansible.builtin.service:
         name: sshd
         state: reloaded
+
+- name: "CIS 4.2.7 - Ensure sshd ClientAliveInterval and ClientAliveCountMax are configured"
+  block:
+    - name: Set ClientAliveInterval to 15
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^ClientAliveInterval'
+        line: 'ClientAliveInterval 15'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: Set ClientAliveCountMax to 3
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^ClientAliveCountMax'
+        line: 'ClientAliveCountMax 3'
+        insertafter: '^ClientAliveInterval.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: Reload SSHD to apply keepalive configuration
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
