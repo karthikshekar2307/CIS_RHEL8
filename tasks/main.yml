@@ -3379,13 +3379,31 @@
         - sshd_config_d_stat.stat.isdir is defined and sshd_config_d_stat.stat.isdir
         - sshd_conf_files.matched > 0
 
-- name: Ensure all files in /etc/ssh/sshd_config.d have 0600 permissions
-  ansible.builtin.shell: |
-    chmod 600 /etc/ssh/sshd_config.d/*
-  args:
-    executable: /bin/bash
-  when: ansible_facts['os_family'] == "RedHat"
+# - name: Ensure all files in /etc/ssh/sshd_config.d have 0600 permissions
+#   ansible.builtin.shell: |
+#     chmod 600 /etc/ssh/sshd_config.d/*
+#   args:
+#     executable: /bin/bash
+#   when: ansible_facts['os_family'] == "RedHat"
 
+- name: CIS 4.2.2 - Set permissions on SSH private host key files
+  block:
+    - name: Find SSH private key files under /etc/ssh
+      ansible.builtin.find:
+        paths: /etc/ssh
+        file_type: file
+        patterns: 'ssh_host_*_key'
+        recurse: no
+      register: ssh_private_keys
+
+    - name: Ensure ownership and permissions on SSH private key files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        owner: root
+        group: root
+        mode: '0600'
+      loop: "{{ ssh_private_keys.files }}"
+      when: ssh_private_keys.matched > 0
 
 
 
