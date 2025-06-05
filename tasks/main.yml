@@ -3685,10 +3685,10 @@
         create: yes
         backup: yes
 
-    - name: "Reload sshd to apply MaxStartups setting"
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: "Reload sshd to apply MaxStartups setting"
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.18 - Ensure sshd PermitEmptyPasswords is disabled"
   block:
@@ -3702,7 +3702,7 @@
         create: yes
         backup: yes
 
-    - name: "Reload sshd to apply PermitEmptyPasswords change"
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: "Reload sshd to apply PermitEmptyPasswords change"
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
