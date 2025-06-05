@@ -3562,10 +3562,10 @@
         create: yes
         backup: yes
 
-    - name: Reload sshd to apply IgnoreRhosts setting
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: Reload sshd to apply IgnoreRhosts setting
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.11 - Ensure sshd KexAlgorithms is configured to disable weak algorithms"
   block:
@@ -3579,10 +3579,10 @@
         create: yes
         backup: yes
 
-    - name: Reload sshd to apply updated KexAlgorithms setting
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: Reload sshd to apply updated KexAlgorithms setting
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.12 - Ensure sshd LoginGraceTime is set to 60 seconds"
   block:
@@ -3596,10 +3596,10 @@
         create: yes
         backup: yes
 
-    - name: "Reload sshd to apply LoginGraceTime setting"
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: "Reload sshd to apply LoginGraceTime setting"
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.13 - Ensure sshd LogLevel is set to VERBOSE"
   block:
@@ -3613,10 +3613,10 @@
         create: yes
         backup: yes
 
-    - name: "Reload sshd to apply LogLevel setting"
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: "Reload sshd to apply LogLevel setting"
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.14 - Ensure sshd MACs are configured to disable weak algorithms"
   block:
@@ -3634,10 +3634,10 @@
         create: yes
         backup: yes
 
-    - name: "Reload sshd to apply MACs setting"
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: "Reload sshd to apply MACs setting"
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.15 - Ensure sshd MaxAuthTries is configured to 4 or less"
   block:
@@ -3668,10 +3668,10 @@
         create: yes
         backup: yes
 
-    - name: "Reload sshd to apply MaxSessions setting"
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: "Reload sshd to apply MaxSessions setting"
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.17 - Ensure sshd MaxStartups is configured to 10:30:60 or more restrictive"
   block:
@@ -3720,6 +3720,23 @@
         backup: yes
 
     # - name: "Reload sshd to apply PermitUserEnvironment change"
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
+
+- name: "CIS 4.2.21 - Ensure sshd UsePAM is enabled"
+  block:
+    - name: "Set 'UsePAM yes' in /etc/ssh/sshd_config"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^UsePAM'
+        line: 'UsePAM yes'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    # - name: "Reload sshd to apply UsePAM configuration"
     #   ansible.builtin.service:
     #     name: sshd
     #     state: reloaded
