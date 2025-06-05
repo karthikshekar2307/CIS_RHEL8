@@ -3316,6 +3316,12 @@
         database: group
         key: daemon
       register: daemon_group
+    
+    - name: Check if 'daemon' group exists
+      ansible.builtin.getent:
+        database: group
+        key: daemon
+      register: daemon_group
 
     - name: Set group variable for 'at' permission files
       set_fact:
