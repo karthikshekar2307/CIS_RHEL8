@@ -3689,3 +3689,20 @@
       ansible.builtin.service:
         name: sshd
         state: reloaded
+
+- name: "CIS 4.2.18 - Ensure sshd PermitEmptyPasswords is disabled"
+  block:
+    - name: "Set 'PermitEmptyPasswords no' in /etc/ssh/sshd_config"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitEmptyPasswords'
+        line: 'PermitEmptyPasswords no'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: "Reload sshd to apply PermitEmptyPasswords change"
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
