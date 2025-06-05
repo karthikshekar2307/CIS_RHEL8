@@ -3133,6 +3133,11 @@
     enabled: true
     state: restarted
 
+# Gather service facts so we can inspect firewalld state
+- name: Gather service facts
+  service_facts:
+
+# Remove unnecessary firewalld services if firewalld is running
 - name: CIS 3.4.2.3 - Remove unnecessary firewalld services
   firewalld:
     service: "{{ item }}"
@@ -3144,8 +3149,11 @@
     - dhcpv6-client
     - ftp
     - samba
-  when: ansible_facts.services['firewalld.service'].state == 'running'
+  when: >
+    "'firewalld.service' in ansible_facts.services and
+     ansible_facts.services['firewalld.service'].state == 'running'"
 
+# Remove unnecessary firewalld ports if firewalld is running
 - name: CIS 3.4.2.3 - Remove unnecessary firewalld ports
   firewalld:
     port: "{{ item }}"
@@ -3156,23 +3164,13 @@
     - 25/tcp
     - 5353/udp
     - 5900/tcp
-  when: ansible_facts.services['firewalld.service'].state == 'running'
+  when: >
+    "'firewalld.service' in ansible_facts.services and
+     ansible_facts.services['firewalld.service'].state == 'running'"
 
-- name: CIS 3.4.2.4 - Allow established TCP connections via nftables
-  command: nft add rule inet filter input ip protocol tcp ct state established accept
-  register: tcp_established_rule
-  failed_when: tcp_established_rule.rc != 0 and 'File exists' not in tcp_established_rule.stderr
-
-- name: CIS 3.4.2.4 - Allow established UDP connections via nftables
-  command: nft add rule inet filter input ip protocol udp ct state established accept
-  register: udp_established_rule
-  failed_when: udp_established_rule.rc != 0 and 'File exists' not in udp_established_rule.stderr
-
-- name: CIS 3.4.2.4 - Allow established ICMP connections via nftables
-  command: nft add rule inet filter input ip protocol icmp ct state established accept
-  register: icmp_established_rule
-  failed_when: icmp_established_rule.rc != 0 and 'File exists' not in icmp_established_rule.stderr
-
-- name: Save nftables rules to persistent config
-  command: bash -c 'nft list ruleset > /etc/nftables/nftables.rules'
-
+# Save runtime configuration to permanent
+- name: CIS 3.4.2.3 - Save firewalld configuration permanently
+  command: firewall-cmd --runtime-to-permanent
+  when: >
+    "'firewalld.service' in ansible_facts.services and
+     ansible_facts.services['firewalld.service'].state == 'running'"
