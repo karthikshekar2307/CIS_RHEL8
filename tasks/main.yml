@@ -3600,3 +3600,20 @@
       ansible.builtin.service:
         name: sshd
         state: reloaded
+
+- name: "CIS 4.2.13 - Ensure sshd LogLevel is set to VERBOSE"
+  block:
+    - name: "Set LogLevel to VERBOSE in /etc/ssh/sshd_config"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^LogLevel'
+        line: 'LogLevel VERBOSE'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: "Reload sshd to apply LogLevel setting"
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
