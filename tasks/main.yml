@@ -3379,4 +3379,11 @@
         - sshd_config_d_stat.stat.isdir is defined and sshd_config_d_stat.stat.isdir
         - sshd_conf_files.matched > 0
 
+- name: Set 0600 permissions for all files in /etc/ssh/sshd_config.d
+  ansible.builtin.shell: |
+    find /etc/ssh/sshd_config.d -type f -exec chmod 600 {} +
+  args:
+    warn: false
+  when: ansible_facts['os_family'] == "RedHat" and ansible_facts['distribution_major_version'] | int >= 8
+
 
