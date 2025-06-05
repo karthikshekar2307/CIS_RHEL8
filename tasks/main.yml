@@ -3175,25 +3175,41 @@
         nft add rule inet filter input ip protocol icmp ct state established accept
       when: nftables_status.stdout == "enabled"
 
-- name: CIS 3.4.2.5 - Set default DROP policy for nftables base chains
+# - name: CIS 3.4.2.5 - Set default DROP policy for nftables base chains
+#   block:
+#     - name: Check if nftables service is enabled
+#       ansible.builtin.command: systemctl is-enabled nftables.service
+#       register: nftables_enabled
+#       changed_when: false
+#       failed_when: false
+
+#     - name: Set input chain default policy to DROP
+#       ansible.builtin.command: >
+#         nft chain inet filter input { policy drop \; }
+#       when: nftables_enabled.stdout == "enabled"
+
+#     - name: Set forward chain default policy to DROP
+#       ansible.builtin.command: >
+#         nft chain inet filter forward { policy drop \; }
+#       when: nftables_enabled.stdout == "enabled"
+
+#     - name: Set output chain default policy to DROP
+#       ansible.builtin.command: >
+#         nft chain inet filter output { policy drop \; }
+#       when: nftables_enabled.stdout == "enabled"
+
+- name: CIS 4.1.1.1 - Ensure cron daemon is enabled and active
   block:
-    - name: Check if nftables service is enabled
-      ansible.builtin.command: systemctl is-enabled nftables.service
-      register: nftables_enabled
+    - name: Check if crond is installed
+      ansible.builtin.shell: rpm -q cronie
+      register: cronie_installed
       changed_when: false
-      failed_when: false
+      failed_when: cronie_installed.rc != 0
 
-    - name: Set input chain default policy to DROP
-      ansible.builtin.command: >
-        nft chain inet filter input { policy drop \; }
-      when: nftables_enabled.stdout == "enabled"
-
-    - name: Set forward chain default policy to DROP
-      ansible.builtin.command: >
-        nft chain inet filter forward { policy drop \; }
-      when: nftables_enabled.stdout == "enabled"
-
-    - name: Set output chain default policy to DROP
-      ansible.builtin.command: >
-        nft chain inet filter output { policy drop \; }
-      when: nftables_enabled.stdout == "enabled"
+    - name: Unmask crond service
+      ansible.builtin.systemd:
+        name: crond
+        state: started
+        enabled: true
+        masked: no
+      when: cronie_installed.rc == 0
