@@ -3133,13 +3133,14 @@
     enabled: true
     state: restarted
 
-# Gather service facts so we can inspect firewalld state
-- name: Gather service facts
-  service_facts:
+- name: Ensure python3-firewall is installed (required for firewalld module)
+  ansible.builtin.package:
+    name: python3-firewall
+    state: present
+  when: ansible_facts.services['firewalld.service'] is defined and ansible_facts.services['firewalld.service'].state == 'running'
 
-# Remove unnecessary firewalld services if firewalld is running
 - name: CIS 3.4.2.3 - Remove unnecessary firewalld services
-  firewalld:
+  ansible.posix.firewalld:
     service: "{{ item }}"
     state: disabled
     permanent: true
@@ -3149,28 +3150,5 @@
     - dhcpv6-client
     - ftp
     - samba
-  when: >
-    "'firewalld.service' in ansible_facts.services and
-     ansible_facts.services['firewalld.service'].state == 'running'"
-
-# Remove unnecessary firewalld ports if firewalld is running
-- name: CIS 3.4.2.3 - Remove unnecessary firewalld ports
-  firewalld:
-    port: "{{ item }}"
-    state: disabled
-    permanent: true
-    immediate: true
-  loop:
-    - 25/tcp
-    - 5353/udp
-    - 5900/tcp
-  when: >
-    "'firewalld.service' in ansible_facts.services and
-     ansible_facts.services['firewalld.service'].state == 'running'"
-
-# Save runtime configuration to permanent
-- name: CIS 3.4.2.3 - Save firewalld configuration permanently
-  command: firewall-cmd --runtime-to-permanent
-  when: >
-    "'firewalld.service' in ansible_facts.services and
-     ansible_facts.services['firewalld.service'].state == 'running'"
+  when: ansible_facts.services['firewalld.service'] is defined and ansible_facts.services['firewalld.service'].state == 'running'
+  #notify: Reload firewalld
