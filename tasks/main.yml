@@ -2994,33 +2994,11 @@
 - name: Install nftables without GPG check (not recommended)
   ansible.builtin.command: dnf install -y --nogpgcheck nftables
 
-# CIS 3.4.1.2 - Ensure only nftables is in use
-
-- name: Ensure nftables is installed
-  ansible.builtin.yum:
-    name: nftables
-    state: present
-
 - name: Enable and start nftables
   ansible.builtin.systemd:
     name: nftables
     enabled: true
     state: started
-
-- name: Check if firewalld is installed
-  ansible.builtin.shell: rpm -q firewalld
-  register: firewalld_installed
-  ignore_errors: true
-  changed_when: false
-
-- name: Stop and mask firewalld if installed
-  ansible.builtin.systemd:
-    name: firewalld
-    enabled: false
-    masked: true
-    state: stopped
-  when: firewalld_installed.rc == 0
-
 
 # CIS 3.4.1.2 - Ensure a single firewall configuration utility is in use
 - name: Check if firewalld is installed
