@@ -3862,3 +3862,34 @@
   ansible.builtin.debug:
     var: authselect_status.stdout
 
+- name: "CIS 4.4.2.1 - Create a custom authselect profile if it doesn't exist"
+  ansible.builtin.command: authselect create-profile custom-profile -b sssd
+  args:
+    creates: /etc/authselect/custom/custom-profile
+
+- name: "CIS 4.4.2.1 - Enable custom profile with required features"
+  ansible.builtin.command: >
+    authselect select custom/custom-profile
+    with-pwhistory
+    with-faillock
+    without-nullok
+    --backup=PAM_CONFIG_BACKUP
+    --force
+  register: authselect_select
+
+- name: "CIS 4.4.2.1 - Apply changes to reflect updated PAM templates"
+  ansible.builtin.command: authselect apply-changes
+
+- name: "CIS 4.4.2.1 - Verify required PAM modules are included in password-auth"
+  ansible.builtin.shell: >
+    grep -P --quiet '\b(pam_pwquality\.so|pam_pwhistory\.so|pam_faillock\.so|pam_unix\.so)\b'
+    /etc/authselect/custom/custom-profile/password-auth
+  register: pam_check_password_auth
+  failed_when: pam_check_password_auth.rc != 0
+
+- name: "CIS 4.4.2.1 - Verify required PAM modules are included in system-auth"
+  ansible.builtin.shell: >
+    grep -P --quiet '\b(pam_pwquality\.so|pam_pwhistory\.so|pam_faillock\.so|pam_unix\.so)\b'
+    /etc/authselect/custom/custom-profile/system-auth
+  register: pam_check_system_auth
+  failed_when: pam_check_system_auth.rc != 0
