@@ -3802,3 +3802,13 @@
       lookup('ansible.builtin.fileglob', '/etc/sudoers.d/*', errors='ignore')
     }}
   when: ansible_facts['os_family'] == 'RedHat'
+
+- name: "CIS 4.3.6 - Ensure sudo authentication timeout is set to 15 minutes or less"
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/10-cis-timeout
+    create: yes
+    mode: '0440'
+    owner: root
+    group: root
+    line: 'Defaults timestamp_timeout=15'
+    validate: '/usr/sbin/visudo -cf %s'
