@@ -3796,12 +3796,9 @@
     regexp: '\!authenticate'
     replace: ''
     validate: '/usr/sbin/visudo -cf %s'
-  loop: >
-    {{
-      ['/etc/sudoers'] +
-      lookup('ansible.builtin.fileglob', '/etc/sudoers.d/*', errors='ignore')
-    }}
+  loop: "{{ ['/etc/sudoers'] + (lookup('ansible.builtin.fileglob', '/etc/sudoers.d/*', wantlist=True) | default([])) }}"
   when: ansible_facts['os_family'] == 'RedHat'
+
 
 - name: "CIS 4.3.6 - Ensure sudo authentication timeout is set to 15 minutes or less"
   ansible.builtin.lineinfile:
