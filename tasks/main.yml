@@ -3213,3 +3213,18 @@
         enabled: true
         masked: no
       when: cronie_installed.rc == 0
+
+- name: CIS 4.1.1.2 - Ensure permissions on /etc/crontab are configured
+  block:
+    - name: Ensure /etc/crontab is owned by root
+      ansible.builtin.file:
+        path: /etc/crontab
+        owner: root
+        group: root
+        state: file
+
+    - name: Ensure /etc/crontab has 0600 permissions
+      ansible.builtin.file:
+        path: /etc/crontab
+        mode: '0600'
+        state: file
