@@ -3354,12 +3354,18 @@
         group: root
         mode: '0600'
 
+    - name: Check if /etc/ssh/sshd_config.d exists and is a directory
+      ansible.builtin.stat:
+        path: /etc/ssh/sshd_config.d
+      register: sshd_config_d_stat
+
     - name: Find *.conf files under /etc/ssh/sshd_config.d/
       ansible.builtin.find:
         paths: /etc/ssh/sshd_config.d/
         patterns: '*.conf'
         file_type: file
       register: sshd_conf_files
+      when: sshd_config_d_stat.stat.isdir is defined and sshd_config_d_stat.stat.isdir
 
     - name: Set permissions on each file in /etc/ssh/sshd_config.d/
       ansible.builtin.file:
@@ -3369,6 +3375,8 @@
         group: root
         mode: '0600'
       loop: "{{ sshd_conf_files.files }}"
-      when: sshd_conf_files.matched > 0
+      when:
+        - sshd_config_d_stat.stat.isdir is defined and sshd_config_d_stat.stat.isdir
+        - sshd_conf_files.matched > 0
 
 
