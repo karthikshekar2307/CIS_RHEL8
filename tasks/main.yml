@@ -3893,3 +3893,28 @@
     /etc/authselect/custom/custom-profile/system-auth
   register: pam_check_system_auth
   failed_when: pam_check_system_auth.rc != 0
+
+- name: "CIS 4.4.2.2 - Ensure 'with-faillock' feature is enabled in authselect"
+  ansible.builtin.command: >
+    authselect enable-feature with-faillock
+  register: faillock_feature
+  changed_when: "'with-faillock' in faillock_feature.stdout"
+
+- name: "CIS 4.4.2.2 - Apply authselect changes"
+  ansible.builtin.command: authselect apply-changes
+
+- name: "CIS 4.4.2.2 - Verify pam_faillock.so present in password-auth"
+  ansible.builtin.shell: >
+    grep -Pq '\bpam_faillock\.so\b'
+    /etc/authselect/custom/custom-profile/password-auth
+  register: faillock_check_password
+  failed_when: faillock_check_password.rc != 0
+  changed_when: false
+
+- name: "CIS 4.4.2.2 - Verify pam_faillock.so present in system-auth"
+  ansible.builtin.shell: >
+    grep -Pq '\bpam_faillock\.so\b'
+    /etc/authselect/custom/custom-profile/system-auth
+  register: faillock_check_system
+  failed_when: faillock_check_system.rc != 0
+  changed_when: false
