@@ -3407,3 +3407,21 @@
 
 
 
+- name: CIS 4.2.3 - Set permissions on SSH public host key files
+  block:
+    - name: Find SSH public key files under /etc/ssh
+      ansible.builtin.find:
+        paths: /etc/ssh
+        file_type: file
+        patterns: 'ssh_host_*_key.pub'
+        recurse: no
+      register: ssh_public_keys
+
+    - name: Ensure ownership and permissions on SSH public key files
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        owner: root
+        group: root
+        mode: '0644'
+      loop: "{{ ssh_public_keys.files }}"
+      when: ssh_public_keys.matched > 0
