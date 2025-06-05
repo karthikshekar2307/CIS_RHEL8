@@ -3311,21 +3311,15 @@
 
 - name: CIS 4.1.2.1 - Ensure 'at' is restricted to authorized users
   block:
-    - name: Determine appropriate group for /etc/at.allow and /etc/at.deny
-      ansible.builtin.getent:
-        database: group
-        key: daemon
-      register: daemon_group
-    
+
     - name: Check if 'daemon' group exists
       ansible.builtin.getent:
         database: group
-        key: daemon
-      register: daemon_group
+      register: getent_group_info
 
     - name: Set group variable for 'at' permission files
-      set_fact:
-        at_group: "{{ 'daemon' if daemon_group.found else 'root' }}"
+      ansible.builtin.set_fact:
+        at_group: "{{ 'daemon' if 'daemon' in getent_group_info.getent_group else 'root' }}"
 
     - name: Ensure /etc/at.allow exists with correct permissions
       ansible.builtin.file:
@@ -3335,6 +3329,11 @@
         group: "{{ at_group }}"
         mode: '0640'
 
+    - name: Check if /etc/at.deny exists
+      ansible.builtin.stat:
+        path: /etc/at.deny
+      register: at_deny_stat
+
     - name: Ensure /etc/at.deny has correct permissions if it exists
       ansible.builtin.file:
         path: /etc/at.deny
@@ -3342,5 +3341,4 @@
         owner: root
         group: "{{ at_group }}"
         mode: '0640'
-      when: ansible.builtin.stat(path='/etc/at.deny').stat.exists
-      
+      when: at_deny_stat.stat.exists
