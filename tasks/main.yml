@@ -3809,3 +3809,22 @@
     group: root
     line: 'Defaults timestamp_timeout=15'
     validate: '/usr/sbin/visudo -cf %s'
+
+- name: "CIS 4.3.7 - Create a group to restrict 'su' access"
+  ansible.builtin.group:
+    name: sugroup
+    state: present
+    system: true
+
+- name: "CIS 4.3.7 - Ensure pam_wheel.so is configured with use_uid and group=sugroup"
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/su
+    regexp: '^#?auth\s+required\s+pam_wheel\.so.*'
+    line: 'auth required pam_wheel.so use_uid group=sugroup'
+    state: present
+    backrefs: yes
+    create: yes
+
+- name: "CIS 4.3.7 - Ensure 'sugroup' has no users"
+  ansible.builtin.command: "gpasswd -M '' sugroup"
+  changed_when: false
