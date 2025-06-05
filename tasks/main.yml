@@ -3152,3 +3152,25 @@
     - samba
   when: ansible_facts.services['firewalld.service'] is defined and ansible_facts.services['firewalld.service'].state == 'running'
   #notify: Reload firewalld
+- name: CIS 3.4.2.4 - Allow established connections in nftables
+  block:
+    - name: Check if nftables service is enabled
+      ansible.builtin.command: systemctl is-enabled nftables.service
+      register: nftables_status
+      changed_when: false
+      failed_when: false
+
+    - name: Allow established TCP connections in nftables
+      ansible.builtin.command: >
+        nft add rule inet filter input ip protocol tcp ct state established accept
+      when: nftables_status.stdout == "enabled"
+
+    - name: Allow established UDP connections in nftables
+      ansible.builtin.command: >
+        nft add rule inet filter input ip protocol udp ct state established accept
+      when: nftables_status.stdout == "enabled"
+
+    - name: Allow established ICMP connections in nftables
+      ansible.builtin.command: >
+        nft add rule inet filter input ip protocol icmp ct state established accept
+      when: nftables_status.stdout == "enabled"
