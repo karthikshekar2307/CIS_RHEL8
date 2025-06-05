@@ -3655,3 +3655,20 @@
       ansible.builtin.service:
         name: sshd
         state: reloaded
+
+- name: "CIS 4.2.16 - Ensure sshd MaxSessions is configured to 10 or less"
+  block:
+    - name: "Set MaxSessions to 10 in /etc/ssh/sshd_config"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^MaxSessions'
+        line: 'MaxSessions 10'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: "Reload sshd to apply MaxSessions setting"
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
