@@ -2988,3 +2988,12 @@
 - name: "CIS 3.3.11 - Reload sysctl for IPv6 settings"
   ansible.builtin.command: sysctl --system
   when: ipv6_status['content'] | b64decode | trim == '0'
+
+# CIS 3.4.1.1 - Ensure nftables is installed
+
+- name: "CIS 3.4.1.1 - Ensure nftables is installed"
+  ansible.builtin.package:
+    name: nftables
+    state: present
+
+
