@@ -3288,3 +3288,25 @@
         path: /etc/cron.d
         mode: '0700'
         state: directory
+
+- name: CIS 4.1.1.8 - Ensure crontab is restricted to authorized users
+  block:
+    - name: Ensure /etc/cron.allow exists
+      ansible.builtin.file:
+        path: /etc/cron.allow
+        state: touch
+        owner: root
+        group: root
+        mode: '0640'
+
+    - name: Ensure /etc/cron.deny is owned by root and permissions are 0640 if it exists
+      ansible.builtin.file:
+        path: /etc/cron.deny
+        owner: root
+        group: root
+        mode: '0640'
+        state: file
+      when: ansible_facts['os_family'] == "Debian" or ansible_facts['distribution'] == "Ubuntu"
+      ignore_errors: true
+
+
