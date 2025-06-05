@@ -4025,3 +4025,21 @@
 
 - name: "CIS 4.4.2.5 - Apply authselect changes"
   ansible.builtin.command: authselect apply-changes
+
+- name: "CIS 4.4.3.1 - Configure pam_faillock in /etc/security/faillock.conf"
+  ansible.builtin.blockinfile:
+    path: /etc/security/faillock.conf
+    create: true
+    block: |
+      deny=5
+      fail_interval=900
+      unlock_time=900
+      even_deny_root
+      root_unlock_time=900
+      local_users_only
+      audit
+  owner: root
+  group: root
+  mode: '0644'
+  tags:
+    - CIS_4.4.3.1
