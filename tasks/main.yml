@@ -3828,3 +3828,8 @@
 - name: "CIS 4.3.7 - Ensure 'sugroup' has no users"
   ansible.builtin.command: "gpasswd -M '' sugroup"
   changed_when: false
+
+- name: "CIS 4.4.1.1 - Ensure latest version of pam is installed"
+  ansible.builtin.command: dnf upgrade -y pam
+  register: pam_upgrade
+  changed_when: "'Nothing to do' not in pam_upgrade.stdout"
