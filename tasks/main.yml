@@ -3549,3 +3549,20 @@
       ansible.builtin.service:
         name: sshd
         state: reloaded
+
+- name: "CIS 4.2.10 - Ensure sshd IgnoreRhosts is enabled"
+  block:
+    - name: "Ensure 'IgnoreRhosts yes' is set in /etc/ssh/sshd_config"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^IgnoreRhosts'
+        line: 'IgnoreRhosts yes'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: Reload sshd to apply IgnoreRhosts setting
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
