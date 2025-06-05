@@ -3672,3 +3672,20 @@
       ansible.builtin.service:
         name: sshd
         state: reloaded
+
+- name: "CIS 4.2.17 - Ensure sshd MaxStartups is configured to 10:30:60 or more restrictive"
+  block:
+    - name: "Set MaxStartups to 10:30:60 in /etc/ssh/sshd_config"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^MaxStartups'
+        line: 'MaxStartups 10:30:60'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: "Reload sshd to apply MaxStartups setting"
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
