@@ -3651,10 +3651,10 @@
         create: yes
         backup: yes
 
-    - name: "Reload sshd to apply MaxAuthTries setting"
-      ansible.builtin.service:
-        name: sshd
-        state: reloaded
+    # - name: "Reload sshd to apply MaxAuthTries setting"
+    #   ansible.builtin.service:
+    #     name: sshd
+    #     state: reloaded
 
 - name: "CIS 4.2.16 - Ensure sshd MaxSessions is configured to 10 or less"
   block:
