@@ -3919,29 +3919,56 @@
   failed_when: faillock_check_system.rc != 0
   changed_when: false
 
-- name: "CIS 4.4.2.3 - Enable 'with-pwquality' feature in authselect"
-  ansible.builtin.command: authselect enable-feature with-pwquality
-  register: pwquality_feature
-  changed_when: "'with-pwquality' in pwquality_feature.stdout"
+- name: "Create custom authselect profile based on sssd"
+  ansible.builtin.command: authselect create-profile custom-profile -b sssd
+  args:
+    creates: /etc/authselect/custom/custom-profile
 
-- name: "CIS 4.4.2.3 - Apply authselect changes"
+- name: "Select custom authselect profile with features"
+  ansible.builtin.command: >
+    authselect select custom/custom-profile
+    with-faillock with-pwhistory with-pwquality
+    --force --backup=before-custom-profile
+
+- name: "Apply authselect changes"
   ansible.builtin.command: authselect apply-changes
 
-- name: "CIS 4.4.2.3 - Verify pam_pwquality.so is present in password-auth"
-  ansible.builtin.shell: >
-    grep -Pq '\bpam_pwquality\.so\b'
-    /etc/authselect/custom/custom-profile/password-auth
+- name: "Verify pam_pwquality.so in password-auth"
+  ansible.builtin.shell: grep -Pq '\bpam_pwquality\.so\b' /etc/authselect/custom/custom-profile/password-auth
   register: pwquality_check_password
   failed_when: pwquality_check_password.rc != 0
   changed_when: false
 
-- name: "CIS 4.4.2.3 - Verify pam_pwquality.so is present in system-auth"
-  ansible.builtin.shell: >
-    grep -Pq '\bpam_pwquality\.so\b'
-    /etc/authselect/custom/custom-profile/system-auth
+- name: "Verify pam_pwquality.so in system-auth"
+  ansible.builtin.shell: grep -Pq '\bpam_pwquality\.so\b' /etc/authselect/custom/custom-profile/system-auth
   register: pwquality_check_system
   failed_when: pwquality_check_system.rc != 0
   changed_when: false
+
+- name: "Verify pam_pwhistory.so in password-auth"
+  ansible.builtin.shell: grep -Pq '\bpam_pwhistory\.so\b' /etc/authselect/custom/custom-profile/password-auth
+  register: pwhistory_check_password
+  failed_when: pwhistory_check_password.rc != 0
+  changed_when: false
+
+- name: "Verify pam_pwhistory.so in system-auth"
+  ansible.builtin.shell: grep -Pq '\bpam_pwhistory\.so\b' /etc/authselect/custom/custom-profile/system-auth
+  register: pwhistory_check_system
+  failed_when: pwhistory_check_system.rc != 0
+  changed_when: false
+
+- name: "Verify pam_faillock.so in password-auth"
+  ansible.builtin.shell: grep -Pq '\bpam_faillock\.so\b' /etc/authselect/custom/custom-profile/password-auth
+  register: faillock_check_password
+  failed_when: faillock_check_password.rc != 0
+  changed_when: false
+
+- name: "Verify pam_faillock.so in system-auth"
+  ansible.builtin.shell: grep -Pq '\bpam_faillock\.so\b' /etc/authselect/custom/custom-profile/system-auth
+  register: faillock_check_system
+  failed_when: faillock_check_system.rc != 0
+  changed_when: false
+
 
 - name: "CIS 4.4.2.4 - Enable 'with-pwhistory' feature in authselect"
   ansible.builtin.command: authselect enable-feature with-pwhistory
