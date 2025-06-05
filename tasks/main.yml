@@ -3228,3 +3228,18 @@
         path: /etc/crontab
         mode: '0600'
         state: file
+
+- name: CIS 4.1.1.3 - Ensure permissions on /etc/cron.hourly are configured
+  block:
+    - name: Ensure /etc/cron.hourly is owned by root
+      ansible.builtin.file:
+        path: /etc/cron.hourly
+        owner: root
+        group: root
+        state: directory
+
+    - name: Ensure /etc/cron.hourly has 0700 permissions
+      ansible.builtin.file:
+        path: /etc/cron.hourly
+        mode: '0700'
+        state: directory
