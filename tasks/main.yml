@@ -3532,3 +3532,20 @@
       ansible.builtin.service:
         name: sshd
         state: reloaded
+
+- name: "CIS 4.2.9 - Ensure sshd HostbasedAuthentication is disabled"
+  block:
+    - name: "Ensure 'HostbasedAuthentication no' is set in /etc/ssh/sshd_config"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^HostbasedAuthentication'
+        line: 'HostbasedAuthentication no'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: Reload sshd to apply HostbasedAuthentication configuration
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
