@@ -3273,3 +3273,18 @@
         path: /etc/cron.monthly
         mode: '0700'
         state: directory
+
+- name: CIS 4.1.1.7 - Ensure permissions on /etc/cron.d are configured
+  block:
+    - name: Ensure /etc/cron.d is owned by root
+      ansible.builtin.file:
+        path: /etc/cron.d
+        owner: root
+        group: root
+        state: directory
+
+    - name: Ensure /etc/cron.d has 0700 permissions
+      ansible.builtin.file:
+        path: /etc/cron.d
+        mode: '0700'
+        state: directory
