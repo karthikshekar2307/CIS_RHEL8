@@ -3834,8 +3834,9 @@
   register: pam_upgrade
   changed_when: "'Nothing to do' not in pam_upgrade.stdout"
 
-- name: "CIS 4.4.1.2 - Ensure latest version of authselect is installed"
-  ansible.builtin.command: dnf upgrade -y authselect
+- name: "CIS 4.4.1.2 - Ensure latest version of authselect is installed using --nogpgcheck"
+  ansible.builtin.command: dnf upgrade -y authselect --nogpgcheck
   register: authselect_upgrade
   changed_when: "'Nothing to do' not in authselect_upgrade.stdout"
+
 
