@@ -3515,3 +3515,20 @@
       ansible.builtin.service:
         name: sshd
         state: reloaded
+
+- name: "CIS 4.2.8 - Ensure sshd DisableForwarding is enabled"
+  block:
+    - name: "Ensure 'DisableForwarding yes' is set in /etc/ssh/sshd_config"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^DisableForwarding'
+        line: 'DisableForwarding yes'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: Reload sshd to apply DisableForwarding configuration
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
