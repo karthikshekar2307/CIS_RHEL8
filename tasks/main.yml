@@ -3065,4 +3065,71 @@
     - "'is not installed' in firewalld_check.stderr"
     - "'is not installed' in nftables_check.stderr"
 
+- name: CIS 3.4.2 - Create nftables rules directory
+  file:
+    path: /etc/nftables
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: CIS 3.4.2 - Write nftables rules to file
+  copy:
+    dest: /etc/nftables/nftables.rules
+    owner: root
+    group: root
+    mode: '0600'
+    content: |
+      flush ruleset
+
+      table inet filter {
+          chain input {
+              type filter hook input priority 0; policy drop;
+
+              ct state invalid drop
+              iif lo accept
+              iif != lo ip daddr 127.0.0.1/8 drop
+              iif != lo ip6 daddr ::1/128 drop
+
+              ip protocol tcp ct state established accept
+              ip protocol udp ct state established accept
+
+              ip protocol igmp accept
+              tcp dport ssh accept
+
+              icmpv6 type { destination-unreachable, packet-too-big, time-exceeded, parameter-problem,
+              mld-listener-query, mld-listener-report, mld-listener-done, nd-router-solicit, nd-router-advert,
+              nd-neighbor-solicit, nd-neighbor-advert, ind-neighbor-solicit, ind-neighbor-advert, mld2-listener-report } accept
+
+              icmp type { destination-unreachable, router-advertisement, router-solicitation,
+              time-exceeded, parameter-problem } accept
+          }
+
+          chain forward {
+              type filter hook forward priority 0; policy drop;
+          }
+
+          chain output {
+              type filter hook output priority 0; policy accept;
+          }
+      }
+
+- name: CIS 3.4.2 - Apply nftables ruleset
+  command: nft -f /etc/nftables/nftables.rules
+
+- name: CIS 3.4.2 - Persist nftables rules
+  command: bash -c 'nft list ruleset > /etc/nftables/nftables.rules'
+
+- name: CIS 3.4.2 - Add include directive to nftables config
+  lineinfile:
+    path: /etc/sysconfig/nftables.conf
+    line: 'include "/etc/nftables/nftables.rules"'
+    create: yes
+    state: present
+
+- name: CIS 3.4.2 - Restart nftables to apply config
+  systemd:
+    name: nftables
+    enabled: true
+    state: restarted
 
