@@ -3343,3 +3343,32 @@
         mode: '0640'
       when: at_deny_stat.stat.exists
 
+- name: CIS 4.2.1 - Ensure permissions on SSH configuration files
+  block:
+
+    - name: Ensure /etc/ssh/sshd_config has correct permissions
+      ansible.builtin.file:
+        path: /etc/ssh/sshd_config
+        state: file
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Find *.conf files under /etc/ssh/sshd_config.d/
+      ansible.builtin.find:
+        paths: /etc/ssh/sshd_config.d/
+        patterns: '*.conf'
+        file_type: file
+      register: sshd_conf_files
+
+    - name: Set permissions on each file in /etc/ssh/sshd_config.d/
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: file
+        owner: root
+        group: root
+        mode: '0600'
+      loop: "{{ sshd_conf_files.files }}"
+      when: sshd_conf_files.matched > 0
+
+
