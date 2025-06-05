@@ -3583,3 +3583,20 @@
       ansible.builtin.service:
         name: sshd
         state: reloaded
+
+- name: "CIS 4.2.12 - Ensure sshd LoginGraceTime is set to 60 seconds"
+  block:
+    - name: "Set LoginGraceTime to 60 in /etc/ssh/sshd_config"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^LoginGraceTime'
+        line: 'LoginGraceTime 60'
+        insertafter: '^#?Port.*'
+        state: present
+        create: yes
+        backup: yes
+
+    - name: "Reload sshd to apply LoginGraceTime setting"
+      ansible.builtin.service:
+        name: sshd
+        state: reloaded
