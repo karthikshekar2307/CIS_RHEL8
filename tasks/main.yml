@@ -2994,5 +2994,69 @@
 - name: Install nftables without GPG check (not recommended)
   ansible.builtin.command: dnf install -y --nogpgcheck nftables
 
+# CIS 3.4.1.2 - Ensure a single firewall configuration utility is in use
+- name: Check if firewalld is installed
+  ansible.builtin.shell: rpm -q firewalld
+  register: firewalld_check
+  ignore_errors: true
+
+- name: Check if nftables is installed
+  ansible.builtin.shell: rpm -q nftables
+  register: nftables_check
+  ignore_errors: true
+
+- name: Check if firewalld is active
+  ansible.builtin.shell: systemctl is-active firewalld
+  register: firewalld_active
+  changed_when: false
+  ignore_errors: true
+
+- name: Check if nftables is active
+  ansible.builtin.shell: systemctl is-active nftables
+  register: nftables_active
+  changed_when: false
+  ignore_errors: true
+
+- name: Check if firewalld is enabled
+  ansible.builtin.shell: systemctl is-enabled firewalld
+  register: firewalld_enabled
+  changed_when: false
+  ignore_errors: true
+
+- name: Check if nftables is enabled
+  ansible.builtin.shell: systemctl is-enabled nftables
+  register: nftables_enabled
+  changed_when: false
+  ignore_errors: true
+
+- name: Mask and stop firewalld if both firewalld and nftables are active
+  ansible.builtin.systemd:
+    name: firewalld
+    enabled: false
+    masked: true
+    state: stopped
+  when: 
+    - firewalld_active.stdout == "active"
+    - nftables_active.stdout == "active"
+    - nftables_enabled.stdout == "enabled"
+
+- name: Mask and stop nftables if both firewalld and nftables are active
+  ansible.builtin.systemd:
+    name: nftables
+    enabled: false
+    masked: true
+    state: stopped
+  when: 
+    - firewalld_active.stdout == "active"
+    - nftables_active.stdout == "active"
+    - firewalld_enabled.stdout == "enabled"
+
+- name: Ensure nftables is installed if neither firewall is present
+  ansible.builtin.yum:
+    name: nftables
+    state: present
+  when:
+    - "'is not installed' in firewalld_check.stderr"
+    - "'is not installed' in nftables_check.stderr"
 
 
