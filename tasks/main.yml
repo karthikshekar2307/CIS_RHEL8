@@ -3839,4 +3839,26 @@
   register: authselect_upgrade
   changed_when: "'Nothing to do' not in authselect_upgrade.stdout"
 
+- name: "CIS 4.4.2 - Create custom authselect profile"
+  ansible.builtin.command: >
+    authselect create-profile custom-profile -b sssd --symlink-meta
+  args:
+    creates: /etc/authselect/custom/custom-profile
+
+- name: "CIS 4.4.2 - Apply custom authselect profile with security features"
+  ansible.builtin.command: >
+    authselect select custom/custom-profile
+    with-faillock
+    with-sudo
+    without-nullok
+    --force
+  register: authselect_configure
+
+- name: "CIS 4.4.2 - Validate applied authselect profile"
+  ansible.builtin.command: authselect current
+  register: authselect_status
+
+- name: "Debug - Show current authselect status"
+  ansible.builtin.debug:
+    var: authselect_status.stdout
 
