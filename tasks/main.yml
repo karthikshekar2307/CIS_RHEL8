@@ -6015,27 +6015,55 @@
 #       -a always,exit -F arch=b64 -S init_module,finit_module,delete_module,create_module,query_module -F auid>={{ uid_min.stdout }} -F auid!=unset -k kernel_modules
 #       -a always,exit -F path=/usr/bin/kmod -F perm=x -F auid>={{ uid_min.stdout }} -F auid!=unset -k kernel_modules
 
-- name: "CIS 5.2.3.19 | Load audit rules with augenrules"
+# - name: "CIS 5.2.3.19 | Load audit rules with augenrules"
+#   become: true
+#   command: augenrules --load
+
+# - name: "CIS 5.2.3.19 | Check if audit system requires reboot to load rules (-e 2)"
+#   become: true
+#   shell: |
+#     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
+#   register: auditd_reboot_check
+#   changed_when: false
+
+# - name: "CIS 5.2.3.19 | Warn if reboot is required to apply audit rule changes"
+#   debug:
+#     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
+#   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+
+# - name: "CIS 5.2.3.19 | Verify symbolic links to kmod are correct"
+#   become: true
+#   shell: |
+#     S_LINKS=$(ls -l /usr/sbin/lsmod /usr/sbin/rmmod /usr/sbin/insmod /usr/sbin/modinfo /usr/sbin/modprobe /usr/sbin/depmod | grep -v " -> ../bin/kmod" || true)
+#     if [[ "$S_LINKS" != "" ]]; then echo "Issue with symlinks: $S_LINKS"; exit 1; else echo "OK"; fi
+#   register: kmod_symlinks_check
+#   changed_when: false
+#   failed_when: kmod_symlinks_check.stdout != "OK"
+
+- name: "CIS 5.2.3.20 | Ensure audit configuration is set to immutable (-e 2)"
+  become: true
+  blockinfile:
+    path: /etc/audit/rules.d/99-finalize.rules
+    create: true
+    owner: root
+    group: root
+    mode: '0640'
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - Set auditd to immutable"
+    block: |
+      -e 2
+
+- name: "CIS 5.2.3.20 | Load audit rules using augenrules"
   become: true
   command: augenrules --load
 
-- name: "CIS 5.2.3.19 | Check if audit system requires reboot to load rules (-e 2)"
+- name: "CIS 5.2.3.20 | Check if audit system requires reboot to enforce immutable rules"
   become: true
   shell: |
     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
   register: auditd_reboot_check
   changed_when: false
 
-- name: "CIS 5.2.3.19 | Warn if reboot is required to apply audit rule changes"
+- name: "CIS 5.2.3.20 | Warn if reboot is required to enforce audit immutability"
   debug:
-    msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
+    msg: "Reboot required to apply immutable audit rules (-e 2)."
   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
-
-- name: "CIS 5.2.3.19 | Verify symbolic links to kmod are correct"
-  become: true
-  shell: |
-    S_LINKS=$(ls -l /usr/sbin/lsmod /usr/sbin/rmmod /usr/sbin/insmod /usr/sbin/modinfo /usr/sbin/modprobe /usr/sbin/depmod | grep -v " -> ../bin/kmod" || true)
-    if [[ "$S_LINKS" != "" ]]; then echo "Issue with symlinks: $S_LINKS"; exit 1; else echo "OK"; fi
-  register: kmod_symlinks_check
-  changed_when: false
-  failed_when: kmod_symlinks_check.stdout != "OK"
