@@ -5306,3 +5306,9 @@
     group: root
   loop: "{{ log_files.files }}"
   when: item.gid not in [0, 4]   # 0=root, 4=adm on most Linux systems
+
+- name: Ensure auditd is installed
+  become: true
+  package:
+    name: audit
+    state: present
