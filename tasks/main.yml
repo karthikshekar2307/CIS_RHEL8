@@ -5173,7 +5173,7 @@
     line: 'Storage=persistent'
     create: yes
     state: present
-  notify: Restart journald
+  #notify: Restart journald
 
 - name: Restart journald
   become: true
