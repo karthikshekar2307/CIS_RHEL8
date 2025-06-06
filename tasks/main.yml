@@ -4527,15 +4527,16 @@
             label: "{{ item }}"
 
         - name: "Fix weak or missing password hashing algorithms"
-          replace:
+          ansible.builtin.replace:
             path: "{{ pam_profile_path }}/{{ item.0 }}"
-            regexp: '(^\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so\s+.*)(md5|bigcrypt|sha256|blowfish)(.*)$'
-            replace: '\1sha512\3'
+            regexp: '(^\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so\s+.*)(md5|bigcrypt|sha256|blowfish)(\s*.*)$'
+            replace: '\1 sha512\4'
             backup: yes
           when: item.1.stdout is defined and item.1.stdout != "present"
           loop: "{{ ['password-auth', 'system-auth'] | zip(hash_check.results) | list }}"
           loop_control:
-          label: "{{ item.0 }}"
-          
+            label: "{{ item.0 }}"
+
+
     - name: "Apply authselect changes"
       command: authselect apply-changes
