@@ -4643,9 +4643,10 @@
         backup: yes
 
     - name: "Get users with valid passwords"
-      shell: "awk -F: '/^[^:\n\r]+:[^!*xX\n\r]/ {print $1}' /etc/shadow"
+      shell: "awk -F: '$2 !~ /^[!*]/ { print $1 }' /etc/shadow"
       register: users_with_passwords
       changed_when: false
+
 
     - name: "Set password warning days to 7 for each user"
       command: chage --warndays 7 {{ item }}
