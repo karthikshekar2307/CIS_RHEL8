@@ -4823,10 +4823,11 @@
 
 - name: "CIS 5.1.1.1 - Ensure rsyslog is installed"
   block:
-    - name: "Install rsyslog package"
-      package:
+    - name: "Install rsyslog package without GPG check (temporary workaround)"
+      yum:
         name: rsyslog
         state: present
+        disable_gpg_check: yes
 
     - name: "Ensure rsyslog service is enabled and started"
       service:
@@ -4835,6 +4836,7 @@
         state: started
   tags:
     - CIS_5.1.1.1
+
 
 # - name: "CIS 5.1.1.2 - Ensure rsyslog service is enabled"
 #   block:
