@@ -4659,17 +4659,37 @@
 #     - login-defs
 #     - warn-age
 
-- name: "CIS 4.5.1.4 - Set default password inactivity to 30 days"
-  command: useradd -D -f 30
+# - name: "CIS 4.5.1.4 - Set default password inactivity to 30 days"
+#   command: useradd -D -f 30
 
-- name: "Get users with valid passwords"
+# - name: "Get users with valid passwords"
+#   shell: "awk -F: '$2 !~ /^[!*]/ { print $1 }' /etc/shadow"
+#   register: users_with_passwords
+#   changed_when: false
+
+# - name: "Set password inactivity for users with valid passwords"
+#   command: "chage --inactive 30 {{ item }}"
+#   loop: "{{ users_with_passwords.stdout_lines }}"
+#   when: users_with_passwords.stdout_lines | length > 0
+
+- name: "CIS 4.5.1.5 - Get users with valid passwords"
   shell: "awk -F: '$2 !~ /^[!*]/ { print $1 }' /etc/shadow"
-  register: users_with_passwords
+  register: valid_users
   changed_when: false
 
-- name: "Set password inactivity for users with valid passwords"
-  command: "chage --inactive 30 {{ item }}"
-  loop: "{{ users_with_passwords.stdout_lines }}"
-  when: users_with_passwords.stdout_lines | length > 0
+- name: "Check if any user has future password change date"
+  shell: |
+    l_change=$(date -d "$(chage --list {{ item }} | grep '^Last password change' | cut -d: -f2 | sed 's/^ *//')" +%s 2>/dev/null || echo 0)
+    if [ "$l_change" -gt "$(date +%s)" ]; then
+      echo "{{ item }}"
+    fi
+  loop: "{{ valid_users.stdout_lines }}"
+  register: users_with_future_change
+  changed_when: false
+  failed_when: false
 
+- name: "Set password as expired for users with future password change date"
+  command: chage -d 0 {{ item.item }}
+  loop: "{{ users_with_future_change.results | selectattr('stdout', '!=', '') | list }}"
+  when: item.stdout != ''
 
