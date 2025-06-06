@@ -4331,30 +4331,40 @@
 #   ansible.builtin.command: authselect apply-changes
 #   changed_when: true
 
-- name: "CIS 4.4.3.2.6 - Comment out any dictcheck = 0 in pwquality.conf"
-  ansible.builtin.replace:
-    path: /etc/security/pwquality.conf
-    regexp: '^\s*dictcheck\s*=\s*0\b'
-    replace: '# dictcheck = 0'
-  ignore_errors: yes
+# - name: "CIS 4.4.3.2.6 - Comment out any dictcheck = 0 in pwquality.conf"
+#   ansible.builtin.replace:
+#     path: /etc/security/pwquality.conf
+#     regexp: '^\s*dictcheck\s*=\s*0\b'
+#     replace: '# dictcheck = 0'
+#   ignore_errors: yes
 
-- name: "CIS 4.4.3.2.6 - Comment out dictcheck = 0 in all pwquality.conf.d files"
-  ansible.builtin.shell: |
-    find /etc/security/pwquality.conf.d/ -type f -name "*.conf" -exec sed -ri 's/^\s*dictcheck\s*=\s*0\b/# dictcheck = 0/' {} +
-  args:
-    executable: /bin/bash
+# - name: "CIS 4.4.3.2.6 - Comment out dictcheck = 0 in all pwquality.conf.d files"
+#   ansible.builtin.shell: |
+#     find /etc/security/pwquality.conf.d/ -type f -name "*.conf" -exec sed -ri 's/^\s*dictcheck\s*=\s*0\b/# dictcheck = 0/' {} +
+#   args:
+#     executable: /bin/bash
 
-- name: "CIS 4.4.3.2.6 - Remove dictcheck=0 from pam_pwquality.so lines in PAM files"
-  ansible.builtin.lineinfile:
-    path: "/etc/authselect/custom/custom-profile/{{ item }}"
-    regexp: '^(.*pam_pwquality\.so.*)\s+dictcheck\s*=\s*0(.*)$'
-    line: '\1\2'
-    backrefs: yes
-    state: present
-  loop:
-    - system-auth
-    - password-auth
+# - name: "CIS 4.4.3.2.6 - Remove dictcheck=0 from pam_pwquality.so lines in PAM files"
+#   ansible.builtin.lineinfile:
+#     path: "/etc/authselect/custom/custom-profile/{{ item }}"
+#     regexp: '^(.*pam_pwquality\.so.*)\s+dictcheck\s*=\s*0(.*)$'
+#     line: '\1\2'
+#     backrefs: yes
+#     state: present
+#   loop:
+#     - system-auth
+#     - password-auth
 
-- name: "CIS 4.4.3.2.6 - Apply authselect changes"
-  ansible.builtin.command: authselect apply-changes
-  changed_when: true
+# - name: "CIS 4.4.3.2.6 - Apply authselect changes"
+#   ansible.builtin.command: authselect apply-changes
+#   changed_when: true
+
+- name: "CIS 4.4.3.2.7 - Ensure enforce_for_root is enabled in pwquality"
+  ansible.builtin.blockinfile:
+    path: /etc/security/pwquality.conf.d/50-pwroot.conf
+    create: true
+    block: |
+      enforce_for_root
+    owner: root
+    group: root
+    mode: '0644'
