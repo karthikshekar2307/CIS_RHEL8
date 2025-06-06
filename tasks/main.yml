@@ -5082,22 +5082,43 @@
 #     enabled: yes
 #   when: journal_upload_conf.stat.exists
 
-- name: "CIS 5.1.2.1.3 - Ensure systemd-journal-upload.service is enabled"
+# - name: "CIS 5.1.2.1.3 - Ensure systemd-journal-upload.service is enabled"
+#   block:
+
+#     - name: "Check if systemd-journal-upload.service unit file exists"
+#       stat:
+#         path: /usr/lib/systemd/system/systemd-journal-upload.service
+#       register: journal_upload_service_file
+
+#     - name: "Enable and start systemd-journal-upload.service"
+#       systemd:
+#         name: systemd-journal-upload.service
+#         enabled: yes
+#         state: started
+#       when: journal_upload_service_file.stat.exists
+
+#     - name: "Warn if systemd-journal-upload.service is not installed"
+#       debug:
+#         msg: "systemd-journal-upload.service not found. Skipping enable step."
+#       when: not journal_upload_service_file.stat.exists
+
+- name: "CIS 5.1.2.1.4 - Ensure journald is not configured to receive remote logs"
   block:
 
-    - name: "Check if systemd-journal-upload.service unit file exists"
+    - name: "Check if systemd-journal-remote.socket unit exists"
       stat:
-        path: /usr/lib/systemd/system/systemd-journal-upload.service
-      register: journal_upload_service_file
+        path: /usr/lib/systemd/system/systemd-journal-remote.socket
+      register: journal_socket
 
-    - name: "Enable and start systemd-journal-upload.service"
+    - name: "Mask systemd-journal-remote.socket if present"
       systemd:
-        name: systemd-journal-upload.service
-        enabled: yes
-        state: started
-      when: journal_upload_service_file.stat.exists
+        name: systemd-journal-remote.socket
+        enabled: no
+        masked: yes
+        state: stopped
+      when: journal_socket.stat.exists
 
-    - name: "Warn if systemd-journal-upload.service is not installed"
+    - name: "Warn if systemd-journal-remote.socket is not found"
       debug:
-        msg: "systemd-journal-upload.service not found. Skipping enable step."
-      when: not journal_upload_service_file.stat.exists
+        msg: "systemd-journal-remote.socket not found. Nothing to mask."
+      when: not journal_socket.stat.exists
