@@ -5673,19 +5673,59 @@
 #     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
 #   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
 
-- name: "CIS 5.2.3.9 | Create audit rules for permission modification events"
+# - name: "CIS 5.2.3.9 | Create audit rules for permission modification events"
+#   become: true
+#   shell: |
+#     UID_MIN=$(awk '/^\s*UID_MIN/{print $2}' /etc/login.defs)
+#     AUDIT_RULE_FILE="/etc/audit/rules.d/50-perm_mod.rules"
+#     > "${AUDIT_RULE_FILE}"
+#     if [ -n "$UID_MIN" ]; then
+#       echo "-a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
+#       echo "-a always,exit -F arch=b64 -S chown,fchown,lchown,fchownat -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
+#       echo "-a always,exit -F arch=b64 -S setxattr,lsetxattr,fsetxattr,removexattr,lremovexattr,fremovexattr -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
+#       echo "-a always,exit -F arch=b32 -S chmod,fchmod,fchmodat -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
+#       echo "-a always,exit -F arch=b32 -S chown,fchown,lchown,fchownat -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
+#       echo "-a always,exit -F arch=b32 -S setxattr,lsetxattr,fsetxattr,removexattr,lremovexattr,fremovexattr -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
+#     else
+#       echo "ERROR: UID_MIN not found"
+#       exit 1
+#     fi
+#   args:
+#     executable: /bin/bash
+
+# - name: "CIS 5.2.3.9 | Set permissions on 50-perm_mod.rules"
+#   become: true
+#   file:
+#     path: /etc/audit/rules.d/50-perm_mod.rules
+#     owner: root
+#     group: root
+#     mode: '0640'
+
+# - name: "CIS 5.2.3.9 | Load audit rules with augenrules"
+#   become: true
+#   command: augenrules --load
+
+# - name: "CIS 5.2.3.9 | Check if audit system requires reboot to load rules (-e 2)"
+#   become: true
+#   shell: |
+#     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
+#   register: auditd_reboot_check
+#   changed_when: false
+
+# - name: "CIS 5.2.3.9 | Warn if reboot is required to apply audit rule changes"
+#   debug:
+#     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
+#   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+
+- name: "CIS 5.2.3.10 | Create audit rules for successful file system mounts"
   become: true
   shell: |
     UID_MIN=$(awk '/^\s*UID_MIN/{print $2}' /etc/login.defs)
-    AUDIT_RULE_FILE="/etc/audit/rules.d/50-perm_mod.rules"
+    AUDIT_RULE_FILE="/etc/audit/rules.d/50-mounts.rules"
     > "${AUDIT_RULE_FILE}"
     if [ -n "$UID_MIN" ]; then
-      echo "-a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
-      echo "-a always,exit -F arch=b64 -S chown,fchown,lchown,fchownat -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
-      echo "-a always,exit -F arch=b64 -S setxattr,lsetxattr,fsetxattr,removexattr,lremovexattr,fremovexattr -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
-      echo "-a always,exit -F arch=b32 -S chmod,fchmod,fchmodat -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
-      echo "-a always,exit -F arch=b32 -S chown,fchown,lchown,fchownat -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
-      echo "-a always,exit -F arch=b32 -S setxattr,lsetxattr,fsetxattr,removexattr,lremovexattr,fremovexattr -F auid>=$UID_MIN -F auid!=unset -F key=perm_mod" >> "${AUDIT_RULE_FILE}"
+      echo "-a always,exit -F arch=b64 -S mount -F auid>=$UID_MIN -F auid!=unset -k mounts" >> "${AUDIT_RULE_FILE}"
+      echo "-a always,exit -F arch=b32 -S mount -F auid>=$UID_MIN -F auid!=unset -k mounts" >> "${AUDIT_RULE_FILE}"
     else
       echo "ERROR: UID_MIN not found"
       exit 1
@@ -5693,26 +5733,26 @@
   args:
     executable: /bin/bash
 
-- name: "CIS 5.2.3.9 | Set permissions on 50-perm_mod.rules"
+- name: "CIS 5.2.3.10 | Set permissions on 50-mounts.rules"
   become: true
   file:
-    path: /etc/audit/rules.d/50-perm_mod.rules
+    path: /etc/audit/rules.d/50-mounts.rules
     owner: root
     group: root
     mode: '0640'
 
-- name: "CIS 5.2.3.9 | Load audit rules with augenrules"
+- name: "CIS 5.2.3.10 | Load audit rules with augenrules"
   become: true
   command: augenrules --load
 
-- name: "CIS 5.2.3.9 | Check if audit system requires reboot to load rules (-e 2)"
+- name: "CIS 5.2.3.10 | Check if audit system requires reboot to load rules (-e 2)"
   become: true
   shell: |
     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
   register: auditd_reboot_check
   changed_when: false
 
-- name: "CIS 5.2.3.9 | Warn if reboot is required to apply audit rule changes"
+- name: "CIS 5.2.3.10 | Warn if reboot is required to apply audit rule changes"
   debug:
     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
