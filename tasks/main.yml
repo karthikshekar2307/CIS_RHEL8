@@ -5029,9 +5029,8 @@
 #     - CIS_5.1.1.7
 
 - name: "CIS 5.1.2.1.1 - Ensure systemd-journal-remote is installed"
-  package:
+  dnf:
     name: systemd-journal-remote
     state: present
-  when: ansible_os_family == "RedHat"
-  tags:
-    - CIS_5.1.2.1.1
+    disable_gpg_check: yes
+
