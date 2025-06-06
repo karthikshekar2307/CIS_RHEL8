@@ -6068,26 +6068,39 @@
 #     msg: "Reboot required to apply immutable audit rules (-e 2)."
 #   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
 
-- name: "CIS 5.2.3.21 | Check for audit rule drift between on-disk and running configuration"
+# - name: "CIS 5.2.3.21 | Check for audit rule drift between on-disk and running configuration"
+#   become: true
+#   command: augenrules --check
+#   register: audit_rule_drift
+#   changed_when: false
+#   failed_when: audit_rule_drift.rc != 0 and "'No change' not in audit_rule_drift.stdout"
+
+# - name: "CIS 5.2.3.21 | Load audit rules if drift detected"
+#   become: true
+#   command: augenrules --load
+#   when: "'No change' not in audit_rule_drift.stdout"
+
+# - name: "CIS 5.2.3.21 | Check if audit system is in immutable mode and requires reboot"
+#   become: true
+#   shell: |
+#     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
+#   register: audit_immutable_check
+#   changed_when: false
+
+# - name: "CIS 5.2.3.21 | Warn if reboot is required to apply audit rules"
+#   debug:
+#     msg: "Reboot required to apply audit rules due to immutable mode (-e 2)."
+#   when: audit_immutable_check.stdout == "REBOOT_REQUIRED"
+
+- name: "CIS 5.2.4.1 | Get audit log directory path from auditd.conf"
   become: true
-  command: augenrules --check
-  register: audit_rule_drift
+  command: awk -F= '/^\s*log_file\s*=\s*/ {gsub(/ /, "", $2); print $2}' /etc/audit/auditd.conf
+  register: audit_log_file_path
   changed_when: false
-  failed_when: audit_rule_drift.rc != 0 and "'No change' not in audit_rule_drift.stdout"
 
-- name: "CIS 5.2.3.21 | Load audit rules if drift detected"
+- name: "CIS 5.2.4.1 | Set permissions on audit log directory to 0750 or more restrictive"
   become: true
-  command: augenrules --load
-  when: "'No change' not in audit_rule_drift.stdout"
-
-- name: "CIS 5.2.3.21 | Check if audit system is in immutable mode and requires reboot"
-  become: true
-  shell: |
-    auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
-  register: audit_immutable_check
-  changed_when: false
-
-- name: "CIS 5.2.3.21 | Warn if reboot is required to apply audit rules"
-  debug:
-    msg: "Reboot required to apply audit rules due to immutable mode (-e 2)."
-  when: audit_immutable_check.stdout == "REBOOT_REQUIRED"
+  file:
+    path: "{{ audit_log_file_path.stdout | dirname }}"
+    mode: '0750'
+    state: directory
