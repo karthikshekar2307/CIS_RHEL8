@@ -6040,30 +6040,54 @@
 #   changed_when: false
 #   failed_when: kmod_symlinks_check.stdout != "OK"
 
-- name: "CIS 5.2.3.20 | Ensure audit configuration is set to immutable (-e 2)"
-  become: true
-  blockinfile:
-    path: /etc/audit/rules.d/99-finalize.rules
-    create: true
-    owner: root
-    group: root
-    mode: '0640'
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - Set auditd to immutable"
-    block: |
-      -e 2
+# - name: "CIS 5.2.3.20 | Ensure audit configuration is set to immutable (-e 2)"
+#   become: true
+#   blockinfile:
+#     path: /etc/audit/rules.d/99-finalize.rules
+#     create: true
+#     owner: root
+#     group: root
+#     mode: '0640'
+#     marker: "# {mark} ANSIBLE MANAGED BLOCK - Set auditd to immutable"
+#     block: |
+#       -e 2
 
-- name: "CIS 5.2.3.20 | Load audit rules using augenrules"
+# - name: "CIS 5.2.3.20 | Load audit rules using augenrules"
+#   become: true
+#   command: augenrules --load
+
+# - name: "CIS 5.2.3.20 | Check if audit system requires reboot to enforce immutable rules"
+#   become: true
+#   shell: |
+#     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
+#   register: auditd_reboot_check
+#   changed_when: false
+
+# - name: "CIS 5.2.3.20 | Warn if reboot is required to enforce audit immutability"
+#   debug:
+#     msg: "Reboot required to apply immutable audit rules (-e 2)."
+#   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+
+- name: "CIS 5.2.3.21 | Check for audit rule drift between on-disk and running configuration"
+  become: true
+  command: augenrules --check
+  register: audit_rule_drift
+  changed_when: false
+  failed_when: audit_rule_drift.rc != 0 and "'No change' not in audit_rule_drift.stdout"
+
+- name: "CIS 5.2.3.21 | Load audit rules if drift detected"
   become: true
   command: augenrules --load
+  when: "'No change' not in audit_rule_drift.stdout"
 
-- name: "CIS 5.2.3.20 | Check if audit system requires reboot to enforce immutable rules"
+- name: "CIS 5.2.3.21 | Check if audit system is in immutable mode and requires reboot"
   become: true
   shell: |
     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
-  register: auditd_reboot_check
+  register: audit_immutable_check
   changed_when: false
 
-- name: "CIS 5.2.3.20 | Warn if reboot is required to enforce audit immutability"
+- name: "CIS 5.2.3.21 | Warn if reboot is required to apply audit rules"
   debug:
-    msg: "Reboot required to apply immutable audit rules (-e 2)."
-  when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+    msg: "Reboot required to apply audit rules due to immutable mode (-e 2)."
+  when: audit_immutable_check.stdout == "REBOOT_REQUIRED"
