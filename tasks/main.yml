@@ -5599,40 +5599,76 @@
 #     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
 #   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
 
-- name: "CIS 5.2.3.7 | Create audit rules for unsuccessful file access attempts"
+# - name: "CIS 5.2.3.7 | Create audit rules for unsuccessful file access attempts"
+#   become: true
+#   shell: |
+#     UID_MIN=$(awk '/^\s*UID_MIN/{print $2}' /etc/login.defs)
+#     AUDIT_RULE_FILE="/etc/audit/rules.d/50-access.rules"
+#     > "${AUDIT_RULE_FILE}"
+#     echo "-a always,exit -F arch=b64 -S creat,open,openat,truncate,ftruncate -F exit=EACCES -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
+#     echo "-a always,exit -F arch=b64 -S creat,open,openat,truncate,ftruncate -F exit=EPERM  -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
+#     echo "-a always,exit -F arch=b32 -S creat,open,openat,truncate,ftruncate -F exit=EACCES -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
+#     echo "-a always,exit -F arch=b32 -S creat,open,openat,truncate,ftruncate -F exit=EPERM  -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
+#   args:
+#     executable: /bin/bash
+
+# - name: "CIS 5.2.3.7 | Set proper permissions on 50-access.rules"
+#   become: true
+#   file:
+#     path: /etc/audit/rules.d/50-access.rules
+#     owner: root
+#     group: root
+#     mode: '0640'
+
+# - name: "CIS 5.2.3.7 | Load audit rules with augenrules"
+#   become: true
+#   command: augenrules --load
+
+# - name: "CIS 5.2.3.7 | Check if audit system requires reboot to load rules (-e 2)"
+#   become: true
+#   shell: |
+#     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
+#   register: auditd_reboot_check
+#   changed_when: false
+
+# - name: "CIS 5.2.3.7 | Warn if reboot is required to apply audit rule changes"
+#   debug:
+#     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
+#   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+
+- name: "CIS 5.2.3.8 | Create audit rules for user/group modification files"
   become: true
   shell: |
-    UID_MIN=$(awk '/^\s*UID_MIN/{print $2}' /etc/login.defs)
-    AUDIT_RULE_FILE="/etc/audit/rules.d/50-access.rules"
+    AUDIT_RULE_FILE="/etc/audit/rules.d/50-identity.rules"
     > "${AUDIT_RULE_FILE}"
-    echo "-a always,exit -F arch=b64 -S creat,open,openat,truncate,ftruncate -F exit=EACCES -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
-    echo "-a always,exit -F arch=b64 -S creat,open,openat,truncate,ftruncate -F exit=EPERM  -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
-    echo "-a always,exit -F arch=b32 -S creat,open,openat,truncate,ftruncate -F exit=EACCES -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
-    echo "-a always,exit -F arch=b32 -S creat,open,openat,truncate,ftruncate -F exit=EPERM  -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
+    echo "-w /etc/group -p wa -k identity" >> "${AUDIT_RULE_FILE}"
+    echo "-w /etc/passwd -p wa -k identity" >> "${AUDIT_RULE_FILE}"
+    echo "-w /etc/gshadow -p wa -k identity" >> "${AUDIT_RULE_FILE}"
+    echo "-w /etc/shadow -p wa -k identity" >> "${AUDIT_RULE_FILE}"
+    echo "-w /etc/security/opasswd -p wa -k identity" >> "${AUDIT_RULE_FILE}"
   args:
     executable: /bin/bash
 
-- name: "CIS 5.2.3.7 | Set proper permissions on 50-access.rules"
+- name: "CIS 5.2.3.8 | Set proper permissions on 50-identity.rules"
   become: true
   file:
-    path: /etc/audit/rules.d/50-access.rules
+    path: /etc/audit/rules.d/50-identity.rules
     owner: root
     group: root
     mode: '0640'
 
-- name: "CIS 5.2.3.7 | Load audit rules with augenrules"
+- name: "CIS 5.2.3.8 | Load audit rules with augenrules"
   become: true
   command: augenrules --load
 
-- name: "CIS 5.2.3.7 | Check if audit system requires reboot to load rules (-e 2)"
+- name: "CIS 5.2.3.8 | Check if audit system requires reboot to load rules (-e 2)"
   become: true
   shell: |
     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
   register: auditd_reboot_check
   changed_when: false
 
-- name: "CIS 5.2.3.7 | Warn if reboot is required to apply audit rule changes"
+- name: "CIS 5.2.3.8 | Warn if reboot is required to apply audit rule changes"
   debug:
     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
-
