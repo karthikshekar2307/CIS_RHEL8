@@ -5353,20 +5353,38 @@
 #     enabled: true
 #     state: started
 
-- name: "CIS 5.2.2.1 | Ensure audit log max file size is set (e.g., 100 MB)"
+# - name: "CIS 5.2.2.1 | Ensure audit log max file size is set (e.g., 100 MB)"
+#   become: true
+#   lineinfile:
+#     path: /etc/audit/auditd.conf
+#     regexp: '^#?\s*max_log_file\s*='
+#     line: 'max_log_file = 100'
+#     create: yes
+#     backrefs: yes
+
+# - name: "CIS 5.2.2.2 | Ensure audit logs are not automatically deleted (keep_logs)"
+#   become: true
+#   lineinfile:
+#     path: /etc/audit/auditd.conf
+#     regexp: '^#?\s*max_log_file_action\s*='
+#     line: 'max_log_file_action = keep_logs'
+#     create: yes
+#     backrefs: yes
+
+- name: "CIS 5.2.2.3 | Ensure disk_full_action is set to halt"
   become: true
   lineinfile:
     path: /etc/audit/auditd.conf
-    regexp: '^#?\s*max_log_file\s*='
-    line: 'max_log_file = 100'
+    regexp: '^#?\s*disk_full_action\s*='
+    line: 'disk_full_action = halt'
     create: yes
     backrefs: yes
 
-- name: "CIS 5.2.2.2 | Ensure audit logs are not automatically deleted (keep_logs)"
+- name: "CIS 5.2.2.3 | Ensure disk_error_action is set to syslog"
   become: true
   lineinfile:
     path: /etc/audit/auditd.conf
-    regexp: '^#?\s*max_log_file_action\s*='
-    line: 'max_log_file_action = keep_logs'
+    regexp: '^#?\s*disk_error_action\s*='
+    line: 'disk_error_action = syslog'
     create: yes
     backrefs: yes
