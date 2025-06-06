@@ -4412,25 +4412,58 @@
 #     group: root
 #     mode: '0644'
 
-- name: "CIS 4.4.3.3.3 - Ensure pam_pwhistory includes use_authtok"
+# - name: "CIS 4.4.3.3.3 - Ensure pam_pwhistory includes use_authtok"
+#   block:
+#     - name: "Determine active authselect custom profile name"
+#       command: awk 'NR==1 {print $1}' /etc/authselect/authselect.conf
+#       register: authselect_profile
+
+#     - name: "Set path to custom profile"
+#       set_fact:
+#         authselect_custom_path: "/etc/authselect/{{ authselect_profile.stdout }}"
+
+#     - name: "Ensure pam_pwhistory.so includes use_authtok in system-auth and password-auth"
+#       lineinfile:
+#         path: "{{ authselect_custom_path }}/{{ item }}"
+#         regexp: '^\s*password\s+(requisite|required|sufficient)\s+pam_pwhistory\.so(?!.*use_authtok)'
+#         line: '\g<0> use_authtok'
+#         backrefs: yes
+#       loop:
+#         - system-auth
+#         - password-auth
+
+#     - name: "Apply authselect changes"
+#       command: authselect apply-changes
+
+- name: "CIS 4.4.3.4.1 - Ensure pam_unix.so does not include nullok"
   block:
-    - name: "Determine active authselect custom profile name"
+    - name: "Check active Authselect profile"
       command: awk 'NR==1 {print $1}' /etc/authselect/authselect.conf
       register: authselect_profile
 
-    - name: "Set path to custom profile"
+    - name: "Set path to active custom Authselect profile"
       set_fact:
         authselect_custom_path: "/etc/authselect/{{ authselect_profile.stdout }}"
 
-    - name: "Ensure pam_pwhistory.so includes use_authtok in system-auth and password-auth"
-      lineinfile:
+    - name: "Fail if not using a custom authselect profile"
+      fail:
+        msg: "Please switch to a custom authselect profile before applying CIS 4.4.3.4.1"
+      when: authselect_profile.stdout is not regex("^custom/")
+
+    - name: "Remove 'nullok' from pam_unix.so lines in system-auth and password-auth"
+      replace:
         path: "{{ authselect_custom_path }}/{{ item }}"
-        regexp: '^\s*password\s+(requisite|required|sufficient)\s+pam_pwhistory\.so(?!.*use_authtok)'
-        line: '\g<0> use_authtok'
-        backrefs: yes
+        regexp: '(^\s*(auth|account|password|session)\s+(requisite|required|sufficient)\s+pam_unix\.so\s+[^#\n]*?)\bnullok\b(.*$)'
+        replace: '\1\3'
+        backup: yes
       loop:
         - system-auth
         - password-auth
+
+    - name: "Enable 'without-nullok' feature for authselect"
+      command: authselect enable-feature without-nullok
+      register: enable_nullok
+      failed_when: enable_nullok.rc != 0 and '"already enabled" not in enable_nullok.stderr'
 
     - name: "Apply authselect changes"
       command: authselect apply-changes
