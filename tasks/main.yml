@@ -5032,5 +5032,5 @@
   dnf:
     name: systemd-journal-remote
     state: present
-    disable_gpg_check: yes
+    disable_gpg_check: true
 
