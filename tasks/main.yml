@@ -4269,26 +4269,57 @@
 #   ansible.builtin.command: authselect apply-changes
 #   changed_when: true
 
-- name: "CIS 4.4.3.2.4 - Comment out existing maxrepeat in pwquality.conf"
+# - name: "CIS 4.4.3.2.4 - Comment out existing maxrepeat in pwquality.conf"
+#   ansible.builtin.replace:
+#     path: /etc/security/pwquality.conf
+#     regexp: '^\s*maxrepeat\s*='
+#     replace: '# maxrepeat ='
+
+# - name: "CIS 4.4.3.2.4 - Set maxrepeat = 3 in pwquality.conf.d"
+#   ansible.builtin.blockinfile:
+#     path: /etc/security/pwquality.conf.d/50-pwrepeat.conf
+#     create: yes
+#     block: |
+#       maxrepeat = 3
+#     owner: root
+#     group: root
+#     mode: '0644'
+
+# - name: "CIS 4.4.3.2.4 - Remove maxrepeat argument from pam_pwquality.so in PAM profiles"
+#   ansible.builtin.lineinfile:
+#     path: "/etc/authselect/custom/custom-profile/{{ item }}"
+#     regexp: '^(.*pam_pwquality\.so.*)\s+maxrepeat\s*=\s*\S+(.*)$'
+#     line: '\1\2'
+#     backrefs: yes
+#     state: present
+#   loop:
+#     - system-auth
+#     - password-auth
+
+# - name: "CIS 4.4.3.2.4 - Apply authselect changes"
+#   ansible.builtin.command: authselect apply-changes
+#   changed_when: true
+
+- name: "CIS 4.4.3.2.5 - Comment out existing maxsequence in pwquality.conf"
   ansible.builtin.replace:
     path: /etc/security/pwquality.conf
-    regexp: '^\s*maxrepeat\s*='
-    replace: '# maxrepeat ='
+    regexp: '^\s*maxsequence\s*='
+    replace: '# maxsequence ='
 
-- name: "CIS 4.4.3.2.4 - Set maxrepeat = 3 in pwquality.conf.d"
+- name: "CIS 4.4.3.2.5 - Set maxsequence = 3 in pwquality.conf.d"
   ansible.builtin.blockinfile:
-    path: /etc/security/pwquality.conf.d/50-pwrepeat.conf
+    path: /etc/security/pwquality.conf.d/50-pwmaxsequence.conf
     create: yes
     block: |
-      maxrepeat = 3
+      maxsequence = 3
     owner: root
     group: root
     mode: '0644'
 
-- name: "CIS 4.4.3.2.4 - Remove maxrepeat argument from pam_pwquality.so in PAM profiles"
+- name: "CIS 4.4.3.2.5 - Remove maxsequence argument from pam_pwquality.so in PAM profiles"
   ansible.builtin.lineinfile:
     path: "/etc/authselect/custom/custom-profile/{{ item }}"
-    regexp: '^(.*pam_pwquality\.so.*)\s+maxrepeat\s*=\s*\S+(.*)$'
+    regexp: '^(.*pam_pwquality\.so.*)\s+maxsequence\s*=\s*\S+(.*)$'
     line: '\1\2'
     backrefs: yes
     state: present
@@ -4296,6 +4327,6 @@
     - system-auth
     - password-auth
 
-- name: "CIS 4.4.3.2.4 - Apply authselect changes"
+- name: "CIS 4.4.3.2.5 - Apply authselect changes"
   ansible.builtin.command: authselect apply-changes
   changed_when: true
