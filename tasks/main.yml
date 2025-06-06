@@ -4359,34 +4359,55 @@
 #   ansible.builtin.command: authselect apply-changes
 #   changed_when: true
 
-- name: "CIS 4.4.3.2.7 - Ensure enforce_for_root is enabled in pwquality"
-  ansible.builtin.blockinfile:
-    path: /etc/security/pwquality.conf.d/50-pwroot.conf
-    create: true
-    block: |
-      enforce_for_root
-    owner: root
-    group: root
-    mode: '0644'
+# - name: "CIS 4.4.3.2.7 - Ensure enforce_for_root is enabled in pwquality"
+#   ansible.builtin.blockinfile:
+#     path: /etc/security/pwquality.conf.d/50-pwroot.conf
+#     create: true
+#     block: |
+#       enforce_for_root
+#     owner: root
+#     group: root
+#     mode: '0644'
 
-- name: "CIS 4.4.3.3 - Configure pam_pwhistory defaults in /etc/security/pwhistory.conf"
+# - name: "CIS 4.4.3.3 - Configure pam_pwhistory defaults in /etc/security/pwhistory.conf"
+#   ansible.builtin.blockinfile:
+#     path: /etc/security/pwhistory.conf
+#     create: true
+#     block: |
+#       remember = 5
+#       enforce_for_root
+#       retry = 3
+#     owner: root
+#     group: root
+#     mode: '0644'
+
+# - name: "CIS 4.4.3.3.1 - Ensure password history remember is set to 24"
+#   ansible.builtin.blockinfile:
+#     path: /etc/security/pwhistory.conf
+#     create: true
+#     block: |
+#       remember = 24
+#     owner: root
+#     group: root
+#     mode: '0644'
+
+- name: "CIS 4.4.3.3.2 - Ensure password history is enforced for the root user"
   ansible.builtin.blockinfile:
     path: /etc/security/pwhistory.conf
     create: true
     block: |
-      remember = 5
       enforce_for_root
-      retry = 3
     owner: root
     group: root
     mode: '0644'
 
-- name: "CIS 4.4.3.3.1 - Ensure password history remember is set to 24"
+- name: "CIS 4.4.3.3 - Enforce password history and root enforcement"
   ansible.builtin.blockinfile:
     path: /etc/security/pwhistory.conf
     create: true
     block: |
       remember = 24
+      enforce_for_root
     owner: root
     group: root
     mode: '0644'
