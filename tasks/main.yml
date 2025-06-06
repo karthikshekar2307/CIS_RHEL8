@@ -5560,31 +5560,18 @@
 #     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
 #   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
 
-- name: "CIS 5.2.3.6 | Gather mounted filesystems excluding noexec and nosuid"
-  become: true
-  shell: |
-    findmnt -n -l -k -it $(awk '/nodev/ { print $2 }' /proc/filesystems | paste -sd,) \
-    | grep -Pv "noexec|nosuid" | awk '{print $1}'
-  register: mounted_partitions
-  changed_when: false
-
-- name: "CIS 5.2.3.6 | Get UID_MIN from /etc/login.defs"
-  become: true
-  command: awk '/^\s*UID_MIN/ { print $2 }' /etc/login.defs
-  register: uid_min
-  changed_when: false
-
 - name: "CIS 5.2.3.6 | Find privileged executables and generate audit rules"
   become: true
   shell: |
-    UID_MIN={{ uid_min.stdout }}
+    UID_MIN=$(awk '/^\s*UID_MIN/{print $2}' /etc/login.defs)
     AUDIT_RULE_FILE="/etc/audit/rules.d/50-privileged.rules"
     > "${AUDIT_RULE_FILE}"
-    {% for part in mounted_partitions.stdout_lines %}
-    find "{{ part }}" -xdev -perm /6000 -type f 2>/dev/null | while read -r file; do
+    {
+      find / -xdev -perm /6000 -type f 2>/dev/null
+      find /boot/efi -xdev -perm /6000 -type f 2>/dev/null
+    } | sort -u | while read -r file; do
       echo "-a always,exit -F path=${file} -F perm=x -F auid>=${UID_MIN} -F auid!=unset -k privileged"
-    done
-    {% endfor %} | sort -u >> "${AUDIT_RULE_FILE}"
+    done >> "${AUDIT_RULE_FILE}"
   args:
     executable: /bin/bash
 
@@ -5611,4 +5598,5 @@
   debug:
     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+
 
