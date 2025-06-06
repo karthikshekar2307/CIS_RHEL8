@@ -5757,30 +5757,57 @@
 #     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
 #   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
 
-- name: "CIS 5.2.3.11 | Create audit rules for session initiation files"
+# - name: "CIS 5.2.3.11 | Create audit rules for session initiation files"
+#   become: true
+#   copy:
+#     dest: /etc/audit/rules.d/50-session.rules
+#     content: |
+#       -w /var/run/utmp -p wa -k session
+#       -w /var/log/wtmp -p wa -k session
+#       -w /var/log/btmp -p wa -k session
+#     owner: root
+#     group: root
+#     mode: '0640'
+
+# - name: "CIS 5.2.3.11 | Load audit rules with augenrules"
+#   become: true
+#   command: augenrules --load
+
+# - name: "CIS 5.2.3.11 | Check if audit system requires reboot to load rules (-e 2)"
+#   become: true
+#   shell: |
+#     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
+#   register: auditd_reboot_check
+#   changed_when: false
+
+# - name: "CIS 5.2.3.11 | Warn if reboot is required to apply audit rule changes"
+#   debug:
+#     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
+#   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+
+- name: "CIS 5.2.3.12 | Create audit rules for login/logout events"
   become: true
   copy:
-    dest: /etc/audit/rules.d/50-session.rules
+    dest: /etc/audit/rules.d/50-login.rules
     content: |
-      -w /var/run/utmp -p wa -k session
-      -w /var/log/wtmp -p wa -k session
-      -w /var/log/btmp -p wa -k session
+      -w /var/log/lastlog -p wa -k logins
+      -w /var/run/faillock -p wa -k logins
     owner: root
     group: root
     mode: '0640'
 
-- name: "CIS 5.2.3.11 | Load audit rules with augenrules"
+- name: "CIS 5.2.3.12 | Load audit rules with augenrules"
   become: true
   command: augenrules --load
 
-- name: "CIS 5.2.3.11 | Check if audit system requires reboot to load rules (-e 2)"
+- name: "CIS 5.2.3.12 | Check if audit system requires reboot to load rules (-e 2)"
   become: true
   shell: |
     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
   register: auditd_reboot_check
   changed_when: false
 
-- name: "CIS 5.2.3.11 | Warn if reboot is required to apply audit rule changes"
+- name: "CIS 5.2.3.12 | Warn if reboot is required to apply audit rule changes"
   debug:
     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
