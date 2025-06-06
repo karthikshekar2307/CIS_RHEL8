@@ -5560,43 +5560,79 @@
 #     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
 #   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
 
-- name: "CIS 5.2.3.6 | Find privileged executables and generate audit rules"
+# - name: "CIS 5.2.3.6 | Find privileged executables and generate audit rules"
+#   become: true
+#   shell: |
+#     UID_MIN=$(awk '/^\s*UID_MIN/{print $2}' /etc/login.defs)
+#     AUDIT_RULE_FILE="/etc/audit/rules.d/50-privileged.rules"
+#     > "${AUDIT_RULE_FILE}"
+#     {
+#       find / -xdev -perm /6000 -type f 2>/dev/null
+#       find /boot/efi -xdev -perm /6000 -type f 2>/dev/null
+#     } | sort -u | while read -r file; do
+#       echo "-a always,exit -F path=${file} -F perm=x -F auid>=${UID_MIN} -F auid!=unset -k privileged"
+#     done >> "${AUDIT_RULE_FILE}"
+#   args:
+#     executable: /bin/bash
+
+# - name: "CIS 5.2.3.6 | Set proper permissions on 50-privileged.rules"
+#   become: true
+#   file:
+#     path: /etc/audit/rules.d/50-privileged.rules
+#     owner: root
+#     group: root
+#     mode: '0640'
+
+# - name: "CIS 5.2.3.6 | Load audit rules with augenrules"
+#   become: true
+#   command: augenrules --load
+
+# - name: "CIS 5.2.3.6 | Check if audit system requires reboot to load rules (-e 2)"
+#   become: true
+#   shell: |
+#     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
+#   register: auditd_reboot_check
+#   changed_when: false
+
+# - name: "CIS 5.2.3.6 | Warn if reboot is required to apply audit rule changes"
+#   debug:
+#     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
+#   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+
+- name: "CIS 5.2.3.7 | Create audit rules for unsuccessful file access attempts"
   become: true
   shell: |
     UID_MIN=$(awk '/^\s*UID_MIN/{print $2}' /etc/login.defs)
-    AUDIT_RULE_FILE="/etc/audit/rules.d/50-privileged.rules"
+    AUDIT_RULE_FILE="/etc/audit/rules.d/50-access.rules"
     > "${AUDIT_RULE_FILE}"
-    {
-      find / -xdev -perm /6000 -type f 2>/dev/null
-      find /boot/efi -xdev -perm /6000 -type f 2>/dev/null
-    } | sort -u | while read -r file; do
-      echo "-a always,exit -F path=${file} -F perm=x -F auid>=${UID_MIN} -F auid!=unset -k privileged"
-    done >> "${AUDIT_RULE_FILE}"
+    echo "-a always,exit -F arch=b64 -S creat,open,openat,truncate,ftruncate -F exit=EACCES -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
+    echo "-a always,exit -F arch=b64 -S creat,open,openat,truncate,ftruncate -F exit=EPERM  -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
+    echo "-a always,exit -F arch=b32 -S creat,open,openat,truncate,ftruncate -F exit=EACCES -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
+    echo "-a always,exit -F arch=b32 -S creat,open,openat,truncate,ftruncate -F exit=EPERM  -F auid>=$UID_MIN -F auid!=unset -k access" >> "${AUDIT_RULE_FILE}"
   args:
     executable: /bin/bash
 
-- name: "CIS 5.2.3.6 | Set proper permissions on 50-privileged.rules"
+- name: "CIS 5.2.3.7 | Set proper permissions on 50-access.rules"
   become: true
   file:
-    path: /etc/audit/rules.d/50-privileged.rules
+    path: /etc/audit/rules.d/50-access.rules
     owner: root
     group: root
     mode: '0640'
 
-- name: "CIS 5.2.3.6 | Load audit rules with augenrules"
+- name: "CIS 5.2.3.7 | Load audit rules with augenrules"
   become: true
   command: augenrules --load
 
-- name: "CIS 5.2.3.6 | Check if audit system requires reboot to load rules (-e 2)"
+- name: "CIS 5.2.3.7 | Check if audit system requires reboot to load rules (-e 2)"
   become: true
   shell: |
     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
   register: auditd_reboot_check
   changed_when: false
 
-- name: "CIS 5.2.3.6 | Warn if reboot is required to apply audit rule changes"
+- name: "CIS 5.2.3.7 | Warn if reboot is required to apply audit rule changes"
   debug:
     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
-
 
