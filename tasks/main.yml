@@ -4541,29 +4541,27 @@
 #     - name: "Apply authselect changes"
 #       command: authselect apply-changes
 
-- name: "4.4.3.4.4 - Ensure pam_unix includes use_authtok in password stack"
-  block:
+- name: "Set pam_profile_path based on authselect active profile"
+  set_fact:
+    pam_profile_path: >-
+      {{
+        '/etc/authselect/' + (lookup('file', '/etc/authselect/authselect.conf').split('\n')[0] | trim)
+        if (lookup('file', '/etc/authselect/authselect.conf').split('\n')[0] | trim) is match('^custom/')
+        else '/usr/share/authselect/default/' + (lookup('file', '/etc/authselect/authselect.conf').split('\n')[0] | trim)
+      }}
 
-    - name: "Set pam_profile_path based on authselect active profile"
-      set_fact:
-        pam_profile_path: >-
-          {{
-            '/etc/authselect/' + lookup('file', '/etc/authselect/authselect.conf').split('\n')[0]
-            if lookup('file', '/etc/authselect/authselect.conf').split('\n')[0] is match('^custom/')
-            else '/usr/share/authselect/default/' + lookup('file', '/etc/authselect/authselect.conf').split('\n')[0]
-          }}
+- name: "Ensure pam_unix.so includes use_authtok"
+  lineinfile:
+    path: "{{ pam_profile_path }}/{{ item }}"
+    regexp: '^(?P<indent>\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so\s+.*)(?<!use_authtok)(?P<rest>\s*)$'
+    line: '\g<indent> use_authtok\g<rest>'
+    backrefs: yes
+    state: present
+  loop:
+    - password-auth
+    - system-auth
 
-    - name: "Ensure pam_unix.so includes use_authtok"
-      ansible.builtin.replace:
-        path: "{{ pam_profile_path }}/{{ item }}"
-        regexp: '(^\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so(?!.*\buse_authtok\b).*)$'
-        replace: '\1 use_authtok'
-        backup: yes
-      loop:
-        - password-auth
-        - system-auth
-      when: pam_profile_path is defined
+- name: "Apply authselect changes"
+  command: authselect apply-changes
+  when: pam_profile_path is defined
 
-    - name: "Apply authselect changes"
-      ansible.builtin.command: authselect apply-changes
-      when: pam_profile_path is defined
