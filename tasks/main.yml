@@ -4061,13 +4061,17 @@
     mode: '0644'
 
 - name: "CIS 4.4.3.1.1 - Remove deny= option from pam_faillock.so lines in PAM files"
-  ansible.builtin.replace:
+  ansible.builtin.lineinfile:
     path: "/etc/authselect/custom/custom-profile/{{ item }}"
-    regexp: '(?<=pam_faillock\.so[^\n\r]*)\s+deny\s*=\s*\S+'
-    replace: ''
+    regexp: '^(.*pam_faillock\.so.*)\s+deny\s*=\s*\S+(.*)$'
+    line: '\1\2'
+    backrefs: yes
   loop:
     - system-auth
     - password-auth
+
+- name: "Apply authselect changes"
+  ansible.builtin.command: authselect apply-changes
 
 - name: "CIS 4.4.3.1.1 - Apply authselect changes"
   ansible.builtin.command: authselect apply-changes
