@@ -4693,17 +4693,38 @@
 #   loop: "{{ users_with_future_change.results | selectattr('stdout', '!=', '') | list }}"
 #   when: item.stdout != ''
 
-- name: "CIS 4.5.2.1 - Check if root's primary group is GID 0"
-  ansible.builtin.command: >
-    awk -F: '$1=="root"{print $4}' /etc/passwd
-  register: root_gid
+# - name: "CIS 4.5.2.1 - Check if root's primary group is GID 0"
+#   ansible.builtin.command: >
+#     awk -F: '$1=="root"{print $4}' /etc/passwd
+#   register: root_gid
 
-- name: "CIS 4.5.2.1 - Fail if root's GID is not 0"
-  ansible.builtin.fail:
-    msg: "Root's primary group ID is not 0"
-  when: root_gid.stdout != "0"
+# - name: "CIS 4.5.2.1 - Fail if root's GID is not 0"
+#   ansible.builtin.fail:
+#     msg: "Root's primary group ID is not 0"
+#   when: root_gid.stdout != "0"
 
-- name: "CIS 4.5.2.1 - Set root user's primary group to GID 0"
-  ansible.builtin.command: usermod -g 0 root
-  when: root_gid.stdout != "0"
+# - name: "CIS 4.5.2.1 - Set root user's primary group to GID 0"
+#   ansible.builtin.command: usermod -g 0 root
+#   when: root_gid.stdout != "0"
 
+- name: "CIS 4.5.2.2 - Ensure root user umask is set to 0027 in /root/.bash_profile"
+  ansible.builtin.lineinfile:
+    path: /root/.bash_profile
+    regexp: '^\s*umask\s+'
+    line: 'umask 0027'
+    state: present
+    create: yes
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "CIS 4.5.2.2 - Ensure root user umask is set to 0027 in /root/.bashrc"
+  ansible.builtin.lineinfile:
+    path: /root/.bashrc
+    regexp: '^\s*umask\s+'
+    line: 'umask 0027'
+    state: present
+    create: yes
+    owner: root
+    group: root
+    mode: '0644'
