@@ -4380,3 +4380,13 @@
     owner: root
     group: root
     mode: '0644'
+
+- name: "CIS 4.4.3.3.1 - Ensure password history remember is set to 24"
+  ansible.builtin.blockinfile:
+    path: /etc/security/pwhistory.conf
+    create: true
+    block: |
+      remember = 24
+    owner: root
+    group: root
+    mode: '0644'
