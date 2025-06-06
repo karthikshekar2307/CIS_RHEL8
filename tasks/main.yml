@@ -4976,54 +4976,62 @@
 #   tags:
 #     - CIS_5.1.1.6
 
-- name: "CIS 5.1.1.7 - Ensure rsyslog is not configured to receive remote logs"
-  block:
+# - name: "CIS 5.1.1.7 - Ensure rsyslog is not configured to receive remote logs"
+#   block:
 
-    - name: "Remove old format rsyslog server directives if present"
-      lineinfile:
-        path: "{{ item }}"
-        regexp: '^\s*\$ModLoad\s+imtcp'
-        state: absent
-      with_fileglob:
-        - /etc/rsyslog.conf
-        - /etc/rsyslog.d/*.conf
-      ignore_errors: true
+#     - name: "Remove old format rsyslog server directives if present"
+#       lineinfile:
+#         path: "{{ item }}"
+#         regexp: '^\s*\$ModLoad\s+imtcp'
+#         state: absent
+#       with_fileglob:
+#         - /etc/rsyslog.conf
+#         - /etc/rsyslog.d/*.conf
+#       ignore_errors: true
 
-    - name: "Remove old format $InputTCPServerRun directive"
-      lineinfile:
-        path: "{{ item }}"
-        regexp: '^\s*\$InputTCPServerRun'
-        state: absent
-      with_fileglob:
-        - /etc/rsyslog.conf
-        - /etc/rsyslog.d/*.conf
-      ignore_errors: true
+#     - name: "Remove old format $InputTCPServerRun directive"
+#       lineinfile:
+#         path: "{{ item }}"
+#         regexp: '^\s*\$InputTCPServerRun'
+#         state: absent
+#       with_fileglob:
+#         - /etc/rsyslog.conf
+#         - /etc/rsyslog.d/*.conf
+#       ignore_errors: true
 
-    - name: "Remove new format rsyslog TCP input module line"
-      lineinfile:
-        path: "{{ item }}"
-        regexp: '^\s*module\(load="imtcp"\)'
-        state: absent
-      with_fileglob:
-        - /etc/rsyslog.conf
-        - /etc/rsyslog.d/*.conf
-      ignore_errors: true
+#     - name: "Remove new format rsyslog TCP input module line"
+#       lineinfile:
+#         path: "{{ item }}"
+#         regexp: '^\s*module\(load="imtcp"\)'
+#         state: absent
+#       with_fileglob:
+#         - /etc/rsyslog.conf
+#         - /etc/rsyslog.d/*.conf
+#       ignore_errors: true
 
-    - name: "Remove new format rsyslog input TCP port line"
-      lineinfile:
-        path: "{{ item }}"
-        regexp: '^\s*input\(type="imtcp"\s+port="514"\)'
-        state: absent
-      with_fileglob:
-        - /etc/rsyslog.conf
-        - /etc/rsyslog.d/*.conf
-      ignore_errors: true
+#     - name: "Remove new format rsyslog input TCP port line"
+#       lineinfile:
+#         path: "{{ item }}"
+#         regexp: '^\s*input\(type="imtcp"\s+port="514"\)'
+#         state: absent
+#       with_fileglob:
+#         - /etc/rsyslog.conf
+#         - /etc/rsyslog.d/*.conf
+#       ignore_errors: true
 
-    - name: "Restart rsyslog after removing remote listener configs"
-      systemd:
-        name: rsyslog
-        state: restarted
-        enabled: yes
+#     - name: "Restart rsyslog after removing remote listener configs"
+#       systemd:
+#         name: rsyslog
+#         state: restarted
+#         enabled: yes
 
+#   tags:
+#     - CIS_5.1.1.7
+
+- name: "CIS 5.1.2.1.1 - Ensure systemd-journal-remote is installed"
+  package:
+    name: systemd-journal-remote
+    state: present
+  when: ansible_os_family == "RedHat"
   tags:
-    - CIS_5.1.1.7
+    - CIS_5.1.2.1.1
