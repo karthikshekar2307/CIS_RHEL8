@@ -5528,34 +5528,87 @@
 #     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
 #   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
 
-- name: "CIS 5.2.3.5 | Configure audit rules for network environment changes"
+# - name: "CIS 5.2.3.5 | Configure audit rules for network environment changes"
+#   become: true
+#   copy:
+#     dest: /etc/audit/rules.d/50-system_local.rules
+#     content: |
+#       -a always,exit -F arch=b64 -S sethostname,setdomainname -k system-locale
+#       -a always,exit -F arch=b32 -S sethostname,setdomainname -k system-locale
+#       -w /etc/issue -p wa -k system-locale
+#       -w /etc/issue.net -p wa -k system-locale
+#       -w /etc/hosts -p wa -k system-locale
+#       -w /etc/sysconfig/network -p wa -k system-locale
+#       -w /etc/sysconfig/network-scripts/ -p wa -k system-locale
+#     owner: root
+#     group: root
+#     mode: '0640'
+
+# - name: "CIS 5.2.3.5 | Load audit rules with augenrules"
+#   become: true
+#   command: augenrules --load
+
+# - name: "CIS 5.2.3.5 | Check if audit system requires reboot to load rules (-e 2)"
+#   become: true
+#   shell: |
+#     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
+#   register: auditd_reboot_check
+#   changed_when: false
+
+# - name: "CIS 5.2.3.5 | Warn if reboot is required to apply audit rule changes"
+#   debug:
+#     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
+#   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+
+- name: "CIS 5.2.3.6 | Gather mounted filesystems excluding noexec and nosuid"
   become: true
-  copy:
-    dest: /etc/audit/rules.d/50-system_local.rules
-    content: |
-      -a always,exit -F arch=b64 -S sethostname,setdomainname -k system-locale
-      -a always,exit -F arch=b32 -S sethostname,setdomainname -k system-locale
-      -w /etc/issue -p wa -k system-locale
-      -w /etc/issue.net -p wa -k system-locale
-      -w /etc/hosts -p wa -k system-locale
-      -w /etc/sysconfig/network -p wa -k system-locale
-      -w /etc/sysconfig/network-scripts/ -p wa -k system-locale
+  shell: |
+    findmnt -n -l -k -it $(awk '/nodev/ { print $2 }' /proc/filesystems | paste -sd,) \
+    | grep -Pv "noexec|nosuid" | awk '{print $1}'
+  register: mounted_partitions
+  changed_when: false
+
+- name: "CIS 5.2.3.6 | Get UID_MIN from /etc/login.defs"
+  become: true
+  command: awk '/^\s*UID_MIN/ { print $2 }' /etc/login.defs
+  register: uid_min
+  changed_when: false
+
+- name: "CIS 5.2.3.6 | Find privileged executables and generate audit rules"
+  become: true
+  shell: |
+    UID_MIN={{ uid_min.stdout }}
+    AUDIT_RULE_FILE="/etc/audit/rules.d/50-privileged.rules"
+    > "${AUDIT_RULE_FILE}"
+    {% for part in mounted_partitions.stdout_lines %}
+    find "{{ part }}" -xdev -perm /6000 -type f 2>/dev/null | while read -r file; do
+      echo "-a always,exit -F path=${file} -F perm=x -F auid>=${UID_MIN} -F auid!=unset -k privileged"
+    done
+    {% endfor %} | sort -u >> "${AUDIT_RULE_FILE}"
+  args:
+    executable: /bin/bash
+
+- name: "CIS 5.2.3.6 | Set proper permissions on 50-privileged.rules"
+  become: true
+  file:
+    path: /etc/audit/rules.d/50-privileged.rules
     owner: root
     group: root
     mode: '0640'
 
-- name: "CIS 5.2.3.5 | Load audit rules with augenrules"
+- name: "CIS 5.2.3.6 | Load audit rules with augenrules"
   become: true
   command: augenrules --load
 
-- name: "CIS 5.2.3.5 | Check if audit system requires reboot to load rules (-e 2)"
+- name: "CIS 5.2.3.6 | Check if audit system requires reboot to load rules (-e 2)"
   become: true
   shell: |
     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
   register: auditd_reboot_check
   changed_when: false
 
-- name: "CIS 5.2.3.5 | Warn if reboot is required to apply audit rule changes"
+- name: "CIS 5.2.3.6 | Warn if reboot is required to apply audit rule changes"
   debug:
     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+
