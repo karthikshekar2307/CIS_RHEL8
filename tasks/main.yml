@@ -5275,40 +5275,41 @@
 #     group: root
 #     mode: '0644'
 
-- name: Find all regular files under /var/log with improper permissions
-  become: true
-  find:
-    paths: /var/log
-    file_type: file
-    recurse: yes
-  register: log_files
+# - name: Find all regular files under /var/log with improper permissions
+#   become: true
+#   find:
+#     paths: /var/log
+#     file_type: file
+#     recurse: yes
+#   register: log_files
 
-- name: Set secure permissions (640) for /var/log files
-  become: true
-  file:
-    path: "{{ item.path }}"
-    mode: '0640'
-  loop: "{{ log_files.files }}"
-  when: item.mode is defined and item.mode|int(base=8) > 640
+# - name: Set secure permissions (640) for /var/log files
+#   become: true
+#   file:
+#     path: "{{ item.path }}"
+#     mode: '0640'
+#   loop: "{{ log_files.files }}"
+#   when: item.mode is defined and item.mode|int(base=8) > 640
 
-- name: Set owner to root for /var/log files
-  become: true
-  file:
-    path: "{{ item.path }}"
-    owner: root
-  loop: "{{ log_files.files }}"
-  when: item.uid != 0
+# - name: Set owner to root for /var/log files
+#   become: true
+#   file:
+#     path: "{{ item.path }}"
+#     owner: root
+#   loop: "{{ log_files.files }}"
+#   when: item.uid != 0
 
-- name: Set group to root or adm for /var/log files if group is not acceptable
-  become: true
-  file:
-    path: "{{ item.path }}"
-    group: root
-  loop: "{{ log_files.files }}"
-  when: item.gid not in [0, 4]   # 0=root, 4=adm on most Linux systems
+# - name: Set group to root or adm for /var/log files if group is not acceptable
+#   become: true
+#   file:
+#     path: "{{ item.path }}"
+#     group: root
+#   loop: "{{ log_files.files }}"
+#   when: item.gid not in [0, 4]   # 0=root, 4=adm on most Linux systems
 
-- name: Ensure auditd is installed
+- name: Install auditd with GPG check disabled
   become: true
-  package:
-    name: audit
-    state: present
+  shell: dnf install -y --nogpgcheck audit
+  args:
+    warn: false
+
