@@ -4821,18 +4821,33 @@
 #   tags:
 #     - CIS_4.5.3.3
 
-- name: "CIS 5.1.1.1 - Ensure rsyslog is installed"
-  block:
-    - name: "Install rsyslog package"
-      package:
-        name: rsyslog
-        state: present
+# - name: "CIS 5.1.1.1 - Ensure rsyslog is installed"
+#   block:
+#     - name: "Install rsyslog package"
+#       package:
+#         name: rsyslog
+#         state: present
 
-    - name: "Ensure rsyslog service is enabled and started"
+#     - name: "Ensure rsyslog service is enabled and started"
+#       service:
+#         name: rsyslog
+#         enabled: yes
+#         state: started
+#   tags:
+#     - CIS_5.1.1.1
+
+- name: "CIS 5.1.1.2 - Ensure rsyslog service is enabled"
+  block:
+    - name: "Check if rsyslog is installed"
+      command: rpm -q rsyslog
+      register: rsyslog_installed
+      ignore_errors: yes
+
+    - name: "Enable and start rsyslog service if installed"
+      when: rsyslog_installed.rc == 0
       service:
         name: rsyslog
         enabled: yes
         state: started
   tags:
-    - CIS_5.1.1.1
-
+    - CIS_5.1.1.2
