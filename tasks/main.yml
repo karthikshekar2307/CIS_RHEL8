@@ -6105,24 +6105,46 @@
 #     mode: '0750'
 #     state: directory
 
-- name: "CIS 5.2.4.2 | Get audit log directory from auditd.conf"
+# - name: "CIS 5.2.4.2 | Get audit log directory from auditd.conf"
+#   become: true
+#   command: awk -F= '/^\s*log_file\s*=\s*/ {gsub(/ /, "", $2); print $2}' /etc/audit/auditd.conf
+#   register: audit_log_file_path
+#   changed_when: false
+
+# - name: "CIS 5.2.4.2 | Find audit log files with overly permissive permissions"
+#   become: true
+#   find:
+#     paths: "{{ audit_log_file_path.stdout | dirname }}"
+#     file_type: file
+#     recurse: no
+#   register: audit_log_files
+
+# - name: "CIS 5.2.4.2 | Set audit log files to mode 0640"
+#   become: true
+#   file:
+#     path: "{{ item.path }}"
+#     mode: '0640'
+#   loop: "{{ audit_log_files.files }}"
+#   when: item.mode | int(base=8) > 0o640
+
+- name: "CIS 5.2.4.3 | Get audit log directory from auditd.conf"
   become: true
   command: awk -F= '/^\s*log_file\s*=\s*/ {gsub(/ /, "", $2); print $2}' /etc/audit/auditd.conf
   register: audit_log_file_path
   changed_when: false
 
-- name: "CIS 5.2.4.2 | Find audit log files with overly permissive permissions"
+- name: "CIS 5.2.4.3 | Find audit log files not owned by root"
   become: true
   find:
     paths: "{{ audit_log_file_path.stdout | dirname }}"
     file_type: file
     recurse: no
-  register: audit_log_files
+  register: audit_log_files_nonroot
 
-- name: "CIS 5.2.4.2 | Set audit log files to mode 0640"
+- name: "CIS 5.2.4.3 | Ensure audit log files are owned by root"
   become: true
   file:
     path: "{{ item.path }}"
-    mode: '0640'
-  loop: "{{ audit_log_files.files }}"
-  when: item.mode | int(base=8) > 0o640
+    owner: root
+  loop: "{{ audit_log_files_nonroot.files }}"
+  when: item.uid != 0
