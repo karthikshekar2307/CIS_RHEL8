@@ -4707,24 +4707,46 @@
 #   ansible.builtin.command: usermod -g 0 root
 #   when: root_gid.stdout != "0"
 
-- name: "CIS 4.5.2.2 - Ensure root user umask is set to 0027 in /root/.bash_profile"
-  ansible.builtin.lineinfile:
-    path: /root/.bash_profile
-    regexp: '^\s*umask\s+'
-    line: 'umask 0027'
-    state: present
-    create: yes
-    owner: root
-    group: root
-    mode: '0644'
+# - name: "CIS 4.5.2.2 - Ensure root user umask is set to 0027 in /root/.bash_profile"
+#   ansible.builtin.lineinfile:
+#     path: /root/.bash_profile
+#     regexp: '^\s*umask\s+'
+#     line: 'umask 0027'
+#     state: present
+#     create: yes
+#     owner: root
+#     group: root
+#     mode: '0644'
 
-- name: "CIS 4.5.2.2 - Ensure root user umask is set to 0027 in /root/.bashrc"
-  ansible.builtin.lineinfile:
-    path: /root/.bashrc
-    regexp: '^\s*umask\s+'
-    line: 'umask 0027'
-    state: present
-    create: yes
-    owner: root
-    group: root
-    mode: '0644'
+# - name: "CIS 4.5.2.2 - Ensure root user umask is set to 0027 in /root/.bashrc"
+#   ansible.builtin.lineinfile:
+#     path: /root/.bashrc
+#     regexp: '^\s*umask\s+'
+#     line: 'umask 0027'
+#     state: present
+#     create: yes
+#     owner: root
+#     group: root
+#     mode: '0644'
+
+- name: "CIS 4.5.2.3 - Get system accounts with login shell"
+  ansible.builtin.shell: |
+    awk -F: '($1!~/^(root|halt|sync|shutdown|nfsnobody)$/ && ($3<$(awk "/^\s*UID_MIN/{print \$2}" /etc/login.defs) || $3 == 65534) && $7!~/^(\/usr)?\/sbin\/nologin$/) { print $1 }' /etc/passwd
+  register: login_shell_accounts
+  changed_when: false
+
+- name: "CIS 4.5.2.3 - Set shell to /sbin/nologin for system accounts"
+  ansible.builtin.command: "usermod -s /sbin/nologin {{ item }}"
+  loop: "{{ login_shell_accounts.stdout_lines }}"
+  when: login_shell_accounts.stdout_lines | length > 0
+
+- name: "CIS 4.5.2.3 - Get accounts with nologin but not locked"
+  ansible.builtin.shell: |
+    awk -F: '/nologin/ {print $1}' /etc/passwd | xargs -r -I '{}' passwd -S '{}' | awk '($2!="L" && $2!="LK") {print $1}'
+  register: not_locked_nologin_accounts
+  changed_when: false
+
+- name: "CIS 4.5.2.3 - Lock accounts with nologin shell that are not locked"
+  ansible.builtin.command: "usermod -L {{ item }}"
+  loop: "{{ not_locked_nologin_accounts.stdout_lines }}"
+  when: not_locked_nologin_accounts.stdout_lines | length > 0
