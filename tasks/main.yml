@@ -5311,5 +5311,6 @@
   become: true
   shell: dnf install -y --nogpgcheck audit
   args:
-    warn: false
+    executable: /bin/bash
+
 
