@@ -4093,4 +4093,28 @@
   changed_when: false
   failed_when: pam_deny_check.stdout != ""
 
+- name: "CIS 4.4.3.1.2 - Set unlock_time to 900 in /etc/security/faillock.conf"
+  ansible.builtin.lineinfile:
+    path: /etc/security/faillock.conf
+    regexp: '^\s*unlock_time\s*='
+    line: 'unlock_time = 900'
+    create: yes
+    state: present
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "CIS 4.4.3.1.2 - Remove unlock_time= option from pam_faillock.so lines in PAM files"
+  ansible.builtin.lineinfile:
+    path: "/etc/authselect/custom/custom-profile/{{ item }}"
+    regexp: '^(.*pam_faillock\.so.*)\s+unlock_time\s*=\s*\S+(.*)$'
+    line: '\1\2'
+    backrefs: yes
+  loop:
+    - system-auth
+    - password-auth
+
+- name: "CIS 4.4.3.1.2 - Apply authselect changes"
+  ansible.builtin.command: authselect apply-changes
+  changed_when: true
 
