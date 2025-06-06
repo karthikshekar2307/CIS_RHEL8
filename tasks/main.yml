@@ -5102,23 +5102,37 @@
 #         msg: "systemd-journal-upload.service not found. Skipping enable step."
 #       when: not journal_upload_service_file.stat.exists
 
-- name: "CIS 5.1.2.1.4 - Ensure journald is not configured to receive remote logs"
+# - name: "CIS 5.1.2.1.4 - Ensure journald is not configured to receive remote logs"
+#   block:
+
+#     - name: "Check if systemd-journal-remote.socket unit exists"
+#       stat:
+#         path: /usr/lib/systemd/system/systemd-journal-remote.socket
+#       register: journal_socket
+
+#     - name: "Mask systemd-journal-remote.socket if present"
+#       systemd:
+#         name: systemd-journal-remote.socket
+#         enabled: no
+#         masked: yes
+#         state: stopped
+#       when: journal_socket.stat.exists
+
+#     - name: "Warn if systemd-journal-remote.socket is not found"
+#       debug:
+#         msg: "systemd-journal-remote.socket not found. Nothing to mask."
+#       when: not journal_socket.stat.exists
+
+- name: "CIS 5.1.2.2 - Ensure journald service is enabled (should be 'static')"
   block:
 
-    - name: "Check if systemd-journal-remote.socket unit exists"
-      stat:
-        path: /usr/lib/systemd/system/systemd-journal-remote.socket
-      register: journal_socket
+    - name: "Check status of systemd-journald service"
+      command: systemctl is-enabled systemd-journald.service
+      register: journald_status
+      changed_when: false
+      failed_when: journald_status.rc != 0 and journald_status.stdout != "static"
 
-    - name: "Mask systemd-journal-remote.socket if present"
-      systemd:
-        name: systemd-journal-remote.socket
-        enabled: no
-        masked: yes
-        state: stopped
-      when: journal_socket.stat.exists
-
-    - name: "Warn if systemd-journal-remote.socket is not found"
+    - name: "Warn if journald service is not static"
       debug:
-        msg: "systemd-journal-remote.socket not found. Nothing to mask."
-      when: not journal_socket.stat.exists
+        msg: "systemd-journald service is in unexpected state: {{ journald_status.stdout }}"
+      when: journald_status.stdout != "static"
