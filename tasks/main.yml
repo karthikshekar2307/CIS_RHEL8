@@ -5389,20 +5389,47 @@
 #     create: yes
 #     backrefs: yes
 
-- name: "CIS 5.2.2.4 | Ensure space_left_action is set to email"
-  become: true
-  lineinfile:
-    path: /etc/audit/auditd.conf
-    regexp: '^#?\s*space_left_action\s*='
-    line: 'space_left_action = email'
-    create: yes
-    backrefs: yes
+# - name: "CIS 5.2.2.4 | Ensure space_left_action is set to email"
+#   become: true
+#   lineinfile:
+#     path: /etc/audit/auditd.conf
+#     regexp: '^#?\s*space_left_action\s*='
+#     line: 'space_left_action = email'
+#     create: yes
+#     backrefs: yes
 
-- name: "CIS 5.2.2.4 | Ensure admin_space_left_action is set to single"
+# - name: "CIS 5.2.2.4 | Ensure admin_space_left_action is set to single"
+#   become: true
+#   lineinfile:
+#     path: /etc/audit/auditd.conf
+#     regexp: '^#?\s*admin_space_left_action\s*='
+#     line: 'admin_space_left_action = single'
+#     create: yes
+#     backrefs: yes
+
+- name: "CIS 5.2.3.1 | Ensure audit rule for /etc/sudoers is configured"
   become: true
-  lineinfile:
-    path: /etc/audit/auditd.conf
-    regexp: '^#?\s*admin_space_left_action\s*='
-    line: 'admin_space_left_action = single'
-    create: yes
-    backrefs: yes
+  copy:
+    dest: /etc/audit/rules.d/50-scope.rules
+    content: |
+      -w /etc/sudoers -p wa -k scope
+      -w /etc/sudoers.d -p wa -k scope
+    owner: root
+    group: root
+    mode: '0640'
+
+- name: "CIS 5.2.3.1 | Load audit rules with augenrules"
+  become: true
+  command: augenrules --load
+
+- name: "CIS 5.2.3.1 | Check if audit system requires reboot to load rules (-e 2)"
+  become: true
+  shell: |
+    auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
+  register: auditd_reboot_check
+  changed_when: false
+
+- name: "CIS 5.2.3.1 | Warn if reboot is required to apply audit rule changes"
+  debug:
+    msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
+  when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
