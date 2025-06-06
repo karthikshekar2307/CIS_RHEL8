@@ -5242,11 +5242,19 @@
 #     state: restarted
 #     daemon_reload: yes
 
-- name: Ensure logrotate is installed
+- name: Check if logrotate is already installed
   become: true
-  package:
+  command: rpm -q logrotate
+  register: logrotate_check
+  ignore_errors: yes
+
+- name: Install logrotate if not present
+  become: true
+  yum:
     name: logrotate
     state: present
+  when: logrotate_check.rc != 0
+
 
 - name: Configure global log rotation policy in /etc/logrotate.conf
   become: true
