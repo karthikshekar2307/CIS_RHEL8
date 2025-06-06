@@ -5346,9 +5346,27 @@
 #   command: grubby --update-kernel ALL --args 'audit_backlog_limit=8192'
 #   when: "'audit_backlog_limit=' not in grub_audit_backlog.stdout or 'audit_backlog_limit=8192' not in grub_audit_backlog.stdout"
 
-- name: "CIS 5.2.1.4 | Ensure auditd service is enabled and running"
+# - name: "CIS 5.2.1.4 | Ensure auditd service is enabled and running"
+#   become: true
+#   systemd:
+#     name: auditd
+#     enabled: true
+#     state: started
+
+- name: "CIS 5.2.2.1 | Ensure audit log max file size is set (e.g., 100 MB)"
   become: true
-  systemd:
-    name: auditd
-    enabled: true
-    state: started
+  lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^#?\s*max_log_file\s*='
+    line: 'max_log_file = 100'
+    create: yes
+    backrefs: yes
+
+- name: "CIS 5.2.2.2 | Ensure audit logs are not automatically deleted (keep_logs)"
+  become: true
+  lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^#?\s*max_log_file_action\s*='
+    line: 'max_log_file_action = keep_logs'
+    create: yes
+    backrefs: yes
