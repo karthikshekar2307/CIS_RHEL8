@@ -4368,3 +4368,15 @@
     owner: root
     group: root
     mode: '0644'
+
+- name: "CIS 4.4.3.3 - Configure pam_pwhistory defaults in /etc/security/pwhistory.conf"
+  ansible.builtin.blockinfile:
+    path: /etc/security/pwhistory.conf
+    create: true
+    block: |
+      remember = 5
+      enforce_for_root
+      retry = 3
+    owner: root
+    group: root
+    mode: '0644'
