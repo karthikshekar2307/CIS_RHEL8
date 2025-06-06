@@ -4788,36 +4788,51 @@
 #   tags:
 #     - CIS_4.5.3.2
 
-- name: "CIS 4.5.3.3 - Ensure default user umask is configured (027 or stricter)"
+# - name: "CIS 4.5.3.3 - Ensure default user umask is configured (027 or stricter)"
+#   block:
+#     - name: "Create system-wide umask configuration file"
+#       copy:
+#         dest: /etc/profile.d/cis_umask.sh
+#         content: |
+#           #!/bin/bash
+#           umask 027
+#         owner: root
+#         group: root
+#         mode: '0644'
+
+#     - name: "Ensure pam_umask is configured in /etc/pam.d/postlogin"
+#       lineinfile:
+#         path: /etc/pam.d/postlogin
+#         regexp: '^session\s+optional\s+pam_umask.so'
+#         line: 'session optional pam_umask.so umask=027'
+#         state: present
+#         create: yes
+#         insertafter: EOF
+#         backup: yes
+
+#     - name: "Ensure UMASK is configured in /etc/login.defs"
+#       lineinfile:
+#         path: /etc/login.defs
+#         regexp: '^UMASK'
+#         line: 'UMASK 027'
+#         state: present
+#         create: yes
+#         backup: yes
+#   tags:
+#     - CIS_4.5.3.3
+
+- name: "CIS 5.1.1.1 - Ensure rsyslog is installed"
   block:
-    - name: "Create system-wide umask configuration file"
-      copy:
-        dest: /etc/profile.d/cis_umask.sh
-        content: |
-          #!/bin/bash
-          umask 027
-        owner: root
-        group: root
-        mode: '0644'
-
-    - name: "Ensure pam_umask is configured in /etc/pam.d/postlogin"
-      lineinfile:
-        path: /etc/pam.d/postlogin
-        regexp: '^session\s+optional\s+pam_umask.so'
-        line: 'session optional pam_umask.so umask=027'
+    - name: "Install rsyslog package"
+      package:
+        name: rsyslog
         state: present
-        create: yes
-        insertafter: EOF
-        backup: yes
 
-    - name: "Ensure UMASK is configured in /etc/login.defs"
-      lineinfile:
-        path: /etc/login.defs
-        regexp: '^UMASK'
-        line: 'UMASK 027'
-        state: present
-        create: yes
-        backup: yes
+    - name: "Ensure rsyslog service is enabled and started"
+      service:
+        name: rsyslog
+        enabled: yes
+        state: started
   tags:
-    - CIS_4.5.3.3
+    - CIS_5.1.1.1
 
