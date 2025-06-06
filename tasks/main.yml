@@ -4729,24 +4729,30 @@
 #     group: root
 #     mode: '0644'
 
-- name: "CIS 4.5.2.3 - Get system accounts with login shell"
-  ansible.builtin.shell: |
-    awk -F: '($1!~/^(root|halt|sync|shutdown|nfsnobody)$/ && ($3<$(awk "/^\s*UID_MIN/{print \$2}" /etc/login.defs) || $3 == 65534) && $7!~/^(\/usr)?\/sbin\/nologin$/) { print $1 }' /etc/passwd
+- name: "CIS 4.5.2.3 - Get UID_MIN from /etc/login.defs"
+  command: awk '/^UID_MIN/ {print $2}' /etc/login.defs
+  register: uid_min
+  changed_when: false
+
+- name: "CIS 4.5.2.3 - Get system accounts with login shells"
+  shell: |
+    awk -F: -v min_uid="{{ uid_min.stdout }}" '($1!~/^(root|halt|sync|shutdown|nfsnobody)$/ && ($3<min_uid || $3 == 65534) && $7 !~ /nologin/) { print $1 }' /etc/passwd
   register: login_shell_accounts
   changed_when: false
 
 - name: "CIS 4.5.2.3 - Set shell to /sbin/nologin for system accounts"
-  ansible.builtin.command: "usermod -s /sbin/nologin {{ item }}"
+  command: usermod -s /sbin/nologin {{ item }}
   loop: "{{ login_shell_accounts.stdout_lines }}"
   when: login_shell_accounts.stdout_lines | length > 0
 
 - name: "CIS 4.5.2.3 - Get accounts with nologin but not locked"
-  ansible.builtin.shell: |
+  shell: |
     awk -F: '/nologin/ {print $1}' /etc/passwd | xargs -r -I '{}' passwd -S '{}' | awk '($2!="L" && $2!="LK") {print $1}'
   register: not_locked_nologin_accounts
   changed_when: false
 
 - name: "CIS 4.5.2.3 - Lock accounts with nologin shell that are not locked"
-  ansible.builtin.command: "usermod -L {{ item }}"
+  command: usermod -L {{ item }}
   loop: "{{ not_locked_nologin_accounts.stdout_lines }}"
   when: not_locked_nologin_accounts.stdout_lines | length > 0
+
