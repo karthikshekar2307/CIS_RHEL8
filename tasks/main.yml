@@ -5028,23 +5028,57 @@
 #   tags:
 #     - CIS_5.1.1.7
 
-- name: "CIS 5.1.2.1.1 - Ensure systemd-journal-remote is installed"
+# - name: "CIS 5.1.2.1.1 - Ensure systemd-journal-remote is installed"
+#   block:
+#     - name: "Check if systemd-journal-remote is already installed"
+#       command: rpm -q systemd-journal-remote
+#       register: journal_remote_check
+#       ignore_errors: yes
+#       changed_when: false
+
+#     - name: "Log message if systemd-journal-remote is not installed"
+#       debug:
+#         msg: "systemd-journal-remote is NOT installed on the system."
+#       when: journal_remote_check.rc != 0
+
+#     - name: "Log message if systemd-journal-remote is installed"
+#       debug:
+#         msg: "systemd-journal-remote is installed."
+#       when: journal_remote_check.rc == 0
+
+- name: "CIS 5.1.2.1.2 - Ensure systemd-journal-remote is configured"
   block:
-    - name: "Check if systemd-journal-remote is already installed"
-      command: rpm -q systemd-journal-remote
-      register: journal_remote_check
-      ignore_errors: yes
-      changed_when: false
 
-    - name: "Log message if systemd-journal-remote is not installed"
+    - name: "Check if journal-upload.conf exists"
+      stat:
+        path: /etc/systemd/journal-upload.conf
+      register: journal_upload_conf
+
+    - name: "Read journal-upload.conf if it exists"
+      slurp:
+        src: /etc/systemd/journal-upload.conf
+      register: journal_upload_content
+      when: journal_upload_conf.stat.exists
+
+    - name: "Decode and parse journal-upload.conf"
+      set_fact:
+        journal_upload_lines: "{{ journal_upload_content['content'] | b64decode | splitlines }}"
+      when: journal_upload_conf.stat.exists
+
+    - name: "Show configuration values"
       debug:
-        msg: "systemd-journal-remote is NOT installed on the system."
-      when: journal_remote_check.rc != 0
+        msg: "{{ journal_upload_lines | select('match', '^\\s*(URL|ServerKeyFile|ServerCertificateFile|TrustedCertificateFile)=') | list }}"
+      when: journal_upload_conf.stat.exists
 
-    - name: "Log message if systemd-journal-remote is installed"
+    - name: "Warn if journal-upload.conf is missing"
       debug:
-        msg: "systemd-journal-remote is installed."
-      when: journal_remote_check.rc == 0
+        msg: "systemd-journal-remote configuration file not found at /etc/systemd/journal-upload.conf"
+      when: not journal_upload_conf.stat.exists
 
-
+- name: "Restart systemd-journal-upload"
+  systemd:
+    name: systemd-journal-upload
+    state: restarted
+    enabled: yes
+  when: journal_upload_conf.stat.exists
 
