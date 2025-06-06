@@ -6127,24 +6127,68 @@
 #   loop: "{{ audit_log_files.files }}"
 #   when: item.mode | int(base=8) > 0o640
 
-- name: "CIS 5.2.4.3 | Get audit log directory from auditd.conf"
+# - name: "CIS 5.2.4.3 | Get audit log directory from auditd.conf"
+#   become: true
+#   command: awk -F= '/^\s*log_file\s*=\s*/ {gsub(/ /, "", $2); print $2}' /etc/audit/auditd.conf
+#   register: audit_log_file_path
+#   changed_when: false
+
+# - name: "CIS 5.2.4.3 | Find audit log files not owned by root"
+#   become: true
+#   find:
+#     paths: "{{ audit_log_file_path.stdout | dirname }}"
+#     file_type: file
+#     recurse: no
+#   register: audit_log_files_nonroot
+
+# - name: "CIS 5.2.4.3 | Ensure audit log files are owned by root"
+#   become: true
+#   file:
+#     path: "{{ item.path }}"
+#     owner: root
+#   loop: "{{ audit_log_files_nonroot.files }}"
+#   when: item.uid != 0
+
+- name: "CIS 5.2.4.4 | Get audit log directory from auditd.conf"
   become: true
   command: awk -F= '/^\s*log_file\s*=\s*/ {gsub(/ /, "", $2); print $2}' /etc/audit/auditd.conf
   register: audit_log_file_path
   changed_when: false
 
-- name: "CIS 5.2.4.3 | Find audit log files not owned by root"
+- name: "CIS 5.2.4.4 | Set group of audit log directory to adm"
+  become: true
+  file:
+    path: "{{ audit_log_file_path.stdout | dirname }}"
+    group: adm
+    recurse: no
+
+- name: "CIS 5.2.4.4 | Ensure audit log files are group-owned by adm"
   become: true
   find:
     paths: "{{ audit_log_file_path.stdout | dirname }}"
     file_type: file
     recurse: no
-  register: audit_log_files_nonroot
+  register: audit_log_files
 
-- name: "CIS 5.2.4.3 | Ensure audit log files are owned by root"
+- name: "CIS 5.2.4.4 | Fix group ownership of audit log files"
   become: true
   file:
     path: "{{ item.path }}"
-    owner: root
-  loop: "{{ audit_log_files_nonroot.files }}"
-  when: item.uid != 0
+    group: adm
+  loop: "{{ audit_log_files.files }}"
+  when: item.gid != 4  # GID 4 is usually 'adm'
+
+- name: "CIS 5.2.4.4 | Ensure log_group = adm in /etc/audit/auditd.conf"
+  become: true
+  lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^(\s*#?\s*log_group\s*=\s*).*$'
+    line: 'log_group = adm'
+    backrefs: true
+    create: yes
+
+- name: "CIS 5.2.4.4 | Restart auditd"
+  become: true
+  systemd:
+    name: auditd
+    state: restarted
