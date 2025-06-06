@@ -4541,13 +4541,17 @@
 #     - name: "Apply authselect changes"
 #       command: authselect apply-changes
 
-- name: "Set pam_profile_path based on authselect active profile"
+- name: "Read active authselect profile name"
+  command: awk 'NR==1{print $1}' /etc/authselect/authselect.conf
+  register: authselect_profile_name
+
+- name: "Set correct pam_profile_path"
   set_fact:
     pam_profile_path: >-
       {{
-        '/etc/authselect/' + (lookup('file', '/etc/authselect/authselect.conf').split('\n')[0] | trim)
-        if (lookup('file', '/etc/authselect/authselect.conf').split('\n')[0] | trim) is match('^custom/')
-        else '/usr/share/authselect/default/' + (lookup('file', '/etc/authselect/authselect.conf').split('\n')[0] | trim)
+        '/etc/authselect/' + authselect_profile_name.stdout
+        if authselect_profile_name.stdout is match('^custom/')
+        else '/usr/share/authselect/default/' + authselect_profile_name.stdout
       }}
 
 - name: "Ensure pam_unix.so includes use_authtok"
@@ -4560,8 +4564,9 @@
   loop:
     - password-auth
     - system-auth
+  when: pam_profile_path is defined
 
 - name: "Apply authselect changes"
   command: authselect apply-changes
-  when: pam_profile_path is defined
+
 
