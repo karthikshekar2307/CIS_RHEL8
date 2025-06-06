@@ -4838,37 +4838,108 @@
 #   tags:
 #     - CIS_5.1.1.2
 
-- name: "CIS 5.1.1.3 - Ensure journald forwards logs to rsyslog"
-  block:
+# - name: "CIS 5.1.1.3 - Ensure journald forwards logs to rsyslog"
+#   block:
 
-    - name: "Create journald override directory if it doesn't exist"
-      file:
-        path: /etc/systemd/journald.conf.d
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
+#     - name: "Create journald override directory if it doesn't exist"
+#       file:
+#         path: /etc/systemd/journald.conf.d
+#         state: directory
+#         owner: root
+#         group: root
+#         mode: '0755'
 
-    - name: "Ensure journald ForwardToSyslog is set to yes"
-      copy:
-        dest: /etc/systemd/journald.conf.d/50-forwardtosyslog.conf
-        content: |
-          [Journal]
-          ForwardToSyslog=yes
-        owner: root
-        group: root
-        mode: '0644'
+#     - name: "Ensure journald ForwardToSyslog is set to yes"
+#       copy:
+#         dest: /etc/systemd/journald.conf.d/50-forwardtosyslog.conf
+#         content: |
+#           [Journal]
+#           ForwardToSyslog=yes
+#         owner: root
+#         group: root
+#         mode: '0644'
 
-    - name: "Restart systemd-journald to apply configuration"
-      systemd:
-        name: systemd-journald
-        state: restarted
-        enabled: yes
+#     - name: "Restart systemd-journald to apply configuration"
+#       systemd:
+#         name: systemd-journald
+#         state: restarted
+#         enabled: yes
 
-  tags:
-    - CIS_5.1.1.3
+#   tags:
+#     - CIS_5.1.1.3
 
-- name: "CIS 5.1.1.4 - Ensure rsyslog default file permissions are configured"
+# - name: "CIS 5.1.1.4 - Ensure rsyslog default file permissions are configured"
+#   block:
+
+#     - name: "Ensure rsyslog.d directory exists"
+#       file:
+#         path: /etc/rsyslog.d
+#         state: directory
+#         mode: '0755'
+#         owner: root
+#         group: root
+
+#     - name: "Set FileCreateMode to 0640 in rsyslog configuration"
+#       copy:
+#         dest: /etc/rsyslog.d/50-filecreatemode.conf
+#         content: |
+#           $FileCreateMode 0640
+#         owner: root
+#         group: root
+#         mode: '0644'
+
+#     - name: "Restart rsyslog service"
+#       systemd:
+#         name: rsyslog
+#         state: restarted
+#         enabled: yes
+
+#   tags:
+#     - CIS_5.1.1.4
+
+# - name: "CIS 5.1.1.5 - Ensure logging is configured"
+#   block:
+
+#     - name: "Ensure rsyslog.d directory exists"
+#       file:
+#         path: /etc/rsyslog.d
+#         state: directory
+#         mode: '0755'
+#         owner: root
+#         group: root
+
+#     - name: "Configure default logging rules"
+#       copy:
+#         dest: /etc/rsyslog.d/50-default-logging.conf
+#         content: |
+#           *.emerg                                   :omusrmsg:*
+#           auth,authpriv.*                           /var/log/secure
+#           mail.*                                    -/var/log/mail
+#           mail.info                                 -/var/log/mail.info
+#           mail.warning                              -/var/log/mail.warn
+#           mail.err                                  /var/log/mail.err
+#           cron.*                                    /var/log/cron
+#           *.=warning;*.=err                         -/var/log/warn
+#           *.crit                                    /var/log/warn
+#           *.*;mail.none;news.none                   -/var/log/messages
+#           local0,local1.*                           -/var/log/localmessages
+#           local2,local3.*                           -/var/log/localmessages
+#           local4,local5.*                           -/var/log/localmessages
+#           local6,local7.*                           -/var/log/localmessages
+#         owner: root
+#         group: root
+#         mode: '0644'
+
+#     - name: "Restart rsyslog to apply logging configuration"
+#       systemd:
+#         name: rsyslog
+#         state: restarted
+#         enabled: yes
+
+#   tags:
+#     - CIS_5.1.1.5
+
+- name: "CIS 5.1.1.6 - Ensure rsyslog sends logs to remote host"
   block:
 
     - name: "Ensure rsyslog.d directory exists"
@@ -4879,62 +4950,28 @@
         owner: root
         group: root
 
-    - name: "Set FileCreateMode to 0640 in rsyslog configuration"
+    - name: "Configure rsyslog to forward logs to remote host"
       copy:
-        dest: /etc/rsyslog.d/50-filecreatemode.conf
+        dest: /etc/rsyslog.d/60-remote-logging.conf
         content: |
-          $FileCreateMode 0640
+          *.* action(
+            type="omfwd"
+            target="192.168.2.100"
+            port="514"
+            protocol="tcp"
+            action.resumeRetryCount="100"
+            queue.type="LinkedList"
+            queue.size="1000"
+          )
         owner: root
         group: root
         mode: '0644'
 
-    - name: "Restart rsyslog service"
+    - name: "Restart rsyslog to apply remote logging configuration"
       systemd:
         name: rsyslog
         state: restarted
         enabled: yes
 
   tags:
-    - CIS_5.1.1.4
-
-- name: "CIS 5.1.1.5 - Ensure logging is configured"
-  block:
-
-    - name: "Ensure rsyslog.d directory exists"
-      file:
-        path: /etc/rsyslog.d
-        state: directory
-        mode: '0755'
-        owner: root
-        group: root
-
-    - name: "Configure default logging rules"
-      copy:
-        dest: /etc/rsyslog.d/50-default-logging.conf
-        content: |
-          *.emerg                                   :omusrmsg:*
-          auth,authpriv.*                           /var/log/secure
-          mail.*                                    -/var/log/mail
-          mail.info                                 -/var/log/mail.info
-          mail.warning                              -/var/log/mail.warn
-          mail.err                                  /var/log/mail.err
-          cron.*                                    /var/log/cron
-          *.=warning;*.=err                         -/var/log/warn
-          *.crit                                    /var/log/warn
-          *.*;mail.none;news.none                   -/var/log/messages
-          local0,local1.*                           -/var/log/localmessages
-          local2,local3.*                           -/var/log/localmessages
-          local4,local5.*                           -/var/log/localmessages
-          local6,local7.*                           -/var/log/localmessages
-        owner: root
-        group: root
-        mode: '0644'
-
-    - name: "Restart rsyslog to apply logging configuration"
-      systemd:
-        name: rsyslog
-        state: restarted
-        enabled: yes
-
-  tags:
-    - CIS_5.1.1.5
+    - CIS_5.1.1.6
