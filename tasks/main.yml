@@ -4694,10 +4694,16 @@
 #   when: item.stdout != ''
 
 - name: "CIS 4.5.2.1 - Check if root's primary group is GID 0"
-  command: awk -F: '$1=="root"{print $4}' /etc/passwd
-  register: root_gid_check
-  changed_when: false
+  ansible.builtin.command: >
+    awk -F: '$1=="root"{print $4}' /etc/passwd
+  register: root_gid
 
-- name: "CIS 4.5.2.1 - Set root's primary group to GID 0 if not already set"
-  command: usermod -g 0 root
-  when: root_gid_check.stdout != "0"
+- name: "CIS 4.5.2.1 - Fail if root's GID is not 0"
+  ansible.builtin.fail:
+    msg: "Root's primary group ID is not 0"
+  when: root_gid.stdout != "0"
+
+- name: "CIS 4.5.2.1 - Set root user's primary group to GID 0"
+  ansible.builtin.command: usermod -g 0 root
+  when: root_gid.stdout != "0"
+
