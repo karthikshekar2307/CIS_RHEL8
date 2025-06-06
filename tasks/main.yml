@@ -4630,34 +4630,46 @@
 #     - password
 #     - expiration
 
-- name: "Ensure password expiration warning days is 7 or more (CIS 4.5.1.3)"
-  block:
+# - name: "Ensure password expiration warning days is 7 or more (CIS 4.5.1.3)"
+#   block:
 
-    - name: "Set PASS_WARN_AGE to 7 in /etc/login.defs"
-      lineinfile:
-        path: /etc/login.defs
-        regexp: '^\\s*PASS_WARN_AGE\\s+'
-        line: 'PASS_WARN_AGE   7'
-        state: present
-        create: yes
-        backup: yes
+#     - name: "Set PASS_WARN_AGE to 7 in /etc/login.defs"
+#       lineinfile:
+#         path: /etc/login.defs
+#         regexp: '^\\s*PASS_WARN_AGE\\s+'
+#         line: 'PASS_WARN_AGE   7'
+#         state: present
+#         create: yes
+#         backup: yes
 
-    - name: "Get users with valid passwords"
-      shell: "awk -F: '$2 !~ /^[!*]/ { print $1 }' /etc/shadow"
-      register: users_with_passwords
-      changed_when: false
+#     - name: "Get users with valid passwords"
+#       shell: "awk -F: '$2 !~ /^[!*]/ { print $1 }' /etc/shadow"
+#       register: users_with_passwords
+#       changed_when: false
 
 
-    - name: "Set password warning days to 7 for each user"
-      command: chage --warndays 7 {{ item }}
-      loop: "{{ users_with_passwords.stdout_lines }}"
-      when: users_with_passwords.stdout_lines | length > 0
+#     - name: "Set password warning days to 7 for each user"
+#       command: chage --warndays 7 {{ item }}
+#       loop: "{{ users_with_passwords.stdout_lines }}"
+#       when: users_with_passwords.stdout_lines | length > 0
 
-  tags:
-    - CIS
-    - password-policy
-    - login-defs
-    - warn-age
+#   tags:
+#     - CIS
+#     - password-policy
+#     - login-defs
+#     - warn-age
 
+- name: "CIS 4.5.1.4 - Set default password inactivity to 30 days"
+  command: useradd -D -f 30
+
+- name: "Get users with valid passwords"
+  shell: "awk -F: '$2 !~ /^[!*]/ { print $1 }' /etc/shadow"
+  register: users_with_passwords
+  changed_when: false
+
+- name: "Set password inactivity for users with valid passwords"
+  command: "chage --inactive 30 {{ item }}"
+  loop: "{{ users_with_passwords.stdout_lines }}"
+  when: users_with_passwords.stdout_lines | length > 0
 
 
