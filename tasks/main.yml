@@ -5812,29 +5812,56 @@
 #     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
 #   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
 
-- name: "CIS 5.2.3.13 | Create audit rules for file deletion events"
+# - name: "CIS 5.2.3.13 | Create audit rules for file deletion events"
+#   become: true
+#   copy:
+#     dest: /etc/audit/rules.d/50-delete.rules
+#     content: |
+#       -a always,exit -F arch=b64 -S rename,unlink,unlinkat,renameat -F auid>=1000 -F auid!=unset -F key=delete
+#       -a always,exit -F arch=b32 -S rename,unlink,unlinkat,renameat -F auid>=1000 -F auid!=unset -F key=delete
+#     owner: root
+#     group: root
+#     mode: '0640'
+
+# - name: "CIS 5.2.3.13 | Load audit rules with augenrules"
+#   become: true
+#   command: augenrules --load
+
+# - name: "CIS 5.2.3.13 | Check if audit system requires reboot to load rules (-e 2)"
+#   become: true
+#   shell: |
+#     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
+#   register: auditd_reboot_check
+#   changed_when: false
+
+# - name: "CIS 5.2.3.13 | Warn if reboot is required to apply audit rule changes"
+#   debug:
+#     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
+#   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+
+- name: "CIS 5.2.3.14 | Create audit rules for MAC policy changes (SELinux)"
   become: true
   copy:
-    dest: /etc/audit/rules.d/50-delete.rules
+    dest: /etc/audit/rules.d/50-MAC-policy.rules
     content: |
-      -a always,exit -F arch=b64 -S rename,unlink,unlinkat,renameat -F auid>=1000 -F auid!=unset -F key=delete
-      -a always,exit -F arch=b32 -S rename,unlink,unlinkat,renameat -F auid>=1000 -F auid!=unset -F key=delete
+      -w /etc/selinux -p wa -k MAC-policy
+      -w /usr/share/selinux -p wa -k MAC-policy
     owner: root
     group: root
     mode: '0640'
 
-- name: "CIS 5.2.3.13 | Load audit rules with augenrules"
+- name: "CIS 5.2.3.14 | Load audit rules with augenrules"
   become: true
   command: augenrules --load
 
-- name: "CIS 5.2.3.13 | Check if audit system requires reboot to load rules (-e 2)"
+- name: "CIS 5.2.3.14 | Check if audit system requires reboot to load rules (-e 2)"
   become: true
   shell: |
     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
   register: auditd_reboot_check
   changed_when: false
 
-- name: "CIS 5.2.3.13 | Warn if reboot is required to apply audit rule changes"
+- name: "CIS 5.2.3.14 | Warn if reboot is required to apply audit rule changes"
   debug:
     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
