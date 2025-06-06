@@ -4672,24 +4672,32 @@
 #   loop: "{{ users_with_passwords.stdout_lines }}"
 #   when: users_with_passwords.stdout_lines | length > 0
 
-- name: "CIS 4.5.1.5 - Get users with valid passwords"
-  shell: "awk -F: '$2 !~ /^[!*]/ { print $1 }' /etc/shadow"
-  register: valid_users
+# - name: "CIS 4.5.1.5 - Get users with valid passwords"
+#   shell: "awk -F: '$2 !~ /^[!*]/ { print $1 }' /etc/shadow"
+#   register: valid_users
+#   changed_when: false
+
+# - name: "Check if any user has future password change date"
+#   shell: |
+#     l_change=$(date -d "$(chage --list {{ item }} | grep '^Last password change' | cut -d: -f2 | sed 's/^ *//')" +%s 2>/dev/null || echo 0)
+#     if [ "$l_change" -gt "$(date +%s)" ]; then
+#       echo "{{ item }}"
+#     fi
+#   loop: "{{ valid_users.stdout_lines }}"
+#   register: users_with_future_change
+#   changed_when: false
+#   failed_when: false
+
+# - name: "Set password as expired for users with future password change date"
+#   command: chage -d 0 {{ item.item }}
+#   loop: "{{ users_with_future_change.results | selectattr('stdout', '!=', '') | list }}"
+#   when: item.stdout != ''
+
+- name: "CIS 4.5.2.1 - Check if root's primary group is GID 0"
+  command: awk -F: '$1=="root"{print $4}' /etc/passwd
+  register: root_gid_check
   changed_when: false
 
-- name: "Check if any user has future password change date"
-  shell: |
-    l_change=$(date -d "$(chage --list {{ item }} | grep '^Last password change' | cut -d: -f2 | sed 's/^ *//')" +%s 2>/dev/null || echo 0)
-    if [ "$l_change" -gt "$(date +%s)" ]; then
-      echo "{{ item }}"
-    fi
-  loop: "{{ valid_users.stdout_lines }}"
-  register: users_with_future_change
-  changed_when: false
-  failed_when: false
-
-- name: "Set password as expired for users with future password change date"
-  command: chage -d 0 {{ item.item }}
-  loop: "{{ users_with_future_change.results | selectattr('stdout', '!=', '') | list }}"
-  when: item.stdout != ''
-
+- name: "CIS 4.5.2.1 - Set root's primary group to GID 0 if not already set"
+  command: usermod -g 0 root
+  when: root_gid_check.stdout != "0"
