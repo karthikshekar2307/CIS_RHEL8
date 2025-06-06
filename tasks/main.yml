@@ -4569,37 +4569,65 @@
 # - name: "Apply authselect changes"
 #   command: authselect apply-changes
 
-- name: "Ensure strong password hashing algorithm is configured (CIS 4.5.1.1)"
-  block:
-    - name: "Ensure 'crypt_style = sha512' is set in /etc/libuser.conf"
-      lineinfile:
-        path: /etc/libuser.conf
-        regexp: '^\s*crypt_style\s*='
-        line: 'crypt_style = sha512'
-        create: yes
-        state: present
-        backup: yes
+# - name: "Ensure strong password hashing algorithm is configured (CIS 4.5.1.1)"
+#   block:
+#     - name: "Ensure 'crypt_style = sha512' is set in /etc/libuser.conf"
+#       lineinfile:
+#         path: /etc/libuser.conf
+#         regexp: '^\s*crypt_style\s*='
+#         line: 'crypt_style = sha512'
+#         create: yes
+#         state: present
+#         backup: yes
 
-    - name: "Ensure 'ENCRYPT_METHOD SHA512' is set in /etc/login.defs"
+#     - name: "Ensure 'ENCRYPT_METHOD SHA512' is set in /etc/login.defs"
+#       lineinfile:
+#         path: /etc/login.defs
+#         regexp: '^\s*ENCRYPT_METHOD\s+'
+#         line: 'ENCRYPT_METHOD SHA512'
+#         create: yes
+#         state: present
+#         backup: yes
+
+#     - name: "Force password reset for all non-system users (optional, recommended)"
+#       shell: |
+#         awk -F: '($3 >= {{ uid_min | default(1000) }} && $1 != "nfsnobody") {print $1}' /etc/passwd | xargs -n 1 chage -d 0
+#       args:
+#         warn: false
+#       when: force_password_reset | default(false)
+
+#   tags:
+#     - CIS
+#     - level1
+#     - password
+#     - hashing
+
+- name: "Ensure password expiration is 365 days or less (CIS 4.5.1.2)"
+  block:
+
+    - name: "Set PASS_MAX_DAYS to 365 in /etc/login.defs"
       lineinfile:
         path: /etc/login.defs
-        regexp: '^\s*ENCRYPT_METHOD\s+'
-        line: 'ENCRYPT_METHOD SHA512'
-        create: yes
+        regexp: '^\s*PASS_MAX_DAYS\s+'
+        line: 'PASS_MAX_DAYS   365'
         state: present
+        create: yes
         backup: yes
 
-    - name: "Force password reset for all non-system users (optional, recommended)"
-      shell: |
-        awk -F: '($3 >= {{ uid_min | default(1000) }} && $1 != "nfsnobody") {print $1}' /etc/passwd | xargs -n 1 chage -d 0
-      args:
-        warn: false
-      when: force_password_reset | default(false)
+    - name: "Get all local users with password set (non-locked accounts)"
+      command: awk -F: '($2 !~ /^[!*]/) { print $1 }' /etc/shadow
+      register: users_with_password
+      changed_when: false
+
+    - name: "Set password max days to 365 for each user"
+      command: chage --maxdays 365 {{ item }}
+      loop: "{{ users_with_password.stdout_lines }}"
+      when: users_with_password.stdout_lines | length > 0
 
   tags:
     - CIS
     - level1
     - password
-    - hashing
+    - expiration
 
 
