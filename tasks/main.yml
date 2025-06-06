@@ -5461,41 +5461,69 @@
 #     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
 #   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
 
-- name: "CIS 5.2.3.3 | Get sudo log file path from sudoers config"
-  become: true
-  shell: |
-    grep -r 'logfile=' /etc/sudoers /etc/sudoers.d 2>/dev/null | \
-    sed -e 's/.*logfile=//;s/,.*//' -e 's/"//g' | head -n1
-  register: sudo_log_file
-  changed_when: false
+# - name: "CIS 5.2.3.3 | Get sudo log file path from sudoers config"
+#   become: true
+#   shell: |
+#     grep -r 'logfile=' /etc/sudoers /etc/sudoers.d 2>/dev/null | \
+#     sed -e 's/.*logfile=//;s/,.*//' -e 's/"//g' | head -n1
+#   register: sudo_log_file
+#   changed_when: false
 
-- name: "CIS 5.2.3.3 | Fail if no sudo log file is configured"
-  fail:
-    msg: "No sudo log file is configured via Defaults logfile= in /etc/sudoers or /etc/sudoers.d"
-  when: sudo_log_file.stdout == ""
+# - name: "CIS 5.2.3.3 | Fail if no sudo log file is configured"
+#   fail:
+#     msg: "No sudo log file is configured via Defaults logfile= in /etc/sudoers or /etc/sudoers.d"
+#   when: sudo_log_file.stdout == ""
 
-- name: "CIS 5.2.3.3 | Configure audit rule to monitor sudo log file"
+# - name: "CIS 5.2.3.3 | Configure audit rule to monitor sudo log file"
+#   become: true
+#   copy:
+#     dest: /etc/audit/rules.d/50-sudo_log_file.rules
+#     content: |
+#       -w {{ sudo_log_file.stdout }} -p wa -k sudo_log_file
+#     owner: root
+#     group: root
+#     mode: '0640'
+
+# - name: "CIS 5.2.3.3 | Load audit rules with augenrules"
+#   become: true
+#   command: augenrules --load
+
+# - name: "CIS 5.2.3.3 | Check if audit system requires reboot to load rules (-e 2)"
+#   become: true
+#   shell: |
+#     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
+#   register: auditd_reboot_check
+#   changed_when: false
+
+# - name: "CIS 5.2.3.3 | Warn if reboot is required to apply audit rule changes"
+#   debug:
+#     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
+#   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
+
+- name: "CIS 5.2.3.4 | Configure audit rules for date and time changes"
   become: true
   copy:
-    dest: /etc/audit/rules.d/50-sudo_log_file.rules
+    dest: /etc/audit/rules.d/50-time-change.rules
     content: |
-      -w {{ sudo_log_file.stdout }} -p wa -k sudo_log_file
+      -a always,exit -F arch=b64 -S adjtimex,settimeofday,clock_settime -k time-change
+      -a always,exit -F arch=b32 -S adjtimex,settimeofday,clock_settime,stime -k time-change
+      -w /etc/localtime -p wa -k time-change
     owner: root
     group: root
     mode: '0640'
 
-- name: "CIS 5.2.3.3 | Load audit rules with augenrules"
+- name: "CIS 5.2.3.4 | Load audit rules with augenrules"
   become: true
   command: augenrules --load
 
-- name: "CIS 5.2.3.3 | Check if audit system requires reboot to load rules (-e 2)"
+- name: "CIS 5.2.3.4 | Check if audit system requires reboot to load rules (-e 2)"
   become: true
   shell: |
     auditctl -s | grep 'enabled' | grep -q '2' && echo "REBOOT_REQUIRED" || echo "OK"
   register: auditd_reboot_check
   changed_when: false
 
-- name: "CIS 5.2.3.3 | Warn if reboot is required to apply audit rule changes"
+- name: "CIS 5.2.3.4 | Warn if reboot is required to apply audit rule changes"
   debug:
     msg: "Reboot required to fully apply audit rules (auditd is locked: -e 2)."
   when: auditd_reboot_check.stdout == "REBOOT_REQUIRED"
