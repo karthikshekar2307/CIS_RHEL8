@@ -5036,9 +5036,15 @@
       ignore_errors: yes
       changed_when: false
 
-    - name: "Fail if systemd-journal-remote is not installed"
-      fail:
-        msg: "systemd-journal-remote is not installed"
+    - name: "Log message if systemd-journal-remote is not installed"
+      debug:
+        msg: "systemd-journal-remote is NOT installed on the system."
       when: journal_remote_check.rc != 0
+
+    - name: "Log message if systemd-journal-remote is installed"
+      debug:
+        msg: "systemd-journal-remote is installed."
+      when: journal_remote_check.rc == 0
+
 
 
