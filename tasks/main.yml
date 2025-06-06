@@ -4541,32 +4541,65 @@
 #     - name: "Apply authselect changes"
 #       command: authselect apply-changes
 
-- name: "Read active authselect profile name"
-  command: awk 'NR==1{print $1}' /etc/authselect/authselect.conf
-  register: authselect_profile_name
+# - name: "Read active authselect profile name"
+#   command: awk 'NR==1{print $1}' /etc/authselect/authselect.conf
+#   register: authselect_profile_name
 
-- name: "Set correct pam_profile_path"
-  set_fact:
-    pam_profile_path: >-
-      {{
-        '/etc/authselect/' + authselect_profile_name.stdout
-        if authselect_profile_name.stdout is match('^custom/')
-        else '/usr/share/authselect/default/' + authselect_profile_name.stdout
-      }}
+# - name: "Set correct pam_profile_path"
+#   set_fact:
+#     pam_profile_path: >-
+#       {{
+#         '/etc/authselect/' + authselect_profile_name.stdout
+#         if authselect_profile_name.stdout is match('^custom/')
+#         else '/usr/share/authselect/default/' + authselect_profile_name.stdout
+#       }}
 
-- name: "Ensure pam_unix.so includes use_authtok"
-  lineinfile:
-    path: "{{ pam_profile_path }}/{{ item }}"
-    regexp: '^(?P<indent>\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so\s+.*)(?<!use_authtok)(?P<rest>\s*)$'
-    line: '\g<indent> use_authtok\g<rest>'
-    backrefs: yes
-    state: present
-  loop:
-    - password-auth
-    - system-auth
-  when: pam_profile_path is defined
+# - name: "Ensure pam_unix.so includes use_authtok"
+#   lineinfile:
+#     path: "{{ pam_profile_path }}/{{ item }}"
+#     regexp: '^(?P<indent>\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so\s+.*)(?<!use_authtok)(?P<rest>\s*)$'
+#     line: '\g<indent> use_authtok\g<rest>'
+#     backrefs: yes
+#     state: present
+#   loop:
+#     - password-auth
+#     - system-auth
+#   when: pam_profile_path is defined
 
-- name: "Apply authselect changes"
-  command: authselect apply-changes
+# - name: "Apply authselect changes"
+#   command: authselect apply-changes
+
+- name: "Ensure strong password hashing algorithm is configured (CIS 4.5.1.1)"
+  block:
+    - name: "Ensure 'crypt_style = sha512' is set in /etc/libuser.conf"
+      lineinfile:
+        path: /etc/libuser.conf
+        regexp: '^\s*crypt_style\s*='
+        line: 'crypt_style = sha512'
+        create: yes
+        state: present
+        backup: yes
+
+    - name: "Ensure 'ENCRYPT_METHOD SHA512' is set in /etc/login.defs"
+      lineinfile:
+        path: /etc/login.defs
+        regexp: '^\s*ENCRYPT_METHOD\s+'
+        line: 'ENCRYPT_METHOD SHA512'
+        create: yes
+        state: present
+        backup: yes
+
+    - name: "Force password reset for all non-system users (optional, recommended)"
+      shell: |
+        awk -F: '($3 >= {{ uid_min | default(1000) }} && $1 != "nfsnobody") {print $1}' /etc/passwd | xargs -n 1 chage -d 0
+      args:
+        warn: false
+      when: force_password_reset | default(false)
+
+  tags:
+    - CIS
+    - level1
+    - password
+    - hashing
 
 
