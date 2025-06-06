@@ -4038,8 +4038,15 @@
       root_unlock_time=900
       local_users_only
       audit
-  owner: root
-  group: root
-  mode: '0644'
   tags:
     - CIS_4.4.3.1
+
+- name: "Set correct permissions for /etc/security/faillock.conf"
+  ansible.builtin.file:
+    path: /etc/security/faillock.conf
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - CIS_4.4.3.1
+
