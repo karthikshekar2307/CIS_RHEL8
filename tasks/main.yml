@@ -5371,20 +5371,38 @@
 #     create: yes
 #     backrefs: yes
 
-- name: "CIS 5.2.2.3 | Ensure disk_full_action is set to halt"
+# - name: "CIS 5.2.2.3 | Ensure disk_full_action is set to halt"
+#   become: true
+#   lineinfile:
+#     path: /etc/audit/auditd.conf
+#     regexp: '^#?\s*disk_full_action\s*='
+#     line: 'disk_full_action = halt'
+#     create: yes
+#     backrefs: yes
+
+# - name: "CIS 5.2.2.3 | Ensure disk_error_action is set to syslog"
+#   become: true
+#   lineinfile:
+#     path: /etc/audit/auditd.conf
+#     regexp: '^#?\s*disk_error_action\s*='
+#     line: 'disk_error_action = syslog'
+#     create: yes
+#     backrefs: yes
+
+- name: "CIS 5.2.2.4 | Ensure space_left_action is set to email"
   become: true
   lineinfile:
     path: /etc/audit/auditd.conf
-    regexp: '^#?\s*disk_full_action\s*='
-    line: 'disk_full_action = halt'
+    regexp: '^#?\s*space_left_action\s*='
+    line: 'space_left_action = email'
     create: yes
     backrefs: yes
 
-- name: "CIS 5.2.2.3 | Ensure disk_error_action is set to syslog"
+- name: "CIS 5.2.2.4 | Ensure admin_space_left_action is set to single"
   become: true
   lineinfile:
     path: /etc/audit/auditd.conf
-    regexp: '^#?\s*disk_error_action\s*='
-    line: 'disk_error_action = syslog'
+    regexp: '^#?\s*admin_space_left_action\s*='
+    line: 'admin_space_left_action = single'
     create: yes
     backrefs: yes
