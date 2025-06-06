@@ -4391,23 +4391,46 @@
 #     group: root
 #     mode: '0644'
 
-- name: "CIS 4.4.3.3.2 - Ensure password history is enforced for the root user"
-  ansible.builtin.blockinfile:
-    path: /etc/security/pwhistory.conf
-    create: true
-    block: |
-      enforce_for_root
-    owner: root
-    group: root
-    mode: '0644'
+# - name: "CIS 4.4.3.3.2 - Ensure password history is enforced for the root user"
+#   ansible.builtin.blockinfile:
+#     path: /etc/security/pwhistory.conf
+#     create: true
+#     block: |
+#       enforce_for_root
+#     owner: root
+#     group: root
+#     mode: '0644'
 
-- name: "CIS 4.4.3.3 - Enforce password history and root enforcement"
-  ansible.builtin.blockinfile:
-    path: /etc/security/pwhistory.conf
-    create: true
-    block: |
-      remember = 24
-      enforce_for_root
-    owner: root
-    group: root
-    mode: '0644'
+# - name: "CIS 4.4.3.3 - Enforce password history and root enforcement"
+#   ansible.builtin.blockinfile:
+#     path: /etc/security/pwhistory.conf
+#     create: true
+#     block: |
+#       remember = 24
+#       enforce_for_root
+#     owner: root
+#     group: root
+#     mode: '0644'
+
+- name: "CIS 4.4.3.3.3 - Ensure pam_pwhistory includes use_authtok"
+  block:
+    - name: "Determine active authselect custom profile name"
+      command: awk 'NR==1 {print $1}' /etc/authselect/authselect.conf
+      register: authselect_profile
+
+    - name: "Set path to custom profile"
+      set_fact:
+        authselect_custom_path: "/etc/authselect/{{ authselect_profile.stdout }}"
+
+    - name: "Ensure pam_pwhistory.so includes use_authtok in system-auth and password-auth"
+      lineinfile:
+        path: "{{ authselect_custom_path }}/{{ item }}"
+        regexp: '^\s*password\s+(requisite|required|sufficient)\s+pam_pwhistory\.so(?!.*use_authtok)'
+        line: '\g<0> use_authtok'
+        backrefs: yes
+      loop:
+        - system-auth
+        - password-auth
+
+    - name: "Apply authselect changes"
+      command: authselect apply-changes
