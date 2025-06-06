@@ -5165,18 +5165,32 @@
 #         state: restarted
 #       when: compress_status.stdout != 'Compress=yes'
 
-- name: Ensure journald is configured to write logs to persistent disk
+# - name: Ensure journald is configured to write logs to persistent disk
+#   become: true
+#   lineinfile:
+#     path: /etc/systemd/journald.conf
+#     regexp: '^#?Storage='
+#     line: 'Storage=persistent'
+#     create: yes
+#     state: present
+#   #notify: Restart journald
+
+# - name: Restart journald
+#   become: true
+#   systemd:
+#     name: systemd-journald
+#     state: restarted
+
+- name: Ensure ForwardToSyslog is not set in journald.conf
   become: true
   lineinfile:
     path: /etc/systemd/journald.conf
-    regexp: '^#?Storage='
-    line: 'Storage=persistent'
-    create: yes
-    state: present
-  #notify: Restart journald
+    regexp: '^#?ForwardToSyslog='
+    state: absent
 
-- name: Restart journald
+- name: Restart journald to apply ForwardToSyslog removal
   become: true
   systemd:
     name: systemd-journald
     state: restarted
+    daemon_reload: yes
