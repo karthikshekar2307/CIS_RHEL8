@@ -4435,62 +4435,107 @@
 #     - name: "Apply authselect changes"
 #       command: authselect apply-changes
 
-- name: "CIS 4.4.3.4.1 - Remove 'nullok' from pam_unix.so lines"
+# - name: "CIS 4.4.3.4.1 - Remove 'nullok' from pam_unix.so lines"
+#   block:
+
+#     - name: "Get active custom authselect profile"
+#       command: awk 'NR==1 {print $1}' /etc/authselect/authselect.conf
+#       register: authselect_profile
+
+#     - name: "Fail if not using a custom profile"
+#       fail:
+#         msg: "A custom authselect profile is required to edit PAM templates."
+#       when: authselect_profile.stdout is not regex("^custom/")
+
+#     - name: "Set custom profile path"
+#       set_fact:
+#         authselect_custom_path: "/etc/authselect/{{ authselect_profile.stdout }}"
+
+#     - name: "Remove 'nullok' from pam_unix.so lines"
+#       replace:
+#         path: "{{ authselect_custom_path }}/{{ item }}"
+#         regexp: '(^\s*(auth|password)\s+(requisite|required|sufficient)\s+pam_unix\.so\s+[^#\n]*)\bnullok\b\s*'
+#         replace: '\1'
+#         backup: yes
+#       loop:
+#         - system-auth
+#         - password-auth
+
+#     - name: "Apply authselect changes"
+#       command: authselect apply-changes
+
+
+# - name: "CIS 4.4.3.4.2 - Ensure pam_unix.so does not include remember=n"
+#   block:
+
+#     - name: "Check active Authselect profile"
+#       command: awk 'NR==1 {print $1}' /etc/authselect/authselect.conf
+#       register: authselect_profile
+
+#     - name: "Fail if not using a custom authselect profile"
+#       fail:
+#         msg: "A custom Authselect profile is required to safely modify pam_unix.so configuration."
+#       when: authselect_profile.stdout is not regex("^custom/")
+
+#     - name: "Set custom profile path"
+#       set_fact:
+#         authselect_custom_path: "/etc/authselect/{{ authselect_profile.stdout }}"
+
+#     - name: "Remove 'remember=n' from pam_unix.so lines in system-auth and password-auth"
+#       replace:
+#         path: "{{ authselect_custom_path }}/{{ item }}"
+#         regexp: '(^\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so\s+[^#\n]*?)\bremember=\d+\b(.*$)'
+#         replace: '\1\2'
+#         backup: yes
+#       loop:
+#         - system-auth
+#         - password-auth
+
+#     - name: "Apply Authselect changes"
+#       command: authselect apply-changes
+
+- name: "CIS 4.4.3.4.3 - Ensure pam_unix.so includes a strong password hashing algorithm (sha512 or yescrypt)"
   block:
 
-    - name: "Get active custom authselect profile"
+    - name: "Get active authselect profile"
       command: awk 'NR==1 {print $1}' /etc/authselect/authselect.conf
       register: authselect_profile
 
     - name: "Fail if not using a custom profile"
       fail:
-        msg: "A custom authselect profile is required to edit PAM templates."
+        msg: "A custom authselect profile is required to modify PAM templates."
       when: authselect_profile.stdout is not regex("^custom/")
 
-    - name: "Set custom profile path"
+    - name: "Set PAM profile template path"
       set_fact:
-        authselect_custom_path: "/etc/authselect/{{ authselect_profile.stdout }}"
+        pam_profile_path: "/etc/authselect/{{ authselect_profile.stdout }}"
 
-    - name: "Remove 'nullok' from pam_unix.so lines"
-      replace:
-        path: "{{ authselect_custom_path }}/{{ item }}"
-        regexp: '(^\s*(auth|password)\s+(requisite|required|sufficient)\s+pam_unix\.so\s+[^#\n]*)\bnullok\b\s*'
-        replace: '\1'
-        backup: yes
-      loop:
-        - system-auth
-        - password-auth
+    - name: "Ensure strong hashing algorithm is present in pam_unix.so"
+      block:
+        - name: "Check for strong hash (sha512 or yescrypt)"
+          shell: |
+            grep -P '^\h*password\h+(requisite|required|sufficient)\h+pam_unix\.so\h+.*\b(sha512|yescrypt)\b' {{ pam_profile_path }}/{{ item }} && echo "present"
+          args:
+            warn: false
+          register: hash_check
+          changed_when: false
+          failed_when: false
+          loop:
+            - password-auth
+            - system-auth
+          loop_control:
+            label: "{{ item }}"
+
+        - name: "Fix weak or missing password hashing algorithms"
+          replace:
+            path: "{{ pam_profile_path }}/{{ item }}"
+            regexp: '(^\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so\s+)(.*?)(\s*)(md5|bigcrypt|sha256|blowfish)?(\s*|$)'
+            replace: '\1\2 sha512'
+            backup: yes
+          when: hash_check.results[loop.index0].stdout != "present"
+          loop:
+            - password-auth
+            - system-auth
 
     - name: "Apply authselect changes"
       command: authselect apply-changes
-
-
-- name: "CIS 4.4.3.4.2 - Ensure pam_unix.so does not include remember=n"
-  block:
-
-    - name: "Check active Authselect profile"
-      command: awk 'NR==1 {print $1}' /etc/authselect/authselect.conf
-      register: authselect_profile
-
-    - name: "Fail if not using a custom authselect profile"
-      fail:
-        msg: "A custom Authselect profile is required to safely modify pam_unix.so configuration."
-      when: authselect_profile.stdout is not regex("^custom/")
-
-    - name: "Set custom profile path"
-      set_fact:
-        authselect_custom_path: "/etc/authselect/{{ authselect_profile.stdout }}"
-
-    - name: "Remove 'remember=n' from pam_unix.so lines in system-auth and password-auth"
-      replace:
-        path: "{{ authselect_custom_path }}/{{ item }}"
-        regexp: '(^\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so\s+[^#\n]*?)\bremember=\d+\b(.*$)'
-        replace: '\1\2'
-        backup: yes
-      loop:
-        - system-auth
-        - password-auth
-
-    - name: "Apply Authselect changes"
-      command: authselect apply-changes
-
