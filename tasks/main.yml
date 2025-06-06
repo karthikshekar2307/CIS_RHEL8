@@ -4602,33 +4602,61 @@
 #     - password
 #     - hashing
 
-- name: "Ensure password expiration is 365 days or less (CIS 4.5.1.2)"
+# - name: "Ensure password expiration is 365 days or less (CIS 4.5.1.2)"
+#   block:
+
+#     - name: "Set PASS_MAX_DAYS to 365 in /etc/login.defs"
+#       lineinfile:
+#         path: /etc/login.defs
+#         regexp: '^\\s*PASS_MAX_DAYS\\s+'
+#         line: 'PASS_MAX_DAYS   365'
+#         state: present
+#         create: yes
+#         backup: yes
+
+#     - name: "Get all local users with password set (non-locked accounts)"
+#       shell: "awk -F: '($2 !~ /^[!*]/) { print $1 }' /etc/shadow"
+#       register: users_with_password
+#       changed_when: false
+
+#     - name: "Set password max days to 365 for each user"
+#       command: chage --maxdays 365 {{ item }}
+#       loop: "{{ users_with_password.stdout_lines }}"
+#       when: users_with_password.stdout_lines | length > 0
+
+#   tags:
+#     - CIS
+#     - level1
+#     - password
+#     - expiration
+
+- name: "Ensure password expiration warning days is 7 or more (CIS 4.5.1.3)"
   block:
 
-    - name: "Set PASS_MAX_DAYS to 365 in /etc/login.defs"
+    - name: "Set PASS_WARN_AGE to 7 in /etc/login.defs"
       lineinfile:
         path: /etc/login.defs
-        regexp: '^\\s*PASS_MAX_DAYS\\s+'
-        line: 'PASS_MAX_DAYS   365'
+        regexp: '^\\s*PASS_WARN_AGE\\s+'
+        line: 'PASS_WARN_AGE   7'
         state: present
         create: yes
         backup: yes
 
-    - name: "Get all local users with password set (non-locked accounts)"
-      shell: "awk -F: '($2 !~ /^[!*]/) { print $1 }' /etc/shadow"
-      register: users_with_password
+    - name: "Get users with valid passwords"
+      shell: "awk -F: '/^[^:\n\r]+:[^!*xX\n\r]/ {print $1}' /etc/shadow"
+      register: users_with_passwords
       changed_when: false
 
-    - name: "Set password max days to 365 for each user"
-      command: chage --maxdays 365 {{ item }}
-      loop: "{{ users_with_password.stdout_lines }}"
-      when: users_with_password.stdout_lines | length > 0
+    - name: "Set password warning days to 7 for each user"
+      command: chage --warndays 7 {{ item }}
+      loop: "{{ users_with_passwords.stdout_lines }}"
+      when: users_with_passwords.stdout_lines | length > 0
 
   tags:
     - CIS
-    - level1
-    - password
-    - expiration
+    - password-policy
+    - login-defs
+    - warn-age
 
 
 
