@@ -4494,49 +4494,76 @@
 #     - name: "Apply Authselect changes"
 #       command: authselect apply-changes
 
-- name: "CIS 4.4.3.4.3 - Ensure pam_unix.so includes a strong password hashing algorithm (sha512 or yescrypt)"
+# - name: "CIS 4.4.3.4.3 - Ensure pam_unix.so includes a strong password hashing algorithm (sha512 or yescrypt)"
+#   block:
+
+#     - name: "Get active authselect profile"
+#       command: awk 'NR==1 {print $1}' /etc/authselect/authselect.conf
+#       register: authselect_profile
+
+#     - name: "Fail if not using a custom profile"
+#       fail:
+#         msg: "A custom authselect profile is required to modify PAM templates."
+#       when: authselect_profile.stdout is not regex("^custom/")
+
+#     - name: "Set PAM profile template path"
+#       set_fact:
+#         pam_profile_path: "/etc/authselect/{{ authselect_profile.stdout }}"
+
+#     - name: "Ensure strong hashing algorithm is present in pam_unix.so"
+#       block:
+#         - name: "Check for strong hash (sha512 or yescrypt)"
+#           shell: |
+#             grep -P '^\h*password\h+(requisite|required|sufficient)\h+pam_unix\.so\h+.*\b(sha512|yescrypt)\b' {{ pam_profile_path }}/{{ item }} && echo "present"
+#           args:
+#             warn: false
+#           register: hash_check
+#           changed_when: false
+#           failed_when: false
+#           loop:
+#             - password-auth
+#             - system-auth
+#           loop_control:
+#             label: "{{ item }}"
+
+#         - name: "Fix weak or missing password hashing algorithms"
+#           ansible.builtin.replace:
+#             path: "{{ pam_profile_path }}/{{ item.0 }}"
+#             regexp: '(^\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so\s+.*)(md5|bigcrypt|sha256|blowfish)(\s*.*)$'
+#             replace: '\1 sha512\4'
+#             backup: yes
+#           when: item.1.stdout is defined and item.1.stdout != "present"
+#           loop: "{{ ['password-auth', 'system-auth'] | zip(hash_check.results) | list }}"
+#           loop_control:
+#             label: "{{ item.0 }}"
+
+
+#     - name: "Apply authselect changes"
+#       command: authselect apply-changes
+
+- name: "4.4.3.4.4 - Ensure pam_unix includes use_authtok in password stack"
   block:
 
-    - name: "Get active authselect profile"
-      command: awk 'NR==1 {print $1}' /etc/authselect/authselect.conf
-      register: authselect_profile
-
-    - name: "Fail if not using a custom profile"
-      fail:
-        msg: "A custom authselect profile is required to modify PAM templates."
-      when: authselect_profile.stdout is not regex("^custom/")
-
-    - name: "Set PAM profile template path"
+    - name: "Set pam_profile_path based on authselect active profile"
       set_fact:
-        pam_profile_path: "/etc/authselect/{{ authselect_profile.stdout }}"
+        pam_profile_path: >-
+          {{
+            '/etc/authselect/' + lookup('file', '/etc/authselect/authselect.conf').split('\n')[0]
+            if lookup('file', '/etc/authselect/authselect.conf').split('\n')[0] is match('^custom/')
+            else '/usr/share/authselect/default/' + lookup('file', '/etc/authselect/authselect.conf').split('\n')[0]
+          }}
 
-    - name: "Ensure strong hashing algorithm is present in pam_unix.so"
-      block:
-        - name: "Check for strong hash (sha512 or yescrypt)"
-          shell: |
-            grep -P '^\h*password\h+(requisite|required|sufficient)\h+pam_unix\.so\h+.*\b(sha512|yescrypt)\b' {{ pam_profile_path }}/{{ item }} && echo "present"
-          args:
-            warn: false
-          register: hash_check
-          changed_when: false
-          failed_when: false
-          loop:
-            - password-auth
-            - system-auth
-          loop_control:
-            label: "{{ item }}"
-
-        - name: "Fix weak or missing password hashing algorithms"
-          ansible.builtin.replace:
-            path: "{{ pam_profile_path }}/{{ item.0 }}"
-            regexp: '(^\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so\s+.*)(md5|bigcrypt|sha256|blowfish)(\s*.*)$'
-            replace: '\1 sha512\4'
-            backup: yes
-          when: item.1.stdout is defined and item.1.stdout != "present"
-          loop: "{{ ['password-auth', 'system-auth'] | zip(hash_check.results) | list }}"
-          loop_control:
-            label: "{{ item.0 }}"
-
+    - name: "Ensure pam_unix.so includes use_authtok"
+      ansible.builtin.replace:
+        path: "{{ pam_profile_path }}/{{ item }}"
+        regexp: '(^\s*password\s+(requisite|required|sufficient)\s+pam_unix\.so(?!.*\buse_authtok\b).*)$'
+        replace: '\1 use_authtok'
+        backup: yes
+      loop:
+        - password-auth
+        - system-auth
+      when: pam_profile_path is defined
 
     - name: "Apply authselect changes"
-      command: authselect apply-changes
+      ansible.builtin.command: authselect apply-changes
+      when: pam_profile_path is defined
