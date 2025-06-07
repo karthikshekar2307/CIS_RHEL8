@@ -6628,26 +6628,46 @@
 #       {{ unowned_files.stdout_lines | default([]) | join('\n') }}
 #   when: unowned_files.stdout != ""
 
-- name: "CIS 6.1.13 | Find SUID and SGID files on the system"
+# - name: "CIS 6.1.13 | Find SUID and SGID files on the system"
+#   become: true
+#   ansible.builtin.shell: |
+#     suid_list=""
+#     sgid_list=""
+#     for mp in $(findmnt -Derno target); do
+#       while IFS= read -r -d '' file; do
+#         mode=$(stat -Lc '%#a' "$file")
+#         [ $(( mode & 04000 )) -gt 0 ] && suid_list="${suid_list}${file}\n"
+#         [ $(( mode & 02000 )) -gt 0 ] && sgid_list="${sgid_list}${file}\n"
+#       done < <(find "$mp" -xdev -not -path "/run/user/*" -type f \( -perm -4000 -o -perm -2000 \) -print0 2>/dev/null)
+#     done
+#     echo -e "SUID Files:\n${suid_list:-None found}\n"
+#     echo -e "SGID Files:\n${sgid_list:-None found}\n"
+#   args:
+#     executable: /bin/bash
+#   register: suid_sgid_audit
+#   changed_when: false
+
+# - name: "CIS 6.1.13 | Output SUID and SGID file list"
+#   ansible.builtin.debug:
+#     msg: "{{ suid_sgid_audit.stdout_lines }}"
+
+- name: "CIS 6.1.14 | Audit system file permissions using RPM"
   become: true
   ansible.builtin.shell: |
-    suid_list=""
-    sgid_list=""
-    for mp in $(findmnt -Derno target); do
-      while IFS= read -r -d '' file; do
-        mode=$(stat -Lc '%#a' "$file")
-        [ $(( mode & 04000 )) -gt 0 ] && suid_list="${suid_list}${file}\n"
-        [ $(( mode & 02000 )) -gt 0 ] && sgid_list="${sgid_list}${file}\n"
-      done < <(find "$mp" -xdev -not -path "/run/user/*" -type f \( -perm -4000 -o -perm -2000 \) -print0 2>/dev/null)
-    done
-    echo -e "SUID Files:\n${suid_list:-None found}\n"
-    echo -e "SGID Files:\n${sgid_list:-None found}\n"
+    rpm -Va --nomtime --nosize --nomd5 --nolinkto --noconfig --noghost > /var/tmp/rpm_audit_report.txt || true
+    echo "Audit complete. Results stored in /var/tmp/rpm_audit_report.txt"
   args:
     executable: /bin/bash
-  register: suid_sgid_audit
+  register: rpm_audit
   changed_when: false
 
-- name: "CIS 6.1.13 | Output SUID and SGID file list"
+- name: "CIS 6.1.14 | Show RPM audit output (first 20 lines)"
+  become: true
+  ansible.builtin.shell: head -n 20 /var/tmp/rpm_audit_report.txt
+  register: rpm_audit_preview
+  changed_when: false
+
+- name: "CIS 6.1.14 | Preview RPM audit discrepancies"
   ansible.builtin.debug:
-    msg: "{{ suid_sgid_audit.stdout_lines }}"
+    msg: "{{ rpm_audit_preview.stdout_lines }}"
 
