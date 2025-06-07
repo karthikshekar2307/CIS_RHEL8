@@ -6595,8 +6595,6 @@
           -o -path "*/kubelet/pods/*" -o -path "/sys/kernel/security/apparmor/*" \
           -o -path "/snap/*" -o -path "/sys/fs/cgroup/memory/*" -o -path "/sys/fs/selinux/*" \) -prune \
           -o -type f -perm -0002 -print0 | xargs -0 chmod o-w
-      args:
-        warn: false
 
     - name: "Set sticky bit on world-writable directories"
       ansible.builtin.shell: |
@@ -6605,5 +6603,4 @@
           -o -path "*/kubelet/pods/*" -o -path "/sys/kernel/security/apparmor/*" \
           -o -path "/snap/*" -o -path "/sys/fs/cgroup/memory/*" -o -path "/sys/fs/selinux/*" \) -prune \
           -o -type d -perm -0002 ! -perm -1000 -print0 | xargs -0 chmod a+t
-      args:
-        warn: false
+
