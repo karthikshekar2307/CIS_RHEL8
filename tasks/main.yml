@@ -6651,23 +6651,33 @@
 #   ansible.builtin.debug:
 #     msg: "{{ suid_sgid_audit.stdout_lines }}"
 
-- name: "CIS 6.1.14 | Audit system file permissions using RPM"
-  become: true
-  ansible.builtin.shell: |
-    rpm -Va --nomtime --nosize --nomd5 --nolinkto --noconfig --noghost > /var/tmp/rpm_audit_report.txt || true
-    echo "Audit complete. Results stored in /var/tmp/rpm_audit_report.txt"
-  args:
-    executable: /bin/bash
-  register: rpm_audit
-  changed_when: false
+# - name: "CIS 6.1.14 | Audit system file permissions using RPM"
+#   become: true
+#   ansible.builtin.shell: |
+#     rpm -Va --nomtime --nosize --nomd5 --nolinkto --noconfig --noghost > /var/tmp/rpm_audit_report.txt || true
+#     echo "Audit complete. Results stored in /var/tmp/rpm_audit_report.txt"
+#   args:
+#     executable: /bin/bash
+#   register: rpm_audit
+#   changed_when: false
 
-- name: "CIS 6.1.14 | Show RPM audit output (first 20 lines)"
-  become: true
-  ansible.builtin.shell: head -n 20 /var/tmp/rpm_audit_report.txt
-  register: rpm_audit_preview
-  changed_when: false
+# - name: "CIS 6.1.14 | Show RPM audit output (first 20 lines)"
+#   become: true
+#   ansible.builtin.shell: head -n 20 /var/tmp/rpm_audit_report.txt
+#   register: rpm_audit_preview
+#   changed_when: false
 
-- name: "CIS 6.1.14 | Preview RPM audit discrepancies"
+# - name: "CIS 6.1.14 | Preview RPM audit discrepancies"
+#   ansible.builtin.debug:
+#     msg: "{{ rpm_audit_preview.stdout_lines }}"
+
+- name: "CIS 6.2.1 | Audit accounts not using shadowed passwords"
+  become: true
+  ansible.builtin.command: awk -F: '($2 != "x" ) { print $1 " is not set to shadowed passwords "}' /etc/passwd
+  register: shadow_audit
+  changed_when: false
+  failed_when: false
+
+- name: "CIS 6.2.1 | Show non-compliant accounts"
   ansible.builtin.debug:
-    msg: "{{ rpm_audit_preview.stdout_lines }}"
-
+    msg: "{{ shadow_audit.stdout_lines | default(['All accounts use shadowed passwords']) }}"
