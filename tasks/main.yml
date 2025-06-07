@@ -6314,12 +6314,12 @@
 
 
 
-- name: "CIS 5.3.1 | Install AIDE"
+- name: "CIS 5.3.1 | Install AIDE with GPG check disabled"
   become: true
-  dnf:
-    name: aide
-    state: present
-    disable_gpg_check: yes  # disables GPG check temporarily
+  command: dnf install -y --nogpgcheck aide
+  register: aide_install_result
+  changed_when: "'Complete!' in aide_install_result.stdout or 'Installed' in aide_install_result.stdout"
+  failed_when: aide_install_result.rc != 0
 
 
 - name: "CIS 5.3.1 | Check if AIDE is installed using rpm"
