@@ -6244,7 +6244,34 @@
 #   loop: "{{ audit_config_files_group_check.files }}"
 #   when: item.gid != 0
 
-- name: "CIS 5.2.4.8 | Define list of audit tools"
+# - name: "CIS 5.2.4.8 | Define list of audit tools"
+#   set_fact:
+#     audit_tools:
+#       - /sbin/auditctl
+#       - /sbin/aureport
+#       - /sbin/ausearch
+#       - /sbin/autrace
+#       - /sbin/auditd
+#       - /sbin/augenrules
+
+# - name: "CIS 5.2.4.8 | Ensure audit tools permissions are 755 or more restrictive"
+#   become: true
+#   file:
+#     path: "{{ item }}"
+#     mode: '0755'
+#   loop: "{{ audit_tools }}"
+#   when: item is file
+
+# - name: "CIS 5.2.4.8 | Ensure audit tools are owned by root"
+#   become: true
+#   file:
+#     path: "{{ item }}"
+#     owner: root
+#     group: root
+#   loop: "{{ audit_tools }}"
+#   when: item is file
+
+- name: "CIS 5.2.4.9 | Define audit tools"
   set_fact:
     audit_tools:
       - /sbin/auditctl
@@ -6254,19 +6281,10 @@
       - /sbin/auditd
       - /sbin/augenrules
 
-- name: "CIS 5.2.4.8 | Ensure audit tools permissions are 755 or more restrictive"
-  become: true
-  file:
-    path: "{{ item }}"
-    mode: '0755'
-  loop: "{{ audit_tools }}"
-  when: item is file
-
-- name: "CIS 5.2.4.8 | Ensure audit tools are owned by root"
+- name: "CIS 5.2.4.9 | Ensure audit tools are owned by root"
   become: true
   file:
     path: "{{ item }}"
     owner: root
-    group: root
   loop: "{{ audit_tools }}"
   when: item is file
