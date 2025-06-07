@@ -6821,7 +6821,7 @@
 - name: "6.2.11 | Ensure local interactive user dot files access is configured"
   block:
     - name: "Get local interactive users with valid shells"
-      command: awk -F: '($7 !~ /nologin|false/) { print $1":"$6 }' /etc/passwd
+      command: "awk -F: '($7 !~ /nologin|false/) { print $1\":\"$6 }' /etc/passwd"
       register: interactive_users
 
     - name: "Check and fix dot file permissions for each user"
@@ -6847,7 +6847,8 @@
       args:
         executable: /bin/bash
       loop: "{{ interactive_users.stdout_lines }}"
-      changed_when: false  # Adjust if you want to track changes
+      changed_when: false
 
-  become: yes
+  become: true
   tags: cis_6.2.11
+
