@@ -6719,13 +6719,24 @@
 #   changed_when: false
 #   failed_when: false
 
-- name: "CIS 6.2.6 | Ensure no duplicate user names exist"
+# - name: "CIS 6.2.6 | Ensure no duplicate user names exist"
+#   become: true
+#   ansible.builtin.shell: |
+#     cut -f1 -d: /etc/passwd | sort | uniq -c | awk '$1 > 1 {print $2}' | while read -r user; do
+#       matches=$(awk -F: -v n="$user" '($1 == n) { print $1 }' /etc/passwd | xargs)
+#       echo "Duplicate User: \"$user\" Users: \"$matches\""
+#     done
+#   register: duplicate_usernames
+#   changed_when: false
+#   failed_when: false
+
+- name: "CIS 6.2.7 | Ensure no duplicate group names exist"
   become: true
   ansible.builtin.shell: |
-    cut -f1 -d: /etc/passwd | sort | uniq -c | awk '$1 > 1 {print $2}' | while read -r user; do
-      matches=$(awk -F: -v n="$user" '($1 == n) { print $1 }' /etc/passwd | xargs)
-      echo "Duplicate User: \"$user\" Users: \"$matches\""
+    cut -f1 -d: /etc/group | sort | uniq -c | awk '$1 > 1 {print $2}' | while read -r group; do
+      matches=$(awk -F: -v n="$group" '($1 == n) { print $1 }' /etc/group | xargs)
+      echo "Duplicate Group: \"$group\" Groups: \"$matches\""
     done
-  register: duplicate_usernames
+  register: duplicate_groupnames
   changed_when: false
   failed_when: false
