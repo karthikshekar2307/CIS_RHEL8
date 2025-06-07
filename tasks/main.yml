@@ -6730,13 +6730,45 @@
 #   changed_when: false
 #   failed_when: false
 
-- name: "CIS 6.2.7 | Ensure no duplicate group names exist"
+# - name: "CIS 6.2.7 | Ensure no duplicate group names exist"
+#   become: true
+#   ansible.builtin.shell: |
+#     cut -f1 -d: /etc/group | sort | uniq -c | awk '$1 > 1 {print $2}' | while read -r group; do
+#       matches=$(awk -F: -v n="$group" '($1 == n) { print $1 }' /etc/group | xargs)
+#       echo "Duplicate Group: \"$group\" Groups: \"$matches\""
+#     done
+#   register: duplicate_groupnames
+#   changed_when: false
+#   failed_when: false
+
+- name: "CIS 6.2.8 | Ensure root path integrity"
   become: true
-  ansible.builtin.shell: |
-    cut -f1 -d: /etc/group | sort | uniq -c | awk '$1 > 1 {print $2}' | while read -r group; do
-      matches=$(awk -F: -v n="$group" '($1 == n) { print $1 }' /etc/group | xargs)
-      echo "Duplicate Group: \"$group\" Groups: \"$matches\""
+  shell: |
+    l_output2=""
+    l_pmask="0022"
+    l_maxperm="$(printf '%o' $(( 0777 & ~$l_pmask )) )"
+    l_root_path="$(sudo -Hiu root env | grep '^PATH' | cut -d= -f2)"
+    unset a_path_loc && IFS=":" read -ra a_path_loc <<< "$l_root_path"
+
+    grep -q "::" <<< "$l_root_path" && l_output2="$l_output2\n - root's path contains an empty directory (::)"
+    grep -Pq ":\s*$" <<< "$l_root_path" && l_output2="$l_output2\n - root's path contains a trailing (:)"
+    grep -Pq '(^|:)\.(?=:|$)' <<< "$l_root_path" && l_output2="$l_output2\n - root's path contains current working directory (.)"
+
+    for l_path in "${a_path_loc[@]}"; do
+      if [ -d "$l_path" ]; then
+        read -r l_fmode l_fown <<< "$(stat -Lc '%#a %U' "$l_path")"
+        [ "$l_fown" != "root" ] && l_output2="$l_output2\n - Directory: \"$l_path\" is owned by: \"$l_fown\" should be owned by \"root\""
+        [ $(( l_fmode & l_pmask )) -gt 0 ] && l_output2="$l_output2\n - Directory: \"$l_path\" is mode: \"$l_fmode\" and should be mode: \"$l_maxperm\" or more restrictive"
+      else
+        l_output2="$l_output2\n - \"$l_path\" is not a directory"
+      fi
     done
-  register: duplicate_groupnames
+
+    if [ -z "$l_output2" ]; then
+      echo -e "\n- Audit Result:\n  *** PASS ***\n - Root's path is correctly configured"
+    else
+      echo -e "\n- Audit Result:\n  ** FAIL **\n - * Reasons for audit failure * :\n$l_output2"
+    fi
+  register: root_path_check
   changed_when: false
   failed_when: false
