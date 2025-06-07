@@ -87,8 +87,6 @@
     - workstation
     - cis_1.1.1.3
 
-
-
 - name: Unload hfs kernel module if loaded
   command: modprobe -r hfs
   when: hfs_module.rc == 0
@@ -123,7 +121,6 @@
     - workstation
     - cis_1.1.1.3
 
-# 1.1.1.4 Ensure hfsplus kernel module is not available
 - name: Check if hfsplus kernel module is available
   command: modinfo hfsplus
   register: hfsplus_module
@@ -168,7 +165,6 @@
     - workstation
     - cis_1.1.1.4
 
-# 1.1.1.5 Ensure jffs2 kernel module is not available
 - name: Check if jffs2 kernel module is available
   command: modinfo jffs2
   register: jffs2_module
@@ -213,7 +209,6 @@
     - workstation
     - cis_1.1.1.5
 
-# 1.1.1.6 Ensure squashfs kernel module is not available
 - name: Check if squashfs kernel module is available
   command: modinfo squashfs
   register: squashfs_module
@@ -258,7 +253,6 @@
     - workstation
     - cis_1.1.1.6
 
-# 1.1.1.7 Ensure udf kernel module is not available
 - name: Check if udf kernel module is available
   command: modinfo udf
   register: udf_module
@@ -303,7 +297,6 @@
     - workstation
     - cis_1.1.1.7
 
-# 1.1.1.8 Ensure usb-storage kernel module is not available
 - name: Check if usb-storage kernel module is available
   command: modinfo usb-storage
   register: usb_storage_module
@@ -352,7 +345,6 @@
     - workstation
     - cis_1.1.1.8
 
-# 1.1.2.1.1 Ensure /tmp is a separate partition using tmpfs
 - name: Ensure systemd tmp.mount is unmasked
   command: systemctl unmask tmp.mount
   ignore_errors: true
@@ -445,318 +437,318 @@
   tags:
     - cis_1.1.2.2.4
 
-# - name: Mount /home on its own partition
-#   mount:
-#     path: /home
-#     src: "/dev/vg_main/lv_home"
-#     fstype: ext4
-#     opts: defaults,rw,nosuid,nodev,noexec,relatime
-#     state: mounted
-#   tags:
-#     - cis_1.1.2.3.1
+- name: Mount /home on its own partition
+  mount:
+    path: /home
+    src: "/dev/vg_main/lv_home"
+    fstype: ext4
+    opts: defaults,rw,nosuid,nodev,noexec,relatime
+    state: mounted
+  tags:
+    - cis_1.1.2.3.1
 
-# - name: Ensure /home is mounted with nodev
-#   mount:
-#     path: /home
-#     src: /dev/vg_main/lv_home
-#     fstype: ext4
-#     opts: defaults,rw,nosuid,nodev,noexec,relatime
-#     state: mounted
-#   tags:
-#     - cis_1.1.2.3.2
+- name: Ensure /home is mounted with nodev
+  mount:
+    path: /home
+    src: /dev/vg_main/lv_home
+    fstype: ext4
+    opts: defaults,rw,nosuid,nodev,noexec,relatime
+    state: mounted
+  tags:
+    - cis_1.1.2.3.2
 
-# - name: Ensure /home is mounted with nosuid
-#   mount:
-#     path: /home
-#     src: /dev/vg_main/lv_home
-#     fstype: ext4
-#     opts: defaults,rw,nosuid,nodev,noexec,relatime
-#     state: mounted
-#   tags:
-#     - cis_1.1.2.3.3
+- name: Ensure /home is mounted with nosuid
+  mount:
+    path: /home
+    src: /dev/vg_main/lv_home
+    fstype: ext4
+    opts: defaults,rw,nosuid,nodev,noexec,relatime
+    state: mounted
+  tags:
+    - cis_1.1.2.3.3
 
-# - name: Mount /var as a separate partition
-#   mount:
-#     path: /var
-#     src: /dev/xvdf1
-#     fstype: ext4
-#     opts: defaults,nosuid,nodev,noexec,relatime
-#     state: mounted
-#     dump: 0
-#     passno: 2
+- name: Mount /var as a separate partition
+  mount:
+    path: /var
+    src: /dev/xvdf1
+    fstype: ext4
+    opts: defaults,nosuid,nodev,noexec,relatime
+    state: mounted
+    dump: 0
+    passno: 2
 
-# - name: Ensure nodev option is set on /var
-#   mount:
-#     path: /var
-#     src: /dev/xvdf1
-#     fstype: ext4
-#     opts: defaults,rw,nosuid,nodev,noexec,relatime
-#     state: mounted
-#     dump: 0
-#     passno: 2
+- name: Ensure nodev option is set on /var
+  mount:
+    path: /var
+    src: /dev/xvdf1
+    fstype: ext4
+    opts: defaults,rw,nosuid,nodev,noexec,relatime
+    state: mounted
+    dump: 0
+    passno: 2
 
-# - name: Ensure mount point exists for /var/tmp
-#   file:
-#     path: /var/tmp
-#     state: directory
-#     mode: '1777'
+- name: Ensure mount point exists for /var/tmp
+  file:
+    path: /var/tmp
+    state: directory
+    mode: '1777'
 
-# - name: Mount /var/tmp with secure options
-#   mount:
-#     path: /var/tmp
-#     src: /dev/xvdf1           # Replace with your actual device
-#     fstype: ext4
-#     opts: defaults,nodev,nosuid,noexec,relatime
-#     state: mounted
-#     dump: 0
-#     passno: 0
+- name: Mount /var/tmp with secure options
+  mount:
+    path: /var/tmp
+    src: /dev/xvdf1           # Replace with your actual device
+    fstype: ext4
+    opts: defaults,nodev,nosuid,noexec,relatime
+    state: mounted
+    dump: 0
+    passno: 0
 
-# - name: Persist mount in /etc/fstab
-#   mount:
-#     path: /var/tmp
-#     src: /dev/xvdf1           # Replace with your actual device
-#     fstype: ext4
-#     opts: defaults,nodev,nosuid,noexec,relatime
-#     state: present
-#     dump: 0
-#     passno: 0
+- name: Persist mount in /etc/fstab
+  mount:
+    path: /var/tmp
+    src: /dev/xvdf1           # Replace with your actual device
+    fstype: ext4
+    opts: defaults,nodev,nosuid,noexec,relatime
+    state: present
+    dump: 0
+    passno: 0
 
-# - name: Ensure /var/tmp is mounted with nodev option
-#   mount:
-#     path: /var/tmp
-#     src: /dev/xvdf1               # 🔁 Replace with the correct device
-#     fstype: ext4                  # 🔁 Adjust if you're using a different filesystem
-#     opts: defaults,nodev,nosuid,noexec,relatime
-#     state: mounted
-#     dump: 0
-#     passno: 0
+- name: Ensure /var/tmp is mounted with nodev option
+  mount:
+    path: /var/tmp
+    src: /dev/xvdf1               # 🔁 Replace with the correct device
+    fstype: ext4                  # 🔁 Adjust if you're using a different filesystem
+    opts: defaults,nodev,nosuid,noexec,relatime
+    state: mounted
+    dump: 0
+    passno: 0
 
-# - name: Ensure /var/tmp fstab entry is present with nodev option
-#   mount:
-#     path: /var/tmp
-#     src: /dev/xvdf1               # 🔁 Replace as needed
-#     fstype: ext4
-#     opts: defaults,nodev,nosuid,noexec,relatime
-#     state: present
-#     dump: 0
-#     passno: 0
+- name: Ensure /var/tmp fstab entry is present with nodev option
+  mount:
+    path: /var/tmp
+    src: /dev/xvdf1               # 🔁 Replace as needed
+    fstype: ext4
+    opts: defaults,nodev,nosuid,noexec,relatime
+    state: present
+    dump: 0
+    passno: 0
 
-# - name: Remount /var/tmp with noexec option if already mounted
-#   mount:
-#     path: /var/tmp
-#     fstype: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='fstype') | first | default('ext4') }}"
-#     opts: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='options') | first | default([]) 
-#              | union(['noexec']) 
-#              | union(['nodev']) 
-#              | union(['nosuid']) 
-#              | unique | join(',') }}"
-#     state: remounted
+- name: Remount /var/tmp with noexec option if already mounted
+  mount:
+    path: /var/tmp
+    fstype: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='fstype') | first | default('ext4') }}"
+    opts: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='options') | first | default([]) 
+             | union(['noexec']) 
+             | union(['nodev']) 
+             | union(['nosuid']) 
+             | unique | join(',') }}"
+    state: remounted
 
-# - name: Ensure /var/tmp entry in /etc/fstab has noexec, nodev, nosuid
-#   lineinfile:
-#     path: /etc/fstab
-#     regexp: '^([^#\s]+\s+/var/tmp\s+[^#\s]+\s+)([^#\s]+)'
-#     line: '\1defaults,nodev,nosuid,noexec,relatime'
-#     backrefs: yes
+- name: Ensure /var/tmp entry in /etc/fstab has noexec, nodev, nosuid
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^([^#\s]+\s+/var/tmp\s+[^#\s]+\s+)([^#\s]+)'
+    line: '\1defaults,nodev,nosuid,noexec,relatime'
+    backrefs: yes
 
-# - name: Check if /var/log is on a separate partition
-#   command: findmnt -n /var/log
-#   register: varlog_mount
-#   changed_when: false
-#   failed_when: varlog_mount.rc != 0
-#   ignore_errors: true
+- name: Check if /var/log is on a separate partition
+  command: findmnt -n /var/log
+  register: varlog_mount
+  changed_when: false
+  failed_when: varlog_mount.rc != 0
+  ignore_errors: true
 
-# - name: Fail if /var/log is not a separate partition
-#   fail:
-#     msg: "/var/log is not a separate partition. Please configure it manually and re-run."
-#   when: varlog_mount.rc != 0
+- name: Fail if /var/log is not a separate partition
+  fail:
+    msg: "/var/log is not a separate partition. Please configure it manually and re-run."
+  when: varlog_mount.rc != 0
 
-# - name: Extract filesystem type for /var/log
-#   set_fact:
-#     varlog_fstype: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | first | default('ext4') }}"
+- name: Extract filesystem type for /var/log
+  set_fact:
+    varlog_fstype: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | first | default('ext4') }}"
 
-# - name: Extract existing mount options for /var/log
-#   set_fact:
-#     varlog_options: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
+- name: Extract existing mount options for /var/log
+  set_fact:
+    varlog_options: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
 
-# - name: Ensure /var/log is remounted with secure mount options
-#   mount:
-#     path: /var/log
-#     fstype: "{{ varlog_fstype }}"
-#     opts: "{{ varlog_options | union(['noexec', 'nodev', 'nosuid']) | unique | join(',') }}"
-#     state: remounted
+- name: Ensure /var/log is remounted with secure mount options
+  mount:
+    path: /var/log
+    fstype: "{{ varlog_fstype }}"
+    opts: "{{ varlog_options | union(['noexec', 'nodev', 'nosuid']) | unique | join(',') }}"
+    state: remounted
 
-# - name: Ensure /etc/fstab entry for /var/log has secure options
-#   lineinfile:
-#     path: /etc/fstab
-#     regexp: '^([^#\s]+\s+/var/log\s+[^#\s]+\s+)([^#\s]+)'
-#     line: '\1defaults,nodev,nosuid,noexec,relatime'
-#     backrefs: yes
+- name: Ensure /etc/fstab entry for /var/log has secure options
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^([^#\s]+\s+/var/log\s+[^#\s]+\s+)([^#\s]+)'
+    line: '\1defaults,nodev,nosuid,noexec,relatime'
+    backrefs: yes
 
-# - name: Check if /var/log is a separate partition
-#   command: findmnt -n /var/log
-#   register: varlog_partition
-#   changed_when: false
-#   failed_when: varlog_partition.rc != 0
-#   ignore_errors: true
+- name: Check if /var/log is a separate partition
+  command: findmnt -n /var/log
+  register: varlog_partition
+  changed_when: false
+  failed_when: varlog_partition.rc != 0
+  ignore_errors: true
 
-# - name: Fail if /var/log is not a separate partition
-#   fail:
-#     msg: "/var/log is not a separate partition. Manual intervention is required to create one."
-#   when: varlog_partition.rc != 0
+- name: Fail if /var/log is not a separate partition
+  fail:
+    msg: "/var/log is not a separate partition. Manual intervention is required to create one."
+  when: varlog_partition.rc != 0
 
-# - name: Get current fstype and mount options for /var/log
-#   set_fact:
-#     varlog_fstype: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | first | default('ext4') }}"
-#     varlog_opts: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
+- name: Get current fstype and mount options for /var/log
+  set_fact:
+    varlog_fstype: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | first | default('ext4') }}"
+    varlog_opts: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
 
-# - name: Ensure nodev is added to mount options at runtime
-#   mount:
-#     path: /var/log
-#     fstype: "{{ varlog_fstype }}"
-#     opts: "{{ varlog_opts | union(['nodev']) | unique | join(',') }}"
-#     state: remounted
+- name: Ensure nodev is added to mount options at runtime
+  mount:
+    path: /var/log
+    fstype: "{{ varlog_fstype }}"
+    opts: "{{ varlog_opts | union(['nodev']) | unique | join(',') }}"
+    state: remounted
 
-# - name: Persist nodev in /etc/fstab for /var/log
-#   lineinfile:
-#     path: /etc/fstab
-#     regexp: '^(\S+\s+/var/log\s+\S+\s+)(\S+)'
-#     line: '\1defaults,nodev,nosuid,noexec,relatime'
-#     backrefs: yes
+- name: Persist nodev in /etc/fstab for /var/log
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^(\S+\s+/var/log\s+\S+\s+)(\S+)'
+    line: '\1defaults,nodev,nosuid,noexec,relatime'
+    backrefs: yes
 
-# - name: Check if /var/log is a separate partition
-#   command: findmnt -n /var/log
-#   register: varlog_partition_check
-#   changed_when: false
-#   failed_when: varlog_partition_check.rc != 0
-#   ignore_errors: true
+- name: Check if /var/log is a separate partition
+  command: findmnt -n /var/log
+  register: varlog_partition_check
+  changed_when: false
+  failed_when: varlog_partition_check.rc != 0
+  ignore_errors: true
 
-# - name: Fail if /var/log is not a separate partition
-#   fail:
-#     msg: "/var/log is not a separate partition. Manual intervention required to create one as per CIS."
-#   when: varlog_partition_check.rc != 0
+- name: Fail if /var/log is not a separate partition
+  fail:
+    msg: "/var/log is not a separate partition. Manual intervention required to create one as per CIS."
+  when: varlog_partition_check.rc != 0
 
-# - name: Get current mount options and fstype for /var/log
-#   set_fact:
-#     varlog_fstype: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | first | default('ext4') }}"
-#     varlog_mountopts: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
+- name: Get current mount options and fstype for /var/log
+  set_fact:
+    varlog_fstype: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | first | default('ext4') }}"
+    varlog_mountopts: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
 
-# - name: Ensure nosuid is added to /var/log mount options at runtime
-#   mount:
-#     path: /var/log
-#     fstype: "{{ varlog_fstype }}"
-#     opts: "{{ varlog_mountopts | union(['nosuid']) | union(['nodev', 'noexec', 'relatime']) | unique | join(',') }}"
-#     state: remounted
+- name: Ensure nosuid is added to /var/log mount options at runtime
+  mount:
+    path: /var/log
+    fstype: "{{ varlog_fstype }}"
+    opts: "{{ varlog_mountopts | union(['nosuid']) | union(['nodev', 'noexec', 'relatime']) | unique | join(',') }}"
+    state: remounted
 
-# - name: Persist nosuid in /etc/fstab for /var/log
-#   lineinfile:
-#     path: /etc/fstab
-#     regexp: '^(\S+\s+/var/log\s+\S+\s+)(\S+)'
-#     line: '\1defaults,rw,nosuid,nodev,noexec,relatime'
-#     backrefs: yes
+- name: Persist nosuid in /etc/fstab for /var/log
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^(\S+\s+/var/log\s+\S+\s+)(\S+)'
+    line: '\1defaults,rw,nosuid,nodev,noexec,relatime'
+    backrefs: yes
 
-# - name: Check if /var/log is a separate partition
-#   command: findmnt -n /var/log
-#   register: varlog_partition_check
-#   changed_when: false
-#   failed_when: varlog_partition_check.rc != 0
-#   ignore_errors: true
+- name: Check if /var/log is a separate partition
+  command: findmnt -n /var/log
+  register: varlog_partition_check
+  changed_when: false
+  failed_when: varlog_partition_check.rc != 0
+  ignore_errors: true
 
-# - name: Fail if /var/log is not a separate partition
-#   fail:
-#     msg: "/var/log is not a separate partition. Manual intervention required to comply with CIS 1.1.2.6.4"
-#   when: varlog_partition_check.rc != 0
+- name: Fail if /var/log is not a separate partition
+  fail:
+    msg: "/var/log is not a separate partition. Manual intervention required to comply with CIS 1.1.2.6.4"
+  when: varlog_partition_check.rc != 0
 
-# - name: Get current mount options and fstype for /var/log
-#   set_fact:
-#     varlog_fstype: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | first | default('ext4') }}"
-#     varlog_mountopts: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
+- name: Get current mount options and fstype for /var/log
+  set_fact:
+    varlog_fstype: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | first | default('ext4') }}"
+    varlog_mountopts: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
 
-# - name: Ensure noexec is added to /var/log mount options at runtime
-#   mount:
-#     path: /var/log
-#     fstype: "{{ varlog_fstype }}"
-#     opts: "{{ varlog_mountopts | union(['noexec']) | union(['nosuid', 'nodev', 'relatime']) | unique | join(',') }}"
-#     state: remounted
+- name: Ensure noexec is added to /var/log mount options at runtime
+  mount:
+    path: /var/log
+    fstype: "{{ varlog_fstype }}"
+    opts: "{{ varlog_mountopts | union(['noexec']) | union(['nosuid', 'nodev', 'relatime']) | unique | join(',') }}"
+    state: remounted
 
-# - name: Persist noexec in /etc/fstab for /var/log
-#   lineinfile:
-#     path: /etc/fstab
-#     regexp: '^(\S+\s+/var/log\s+\S+\s+)(\S+)'
-#     line: '\1defaults,rw,nosuid,nodev,noexec,relatime'
-#     backrefs: yes
+- name: Persist noexec in /etc/fstab for /var/log
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^(\S+\s+/var/log\s+\S+\s+)(\S+)'
+    line: '\1defaults,rw,nosuid,nodev,noexec,relatime'
+    backrefs: yes
 
-# - name: Check if /var/log/audit is a separate partition
-#   command: findmnt -n /var/log/audit
-#   register: audit_partition_check
-#   changed_when: false
-#   failed_when: audit_partition_check.rc != 0
-#   ignore_errors: true
+- name: Check if /var/log/audit is a separate partition
+  command: findmnt -n /var/log/audit
+  register: audit_partition_check
+  changed_when: false
+  failed_when: audit_partition_check.rc != 0
+  ignore_errors: true
 
-# - name: Fail if /var/log/audit is not a separate partition
-#   fail:
-#     msg: "/var/log/audit is not a separate partition. Please create a dedicated partition as per CIS 1.1.2.7.1"
-#   when: audit_partition_check.rc != 0
+- name: Fail if /var/log/audit is not a separate partition
+  fail:
+    msg: "/var/log/audit is not a separate partition. Please create a dedicated partition as per CIS 1.1.2.7.1"
+  when: audit_partition_check.rc != 0
 
-# - name: Check if /var/log/audit is a separate partition
-#   command: findmnt -n /var/log/audit
-#   register: audit_partition_check
-#   changed_when: false
-#   failed_when: audit_partition_check.rc != 0
-#   ignore_errors: true
+- name: Check if /var/log/audit is a separate partition
+  command: findmnt -n /var/log/audit
+  register: audit_partition_check
+  changed_when: false
+  failed_when: audit_partition_check.rc != 0
+  ignore_errors: true
 
-# - name: Check if nodev option is set on /var/log/audit
-#   command: findmnt -nk /var/log/audit | grep -w nodev
-#   register: nodev_option_check
-#   changed_when: false
-#   failed_when: nodev_option_check.rc != 0
-#   when: audit_partition_check.rc == 0
-#   ignore_errors: true
+- name: Check if nodev option is set on /var/log/audit
+  command: findmnt -nk /var/log/audit | grep -w nodev
+  register: nodev_option_check
+  changed_when: false
+  failed_when: nodev_option_check.rc != 0
+  when: audit_partition_check.rc == 0
+  ignore_errors: true
 
-# - name: Warn if nodev is not set on /var/log/audit
-#   debug:
-#     msg: "The /var/log/audit partition exists but 'nodev' is not set. Please update /etc/fstab and remount as per CIS 1.1.2.7.2."
-#   when: audit_partition_check.rc == 0 and nodev_option_check.rc != 0
+- name: Warn if nodev is not set on /var/log/audit
+  debug:
+    msg: "The /var/log/audit partition exists but 'nodev' is not set. Please update /etc/fstab and remount as per CIS 1.1.2.7.2."
+  when: audit_partition_check.rc == 0 and nodev_option_check.rc != 0
 
-# - name: Check if /var/log/audit is a separate partition
-#   command: findmnt -n /var/log/audit
-#   register: audit_partition_check
-#   changed_when: false
-#   failed_when: audit_partition_check.rc != 0
-#   ignore_errors: true
+- name: Check if /var/log/audit is a separate partition
+  command: findmnt -n /var/log/audit
+  register: audit_partition_check
+  changed_when: false
+  failed_when: audit_partition_check.rc != 0
+  ignore_errors: true
 
-# - name: Check if nosuid option is set on /var/log/audit
-#   command: findmnt -nk /var/log/audit | grep -w nosuid
-#   register: nosuid_option_check
-#   changed_when: false
-#   failed_when: nosuid_option_check.rc != 0
-#   when: audit_partition_check.rc == 0
-#   ignore_errors: true
+- name: Check if nosuid option is set on /var/log/audit
+  command: findmnt -nk /var/log/audit | grep -w nosuid
+  register: nosuid_option_check
+  changed_when: false
+  failed_when: nosuid_option_check.rc != 0
+  when: audit_partition_check.rc == 0
+  ignore_errors: true
 
-# - name: Warn if nosuid is not set on /var/log/audit
-#   debug:
-#     msg: "The /var/log/audit partition exists but 'nosuid' is not set. Please update /etc/fstab and remount as per CIS 1.1.2.7.3."
-#   when: audit_partition_check.rc == 0 and nosuid_option_check.rc != 0
+- name: Warn if nosuid is not set on /var/log/audit
+  debug:
+    msg: "The /var/log/audit partition exists but 'nosuid' is not set. Please update /etc/fstab and remount as per CIS 1.1.2.7.3."
+  when: audit_partition_check.rc == 0 and nosuid_option_check.rc != 0
 
-# - name: Check if /var/log/audit is a separate partition
-#   command: findmnt -n /var/log/audit
-#   register: audit_partition_check
-#   changed_when: false
-#   failed_when: audit_partition_check.rc != 0
-#   ignore_errors: true
+- name: Check if /var/log/audit is a separate partition
+  command: findmnt -n /var/log/audit
+  register: audit_partition_check
+  changed_when: false
+  failed_when: audit_partition_check.rc != 0
+  ignore_errors: true
 
-# - name: Check if noexec option is set on /var/log/audit
-#   command: findmnt -nk /var/log/audit | grep -w noexec
-#   register: noexec_option_check
-#   changed_when: false
-#   failed_when: noexec_option_check.rc != 0
-#   when: audit_partition_check.rc == 0
-#   ignore_errors: true
+- name: Check if noexec option is set on /var/log/audit
+  command: findmnt -nk /var/log/audit | grep -w noexec
+  register: noexec_option_check
+  changed_when: false
+  failed_when: noexec_option_check.rc != 0
+  when: audit_partition_check.rc == 0
+  ignore_errors: true
 
-# - name: Warn if noexec is not set on /var/log/audit
-#   debug:
-#     msg: "The /var/log/audit partition exists but 'noexec' is not set. Please update /etc/fstab and remount to comply with CIS 1.1.2.7.4."
-#   when: audit_partition_check.rc == 0 and noexec_option_check.rc != 0
+- name: Warn if noexec is not set on /var/log/audit
+  debug:
+    msg: "The /var/log/audit partition exists but 'noexec' is not set. Please update /etc/fstab and remount to comply with CIS 1.1.2.7.4."
+  when: audit_partition_check.rc == 0 and noexec_option_check.rc != 0
 
 - name: Check for GPG key URL configuration in repos
   shell: grep -r gpgkey /etc/yum.repos.d/* /etc/dnf/dnf.conf || true
@@ -791,7 +783,6 @@
     line: 'gpgcheck=1'
     insertafter: '^\[main\]'
     backup: yes
-  #notify: Reload DNF
 
 - name: Ensure gpgcheck is set to 1 in all yum repo files
   ansible.builtin.find:
@@ -807,7 +798,6 @@
     backup: yes
   loop: "{{ repo_files.files }}"
   when: repo_files.matched > 0
-  #notify: Reload DNF
 
 - name: Audit gpgcheck in dnf.conf
   command: grep '^gpgcheck=' /etc/dnf/dnf.conf
@@ -951,7 +941,7 @@
     line: 'ProcessSizeMax=0'
     create: yes
     backup: yes
-  #notify: Reload systemd-coredump
+ 
   tags:
     - level1-server
     - level1-workstation
@@ -964,7 +954,7 @@
     line: 'Storage=none'
     create: yes
     backup: yes
-  #notify: Reload systemd-coredump
+  
 
 - name: CIS 1.5.1.1 | Ensure SELinux is installed using bash fallback
   ansible.builtin.shell: |
@@ -1164,11 +1154,6 @@
     group: root
     mode: '0644'
     state: file
-
-# - name: CIS 1.8.1 | Ensure GNOME Display Manager (GDM) is removed
-#   package:
-#     name: gdm
-#     state: absent
 
 - name: CIS 1.8.1 | Ensure GNOME Display Manager (GDM) is removed
   ansible.builtin.shell: dnf remove -y gdm
@@ -2379,7 +2364,7 @@
   package:
     name: ftp
     state: absent
-  ignore_errors: true  # Prevent task failure if repo metadata is broken
+  ignore_errors: true  
 
 - name: Check if FTP is installed
   shell: rpm -q ftp
@@ -2394,7 +2379,7 @@
   package:
     name: openldap-clients
     state: absent
-  ignore_errors: true  # Handles missing repos or package gracefully
+  ignore_errors: true  
 
 - name: Check if openldap-clients is installed
   shell: rpm -q openldap-clients
@@ -2415,7 +2400,7 @@
   package:
     name: ypbind
     state: absent
-  ignore_errors: true  # Useful in air-gapped or repo-issue environments
+  ignore_errors: true  
 
 - name: Check if ypbind is installed
   shell: rpm -q ypbind
@@ -2820,9 +2805,6 @@
     state: present
     reload: yes
 
-# CIS 3.3.8 - Ensure source routed packets are not accepted
-
-# Step 1: Apply runtime sysctl settings for IPv4
 - name: CIS 3.3.8 - Apply runtime net.ipv4.conf.all.accept_source_route
   ansible.posix.sysctl:
     name: net.ipv4.conf.all.accept_source_route
@@ -2837,7 +2819,6 @@
     state: present
     reload: yes
 
-# Step 2: Apply persistent settings for IPv4
 - name: CIS 3.3.8 - Persist net.ipv4.conf.all.accept_source_route
   ansible.builtin.lineinfile:
     path: /etc/sysctl.d/60-netipv4_sysctl.conf
@@ -2854,7 +2835,6 @@
     create: yes
     mode: '0644'
 
-# Step 3: Gather runtime sysctl values to check if IPv6 is enabled
 - name: CIS 3.3.8 - Gather sysctl values to determine if IPv6 is enabled
   ansible.builtin.command: sysctl -a
   register: sysctl_output
@@ -2864,7 +2844,6 @@
   ansible.builtin.set_fact:
     ipv6_disabled: "{{ 'net.ipv6.conf.all.disable_ipv6 = 1' in sysctl_output.stdout }}"
 
-# Step 4: Apply runtime sysctl settings for IPv6 if enabled
 - name: CIS 3.3.8 - Apply runtime net.ipv6.conf.all.accept_source_route (if IPv6 enabled)
   ansible.posix.sysctl:
     name: net.ipv6.conf.all.accept_source_route
@@ -2881,7 +2860,6 @@
     reload: yes
   when: not ipv6_disabled
 
-# Step 5: Apply persistent settings for IPv6 if enabled
 - name: CIS 3.3.8 - Persist net.ipv6.conf.all.accept_source_route (if IPv6 enabled)
   ansible.builtin.lineinfile:
     path: /etc/sysctl.d/60-netipv6_sysctl.conf
@@ -2901,9 +2879,7 @@
   when: not ipv6_disabled
 
 
-# CIS 3.3.9 - Ensure suspicious packets are logged
 
-# Step 1: Apply runtime sysctl settings
 - name: CIS 3.3.9 - Apply runtime net.ipv4.conf.all.log_martians
   ansible.posix.sysctl:
     name: net.ipv4.conf.all.log_martians
@@ -2918,7 +2894,7 @@
     state: present
     reload: yes
 
-# Step 2: Apply persistent settings
+
 - name: CIS 3.3.9 - Persist net.ipv4.conf.all.log_martians
   ansible.builtin.lineinfile:
     path: /etc/sysctl.d/60-netipv4_sysctl.conf
@@ -2935,7 +2911,7 @@
     create: yes
     mode: '0644'
 
-# CIS 3.3.10 - Ensure tcp_syncookies is enabled (runtime and persistent)
+
 
 - name: "CIS 3.3.10 - Apply runtime: net.ipv4.tcp_syncookies"
   ansible.posix.sysctl:
@@ -2949,9 +2925,6 @@
     dest: /etc/sysctl.d/60-netipv4_sysctl.conf
     content: |
       net.ipv4.tcp_syncookies = 1
-  #notify: Reload sysctl
-
-# CIS 3.3.11 - Ensure IPv6 router advertisements are not accepted (if IPv6 is enabled)
 
 - name: "CIS 3.3.11 - Check if IPv6 is enabled"
   ansible.builtin.slurp:
@@ -2989,7 +2962,7 @@
   ansible.builtin.command: sysctl --system
   when: ipv6_status['content'] | b64decode | trim == '0'
 
-# CIS 3.4.1.1 - Ensure nftables is installed
+
 
 - name: Install nftables without GPG check (not recommended)
   ansible.builtin.command: dnf install -y --nogpgcheck nftables
@@ -3000,7 +2973,7 @@
     enabled: true
     state: started
 
-# CIS 3.4.1.2 - Ensure a single firewall configuration utility is in use
+
 - name: Check if firewalld is installed
   ansible.builtin.shell: rpm -q firewalld
   register: firewalld_check
@@ -3151,7 +3124,7 @@
     - ftp
     - samba
   when: ansible_facts.services['firewalld.service'] is defined and ansible_facts.services['firewalld.service'].state == 'running'
-  #notify: Reload firewalld
+  
 - name: CIS 3.4.2.4 - Allow established connections in nftables
   block:
     - name: Check if nftables service is enabled
@@ -3175,28 +3148,28 @@
         nft add rule inet filter input ip protocol icmp ct state established accept
       when: nftables_status.stdout == "enabled"
 
-# - name: CIS 3.4.2.5 - Set default DROP policy for nftables base chains
-#   block:
-#     - name: Check if nftables service is enabled
-#       ansible.builtin.command: systemctl is-enabled nftables.service
-#       register: nftables_enabled
-#       changed_when: false
-#       failed_when: false
+- name: CIS 3.4.2.5 - Set default DROP policy for nftables base chains
+  block:
+    - name: Check if nftables service is enabled
+      ansible.builtin.command: systemctl is-enabled nftables.service
+      register: nftables_enabled
+      changed_when: false
+      failed_when: false
 
-#     - name: Set input chain default policy to DROP
-#       ansible.builtin.command: >
-#         nft chain inet filter input { policy drop \; }
-#       when: nftables_enabled.stdout == "enabled"
+    - name: Set input chain default policy to DROP
+      ansible.builtin.command: >
+        nft chain inet filter input { policy drop \; }
+      when: nftables_enabled.stdout == "enabled"
 
-#     - name: Set forward chain default policy to DROP
-#       ansible.builtin.command: >
-#         nft chain inet filter forward { policy drop \; }
-#       when: nftables_enabled.stdout == "enabled"
+    - name: Set forward chain default policy to DROP
+      ansible.builtin.command: >
+        nft chain inet filter forward { policy drop \; }
+      when: nftables_enabled.stdout == "enabled"
 
-#     - name: Set output chain default policy to DROP
-#       ansible.builtin.command: >
-#         nft chain inet filter output { policy drop \; }
-#       when: nftables_enabled.stdout == "enabled"
+    - name: Set output chain default policy to DROP
+      ansible.builtin.command: >
+        nft chain inet filter output { policy drop \; }
+      when: nftables_enabled.stdout == "enabled"
 
 - name: CIS 4.1.1.1 - Ensure cron daemon is enabled and active
   block:
@@ -3379,12 +3352,12 @@
         - sshd_config_d_stat.stat.isdir is defined and sshd_config_d_stat.stat.isdir
         - sshd_conf_files.matched > 0
 
-# - name: Ensure all files in /etc/ssh/sshd_config.d have 0600 permissions
-#   ansible.builtin.shell: |
-#     chmod 600 /etc/ssh/sshd_config.d/*
-#   args:
-#     executable: /bin/bash
-#   when: ansible_facts['os_family'] == "RedHat"
+- name: Ensure all files in /etc/ssh/sshd_config.d have 0600 permissions
+  ansible.builtin.shell: |
+    chmod 600 /etc/ssh/sshd_config.d/*
+  args:
+    executable: /bin/bash
+  when: ansible_facts['os_family'] == "RedHat"
 
 - name: CIS 4.2.2 - Set permissions on SSH private host key files
   block:
@@ -5305,7 +5278,7 @@
     path: "{{ item.path }}"
     group: root
   loop: "{{ log_files.files }}"
-  when: item.gid not in [0, 4]   # 0=root, 4=adm on most Linux systems
+  when: item.gid not in [0, 4]   
 
 - name: Install auditd with GPG check disabled
   become: true
