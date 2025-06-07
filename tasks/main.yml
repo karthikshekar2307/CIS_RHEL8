@@ -6780,41 +6780,74 @@
 #   register: uid_0_users
 #   changed_when: false
 
-- name: "CIS 6.2.10 | Gather local interactive users and their home directories"
-  become: true
-  shell: >
-    awk -F: '($7 ~ /^\/(bin|usr\/bin)\/(bash|sh|zsh)$/) { print $1, $6 }' /etc/passwd
-  register: local_users
-  changed_when: false
+# - name: "CIS 6.2.10 | Gather local interactive users and their home directories"
+#   become: true
+#   shell: >
+#     awk -F: '($7 ~ /^\/(bin|usr\/bin)\/(bash|sh|zsh)$/) { print $1, $6 }' /etc/passwd
+#   register: local_users
+#   changed_when: false
 
-- name: "CIS 6.2.10 | Set fact for user list"
-  set_fact:
-    users: "{{ local_users.stdout_lines | map('split', ' ') | list }}"
+# - name: "CIS 6.2.10 | Set fact for user list"
+#   set_fact:
+#     users: "{{ local_users.stdout_lines | map('split', ' ') | list }}"
 
-- name: "CIS 6.2.10 | Check home directory existence, ownership, and permissions"
-  become: true
+# - name: "CIS 6.2.10 | Check home directory existence, ownership, and permissions"
+#   become: true
+#   block:
+#     - name: "Check existence, ownership, and permissions"
+#       ansible.builtin.command: stat -c "%U %a %n" "{{ item[1] }}"
+#       register: homedir_stat
+#       failed_when: false
+#       loop: "{{ users }}"
+#       loop_control:
+#         label: "{{ item[0] }}"
+
+#     - name: "Fix home directory ownership if not owned by the user"
+#       ansible.builtin.command: chown "{{ item.item[0] }}" "{{ item.item[1] }}"
+#       when: item.rc == 0 and item.stdout.split()[0] != item.item[0]
+#       loop: "{{ homedir_stat.results }}"
+
+#     - name: "Fix home directory permissions if more permissive than 750"
+#       ansible.builtin.command: chmod 750 "{{ item.item[1] }}"
+#       when: item.rc == 0 and (item.stdout.split()[1]|int) > 750
+#       loop: "{{ homedir_stat.results }}"
+
+# - name: "CIS 6.2.10 | Warn if home directory does not exist"
+#   debug:
+#     msg: "Home directory {{ item[1] }} for user {{ item[0] }} does not exist"
+#   when: item[1] is not exists
+#   loop: "{{ users }}"
+
+- name: "6.2.11 | Ensure local interactive user dot files access is configured"
   block:
-    - name: "Check existence, ownership, and permissions"
-      ansible.builtin.command: stat -c "%U %a %n" "{{ item[1] }}"
-      register: homedir_stat
-      failed_when: false
-      loop: "{{ users }}"
-      loop_control:
-        label: "{{ item[0] }}"
+    - name: "Get local interactive users with valid shells"
+      command: awk -F: '($7 !~ /nologin|false/) { print $1":"$6 }' /etc/passwd
+      register: interactive_users
 
-    - name: "Fix home directory ownership if not owned by the user"
-      ansible.builtin.command: chown "{{ item.item[0] }}" "{{ item.item[1] }}"
-      when: item.rc == 0 and item.stdout.split()[0] != item.item[0]
-      loop: "{{ homedir_stat.results }}"
+    - name: "Check and fix dot file permissions for each user"
+      shell: |
+        user="{{ item.split(':')[0] }}"
+        home="{{ item.split(':')[1] }}"
 
-    - name: "Fix home directory permissions if more permissive than 750"
-      ansible.builtin.command: chmod 750 "{{ item.item[1] }}"
-      when: item.rc == 0 and (item.stdout.split()[1]|int) > 750
-      loop: "{{ homedir_stat.results }}"
+        if [ -d "$home" ]; then
+          find "$home" -xdev -type f -name '.*' | while read -r file; do
+            basefile="$(basename "$file")"
 
-- name: "CIS 6.2.10 | Warn if home directory does not exist"
-  debug:
-    msg: "Home directory {{ item[1] }} for user {{ item[0] }} does not exist"
-  when: item[1] is not exists
-  loop: "{{ users }}"
+            if [ "$basefile" = ".forward" ] || [ "$basefile" = ".rhost" ]; then
+              echo "Warning: $file exists - should be manually reviewed and removed"
+            elif [ "$basefile" = ".netrc" ] || [ "$basefile" = ".bash_history" ]; then
+              chmod 600 "$file"
+              chown "$user:$user" "$file"
+            else
+              chmod go-wx "$file"
+              chown "$user:$user" "$file"
+            fi
+          done
+        fi
+      args:
+        executable: /bin/bash
+      loop: "{{ interactive_users.stdout_lines }}"
+      changed_when: false  # Adjust if you want to track changes
 
+  become: yes
+  tags: cis_6.2.11
