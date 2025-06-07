@@ -6609,23 +6609,45 @@
 #       args:
 #         executable: /bin/bash
 
-- name: "CIS 6.1.12 | Audit unowned or ungrouped files/directories"
+# - name: "CIS 6.1.12 | Audit unowned or ungrouped files/directories"
+#   become: true
+#   ansible.builtin.shell: |
+#     find / -xdev \
+#       \( -path "/run/user/*" -o -path "/proc/*" -o -path "*/containerd/*" \
+#       -o -path "*/kubelet/pods/*" -o -path "/sys/fs/cgroup/memory/*" \) -prune \
+#       -o \( -nouser -o -nogroup \) -print
+#   args:
+#     executable: /bin/bash
+#   register: unowned_files
+#   changed_when: false
+
+# - name: "CIS 6.1.12 | Print unowned or ungrouped files if any"
+#   ansible.builtin.debug:
+#     msg: |
+#       The following unowned or ungrouped files/directories were found:
+#       {{ unowned_files.stdout_lines | default([]) | join('\n') }}
+#   when: unowned_files.stdout != ""
+
+- name: "CIS 6.1.13 | Find SUID and SGID files on the system"
   become: true
   ansible.builtin.shell: |
-    find / -xdev \
-      \( -path "/run/user/*" -o -path "/proc/*" -o -path "*/containerd/*" \
-      -o -path "*/kubelet/pods/*" -o -path "/sys/fs/cgroup/memory/*" \) -prune \
-      -o \( -nouser -o -nogroup \) -print
+    suid_list=""
+    sgid_list=""
+    for mp in $(findmnt -Derno target); do
+      while IFS= read -r -d '' file; do
+        mode=$(stat -Lc '%#a' "$file")
+        [ $(( mode & 04000 )) -gt 0 ] && suid_list="${suid_list}${file}\n"
+        [ $(( mode & 02000 )) -gt 0 ] && sgid_list="${sgid_list}${file}\n"
+      done < <(find "$mp" -xdev -not -path "/run/user/*" -type f \( -perm -4000 -o -perm -2000 \) -print0 2>/dev/null)
+    done
+    echo -e "SUID Files:\n${suid_list:-None found}\n"
+    echo -e "SGID Files:\n${sgid_list:-None found}\n"
   args:
     executable: /bin/bash
-  register: unowned_files
+  register: suid_sgid_audit
   changed_when: false
 
-- name: "CIS 6.1.12 | Print unowned or ungrouped files if any"
+- name: "CIS 6.1.13 | Output SUID and SGID file list"
   ansible.builtin.debug:
-    msg: |
-      The following unowned or ungrouped files/directories were found:
-      {{ unowned_files.stdout_lines | default([]) | join('\n') }}
-  when: unowned_files.stdout != ""
-
+    msg: "{{ suid_sgid_audit.stdout_lines }}"
 
