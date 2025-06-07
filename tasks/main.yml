@@ -6271,20 +6271,48 @@
 #   loop: "{{ audit_tools }}"
 #   when: item is file
 
-- name: "CIS 5.2.4.9 | Define audit tools"
-  set_fact:
-    audit_tools:
-      - /sbin/auditctl
-      - /sbin/aureport
-      - /sbin/ausearch
-      - /sbin/autrace
-      - /sbin/auditd
-      - /sbin/augenrules
+# - name: "CIS 5.2.4.9 | Define audit tools"
+#   set_fact:
+#     audit_tools:
+#       - /sbin/auditctl
+#       - /sbin/aureport
+#       - /sbin/ausearch
+#       - /sbin/autrace
+#       - /sbin/auditd
+#       - /sbin/augenrules
 
-- name: "CIS 5.2.4.9 | Ensure audit tools are owned by root"
+# - name: "CIS 5.2.4.9 | Ensure audit tools are owned by root"
+#   become: true
+#   file:
+#     path: "{{ item }}"
+#     owner: root
+#   loop: "{{ audit_tools }}"
+#   when: item is file
+
+- name: "CIS 5.3.1 | Ensure AIDE is installed"
   become: true
-  file:
-    path: "{{ item }}"
-    owner: root
-  loop: "{{ audit_tools }}"
-  when: item is file
+  package:
+    name: aide
+    state: present
+
+- name: "CIS 5.3.1 | Ensure prelinking is disabled (restore binaries)"
+  become: true
+  command: prelink -ua
+  args:
+    warn: false
+  register: prelink_output
+  failed_when: false
+  changed_when: false
+
+- name: "CIS 5.3.1 | Initialize AIDE database"
+  become: true
+  command: aide --init
+  args:
+    creates: /var/lib/aide/aide.db.new.gz
+
+- name: "CIS 5.3.1 | Move AIDE database to default location"
+  become: true
+  command: mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+  args:
+    removes: /var/lib/aide/aide.db.new.gz
+    creates: /var/lib/aide/aide.db.gz
