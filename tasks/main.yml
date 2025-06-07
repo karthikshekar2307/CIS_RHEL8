@@ -6553,18 +6553,34 @@
 #         mode: '0000'
 #       when: gshadow_stat.stat.exists
 
-- name: "CIS 6.1.9 | Ensure permissions and ownership on /etc/gshadow-"
+# - name: "CIS 6.1.9 | Ensure permissions and ownership on /etc/gshadow-"
+#   become: true
+#   block:
+#     - name: "Check if /etc/gshadow- exists"
+#       ansible.builtin.stat:
+#         path: /etc/gshadow-
+#       register: gshadow_dash_stat
+
+#     - name: "Set ownership and permissions on /etc/gshadow-"
+#       ansible.builtin.file:
+#         path: /etc/gshadow-
+#         owner: root
+#         group: root
+#         mode: '0000'
+#       when: gshadow_dash_stat.stat.exists
+
+- name: "CIS 6.1.10 | Ensure permissions and ownership on /etc/shells"
   become: true
   block:
-    - name: "Check if /etc/gshadow- exists"
+    - name: "Check if /etc/shells exists"
       ansible.builtin.stat:
-        path: /etc/gshadow-
-      register: gshadow_dash_stat
+        path: /etc/shells
+      register: shells_stat
 
-    - name: "Set ownership and permissions on /etc/gshadow-"
+    - name: "Set ownership and permissions on /etc/shells"
       ansible.builtin.file:
-        path: /etc/gshadow-
+        path: /etc/shells
         owner: root
         group: root
-        mode: '0000'
-      when: gshadow_dash_stat.stat.exists
+        mode: '0644'
+      when: shells_stat.stat.exists
