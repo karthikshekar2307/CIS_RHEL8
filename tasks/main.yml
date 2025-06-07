@@ -6673,11 +6673,9 @@
 
 - name: "CIS 6.2.1 | Audit accounts not using shadowed passwords"
   become: true
-  ansible.builtin.command: awk -F: '($2 != "x" ) { print $1 " is not set to shadowed passwords "}' /etc/passwd
+  ansible.builtin.command: >
+    awk -F: '($2 != "x") { print $1 " is not set to shadowed passwords" }' /etc/passwd
   register: shadow_audit
   changed_when: false
   failed_when: false
 
-- name: "CIS 6.2.1 | Show non-compliant accounts"
-  ansible.builtin.debug:
-    msg: "{{ shadow_audit.stdout_lines | default(['All accounts use shadowed passwords']) }}"
