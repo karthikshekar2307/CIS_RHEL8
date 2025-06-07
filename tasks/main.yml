@@ -6679,11 +6679,20 @@
 #   changed_when: false
 #   failed_when: false
 
-- name: "CIS 6.2.2 | Ensure /etc/shadow password fields are not empty"
+# - name: "CIS 6.2.2 | Ensure /etc/shadow password fields are not empty"
+#   become: true
+#   ansible.builtin.command: >
+#     awk -F: '($2 == "") { print $1 " does not have a password" }' /etc/shadow
+#   register: empty_password_check
+#   changed_when: false
+#   failed_when: false
+
+- name: "CIS 6.2.3 | Ensure all groups in /etc/passwd exist in /etc/group"
   become: true
-  ansible.builtin.command: >
-    awk -F: '($2 == "") { print $1 " does not have a password" }' /etc/shadow
-  register: empty_password_check
+  ansible.builtin.shell: |
+    for i in $(cut -s -d: -f4 /etc/passwd | sort -u ); do
+      grep -q -P "^.*?:[^:]*:$i:" /etc/group || echo "Group $i is referenced by /etc/passwd but does not exist in /etc/group"
+    done
+  register: passwd_group_check
   changed_when: false
   failed_when: false
-
