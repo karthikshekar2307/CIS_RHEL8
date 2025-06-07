@@ -6289,12 +6289,12 @@
 #   loop: "{{ audit_tools }}"
 #   when: item is file
 
-- name: "CIS 5.3.1 | Ensure AIDE is installed with GPG check disabled"
-  become: true
-  ansible.builtin.dnf:
-    name: aide
-    state: present
-    disable_gpg_check: yes
+# - name: "CIS 5.3.1 | Ensure AIDE is installed with GPG check disabled"
+#   become: true
+#   ansible.builtin.dnf:
+#     name: aide
+#     state: present
+#     disable_gpg_check: yes
 
 
 - name: "CIS 5.3.1 | Ensure prelinking is disabled (restore binaries)"
