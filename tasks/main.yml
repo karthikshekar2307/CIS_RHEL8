@@ -6697,13 +6697,24 @@
 #   changed_when: false
 #   failed_when: false
 
-- name: "CIS 6.2.4 | Ensure no duplicate UIDs exist"
+# - name: "CIS 6.2.4 | Ensure no duplicate UIDs exist"
+#   become: true
+#   ansible.builtin.shell: |
+#     cut -f3 -d: /etc/passwd | sort -n | uniq -c | awk '$1 > 1 {print $2}' | while read -r uid; do
+#       users=$(awk -F: -v n="$uid" '($3 == n) { print $1 }' /etc/passwd | xargs)
+#       echo "Duplicate UID: \"$uid\" Users: \"$users\""
+#     done
+#   register: duplicate_uids
+#   changed_when: false
+#   failed_when: false
+
+- name: "CIS 6.2.5 | Ensure no duplicate GIDs exist"
   become: true
   ansible.builtin.shell: |
-    cut -f3 -d: /etc/passwd | sort -n | uniq -c | awk '$1 > 1 {print $2}' | while read -r uid; do
-      users=$(awk -F: -v n="$uid" '($3 == n) { print $1 }' /etc/passwd | xargs)
-      echo "Duplicate UID: \"$uid\" Users: \"$users\""
+    cut -f3 -d: /etc/group | sort -n | uniq -c | awk '$1 > 1 {print $2}' | while read -r gid; do
+      groups=$(awk -F: -v n="$gid" '($3 == n) { print $1 }' /etc/group | xargs)
+      echo "Duplicate GID: \"$gid\" Groups: \"$groups\""
     done
-  register: duplicate_uids
+  register: duplicate_gids
   changed_when: false
   failed_when: false
