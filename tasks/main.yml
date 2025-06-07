@@ -6708,13 +6708,24 @@
 #   changed_when: false
 #   failed_when: false
 
-- name: "CIS 6.2.5 | Ensure no duplicate GIDs exist"
+# - name: "CIS 6.2.5 | Ensure no duplicate GIDs exist"
+#   become: true
+#   ansible.builtin.shell: |
+#     cut -f3 -d: /etc/group | sort -n | uniq -c | awk '$1 > 1 {print $2}' | while read -r gid; do
+#       groups=$(awk -F: -v n="$gid" '($3 == n) { print $1 }' /etc/group | xargs)
+#       echo "Duplicate GID: \"$gid\" Groups: \"$groups\""
+#     done
+#   register: duplicate_gids
+#   changed_when: false
+#   failed_when: false
+
+- name: "CIS 6.2.6 | Ensure no duplicate user names exist"
   become: true
   ansible.builtin.shell: |
-    cut -f3 -d: /etc/group | sort -n | uniq -c | awk '$1 > 1 {print $2}' | while read -r gid; do
-      groups=$(awk -F: -v n="$gid" '($3 == n) { print $1 }' /etc/group | xargs)
-      echo "Duplicate GID: \"$gid\" Groups: \"$groups\""
+    cut -f1 -d: /etc/passwd | sort | uniq -c | awk '$1 > 1 {print $2}' | while read -r user; do
+      matches=$(awk -F: -v n="$user" '($1 == n) { print $1 }' /etc/passwd | xargs)
+      echo "Duplicate User: \"$user\" Users: \"$matches\""
     done
-  register: duplicate_gids
+  register: duplicate_usernames
   changed_when: false
   failed_when: false
