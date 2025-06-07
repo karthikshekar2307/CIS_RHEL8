@@ -6569,18 +6569,41 @@
 #         mode: '0000'
 #       when: gshadow_dash_stat.stat.exists
 
-- name: "CIS 6.1.10 | Ensure permissions and ownership on /etc/shells"
+# - name: "CIS 6.1.10 | Ensure permissions and ownership on /etc/shells"
+#   become: true
+#   block:
+#     - name: "Check if /etc/shells exists"
+#       ansible.builtin.stat:
+#         path: /etc/shells
+#       register: shells_stat
+
+#     - name: "Set ownership and permissions on /etc/shells"
+#       ansible.builtin.file:
+#         path: /etc/shells
+#         owner: root
+#         group: root
+#         mode: '0644'
+#       when: shells_stat.stat.exists
+
+- name: "CIS 6.1.11 | Secure world-writable files and directories"
   become: true
   block:
-    - name: "Check if /etc/shells exists"
-      ansible.builtin.stat:
-        path: /etc/shells
-      register: shells_stat
+    - name: "Remove other write permissions from world-writable files"
+      ansible.builtin.shell: |
+        find / -xdev \
+          \( -path "/run/user/*" -o -path "/proc/*" -o -path "*/containerd/*" \
+          -o -path "*/kubelet/pods/*" -o -path "/sys/kernel/security/apparmor/*" \
+          -o -path "/snap/*" -o -path "/sys/fs/cgroup/memory/*" -o -path "/sys/fs/selinux/*" \) -prune \
+          -o -type f -perm -0002 -print0 | xargs -0 chmod o-w
+      args:
+        warn: false
 
-    - name: "Set ownership and permissions on /etc/shells"
-      ansible.builtin.file:
-        path: /etc/shells
-        owner: root
-        group: root
-        mode: '0644'
-      when: shells_stat.stat.exists
+    - name: "Set sticky bit on world-writable directories"
+      ansible.builtin.shell: |
+        find / -xdev \
+          \( -path "/run/user/*" -o -path "/proc/*" -o -path "*/containerd/*" \
+          -o -path "*/kubelet/pods/*" -o -path "/sys/kernel/security/apparmor/*" \
+          -o -path "/snap/*" -o -path "/sys/fs/cgroup/memory/*" -o -path "/sys/fs/selinux/*" \) -prune \
+          -o -type d -perm -0002 ! -perm -1000 -print0 | xargs -0 chmod a+t
+      args:
+        warn: false
