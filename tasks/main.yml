@@ -6671,11 +6671,19 @@
 #   ansible.builtin.debug:
 #     msg: "{{ rpm_audit_preview.stdout_lines }}"
 
-- name: "CIS 6.2.1 | Audit accounts not using shadowed passwords"
+# - name: "CIS 6.2.1 | Audit accounts not using shadowed passwords"
+#   become: true
+#   ansible.builtin.command: >
+#     awk -F: '($2 != "x") { print $1 " is not set to shadowed passwords" }' /etc/passwd
+#   register: shadow_audit
+#   changed_when: false
+#   failed_when: false
+
+- name: "CIS 6.2.2 | Ensure /etc/shadow password fields are not empty"
   become: true
   ansible.builtin.command: >
-    awk -F: '($2 != "x") { print $1 " is not set to shadowed passwords" }' /etc/passwd
-  register: shadow_audit
+    awk -F: '($2 == "") { print $1 " does not have a password" }' /etc/shadow
+  register: empty_password_check
   changed_when: false
   failed_when: false
 
