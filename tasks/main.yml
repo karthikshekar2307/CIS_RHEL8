@@ -6296,6 +6296,29 @@
 #     state: present
 #     disable_gpg_check: yes
 
+- name: "CIS 5.3.1 | Check if AIDE is installed using rpm"
+  become: true
+  command: rpm -q aide
+  register: aide_installed
+  changed_when: false
+  failed_when: aide_installed.rc != 0
+
+
+- name: "CIS 5.3.1 | Install AIDE"
+  become: true
+  dnf:
+    name: aide
+    state: present
+    disable_gpg_check: yes  # disables GPG check temporarily
+
+
+- name: "CIS 5.3.1 | Check if AIDE is installed using rpm"
+  become: true
+  command: rpm -q aide
+  register: aide_installed
+  changed_when: false
+  failed_when: aide_installed.rc != 0
+
 
 - name: "CIS 5.3.1 | Ensure prelinking is disabled (restore binaries)"
   become: true
