@@ -6351,56 +6351,87 @@
 #     removes: /var/lib/aide/aide.db.new.gz
 #     creates: /var/lib/aide/aide.db.gz
 
+# - name: "CIS 5.3.2 | Create aidecheck.service systemd unit"
+#   become: true
+#   copy:
+#     dest: /etc/systemd/system/aidecheck.service
+#     owner: root
+#     group: root
+#     mode: '0644'
+#     content: |
+#       [Unit]
+#       Description=Aide Check
 
-- name: "CIS 5.3.2 | Create aidecheck.service systemd unit"
+#       [Service]
+#       Type=simple
+#       ExecStart=/usr/sbin/aide --check
+
+#       [Install]
+#       WantedBy=multi-user.target
+
+# - name: "CIS 5.3.2 | Create aidecheck.timer systemd unit"
+#   become: true
+#   copy:
+#     dest: /etc/systemd/system/aidecheck.timer
+#     owner: root
+#     group: root
+#     mode: '0644'
+#     content: |
+#       [Unit]
+#       Description=Aide check every day at 5AM
+
+#       [Timer]
+#       OnCalendar=*-*-* 05:00:00
+#       Unit=aidecheck.service
+
+#       [Install]
+#       WantedBy=multi-user.target
+
+# - name: "CIS 5.3.2 | Reload systemd daemon"
+#   become: true
+#   command: systemctl daemon-reexec
+
+# - name: "CIS 5.3.2 | Enable aidecheck.service"
+#   become: true
+#   systemd:
+#     name: aidecheck.service
+#     enabled: true
+
+# - name: "CIS 5.3.2 | Enable and start aidecheck.timer"
+#   become: true
+#   systemd:
+#     name: aidecheck.timer
+#     enabled: true
+#     state: started
+
+- name: "CIS 5.3.3 | Ensure audit tools are protected with cryptographic checks in AIDE"
+  become: true
+  blockinfile:
+    path: /etc/aide.conf
+    marker: "# {mark} CIS 5.3.3 Audit Tool Integrity Check"
+    block: |
+      # Audit Tools
+      /sbin/auditctl p+i+n+u+g+s+b+acl+xattrs+sha512
+      /sbin/auditd p+i+n+u+g+s+b+acl+xattrs+sha512
+      /sbin/ausearch p+i+n+u+g+s+b+acl+xattrs+sha512
+      /sbin/aureport p+i+n+u+g+s+b+acl+xattrs+sha512
+      /sbin/autrace p+i+n+u+g+s+b+acl+xattrs+sha512
+      /sbin/augenrules p+i+n+u+g+s+b+acl+xattrs+sha512
+  when: ansible_facts['distribution'] == "RedHat" or ansible_facts['distribution'] == "CentOS"
+
+
+- name: "CIS 5.3.3 | Create audit-tools AIDE config with cryptographic checks"
   become: true
   copy:
-    dest: /etc/systemd/system/aidecheck.service
+    dest: /etc/aide.conf.d/audit-tools.conf
     owner: root
     group: root
     mode: '0644'
     content: |
-      [Unit]
-      Description=Aide Check
-
-      [Service]
-      Type=simple
-      ExecStart=/usr/sbin/aide --check
-
-      [Install]
-      WantedBy=multi-user.target
-
-- name: "CIS 5.3.2 | Create aidecheck.timer systemd unit"
-  become: true
-  copy:
-    dest: /etc/systemd/system/aidecheck.timer
-    owner: root
-    group: root
-    mode: '0644'
-    content: |
-      [Unit]
-      Description=Aide check every day at 5AM
-
-      [Timer]
-      OnCalendar=*-*-* 05:00:00
-      Unit=aidecheck.service
-
-      [Install]
-      WantedBy=multi-user.target
-
-- name: "CIS 5.3.2 | Reload systemd daemon"
-  become: true
-  command: systemctl daemon-reexec
-
-- name: "CIS 5.3.2 | Enable aidecheck.service"
-  become: true
-  systemd:
-    name: aidecheck.service
-    enabled: true
-
-- name: "CIS 5.3.2 | Enable and start aidecheck.timer"
-  become: true
-  systemd:
-    name: aidecheck.timer
-    enabled: true
-    state: started
+      # CIS 5.3.3 Audit Tools Configuration
+      /sbin/auditctl p+i+n+u+g+s+b+acl+xattrs+sha512
+      /sbin/auditd p+i+n+u+g+s+b+acl+xattrs+sha512
+      /sbin/ausearch p+i+n+u+g+s+b+acl+xattrs+sha512
+      /sbin/aureport p+i+n+u+g+s+b+acl+xattrs+sha512
+      /sbin/autrace p+i+n+u+g+s+b+acl+xattrs+sha512
+      /sbin/augenrules p+i+n+u+g+s+b+acl+xattrs+sha512
