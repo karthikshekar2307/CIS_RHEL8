@@ -6420,32 +6420,32 @@
 #   when: ansible_facts['distribution'] == "RedHat" or ansible_facts['distribution'] == "CentOS"
 
 
-# - name: "CIS 5.3.3 | Create audit-tools AIDE config with cryptographic checks"
+# - name: "CIS 6.1.1 | Ensure permissions on /etc/passwd are configured"
 #   become: true
-#   copy:
-#     dest: /etc/aide.conf.d/audit-tools.conf
-#     owner: root
-#     group: root
-#     mode: '0644'
-#     content: |
-#       # CIS 5.3.3 Audit Tools Configuration
-#       /sbin/auditctl p+i+n+u+g+s+b+acl+xattrs+sha512
-#       /sbin/auditd p+i+n+u+g+s+b+acl+xattrs+sha512
-#       /sbin/ausearch p+i+n+u+g+s+b+acl+xattrs+sha512
-#       /sbin/aureport p+i+n+u+g+s+b+acl+xattrs+sha512
-#       /sbin/autrace p+i+n+u+g+s+b+acl+xattrs+sha512
-#       /sbin/augenrules p+i+n+u+g+s+b+acl+xattrs+sha512
+#   block:
+#     - name: "CIS 6.1.1 | Set ownership of /etc/passwd to root:root"
+#       ansible.builtin.file:
+#         path: /etc/passwd
+#         owner: root
+#         group: root
 
-- name: "CIS 6.1.1 | Ensure permissions on /etc/passwd are configured"
+#     - name: "CIS 6.1.1 | Set permissions on /etc/passwd to 0644"
+#       ansible.builtin.file:
+#         path: /etc/passwd
+#         mode: '0644'
+
+- name: "CIS 6.1.2 | Ensure permissions on /etc/passwd- are configured"
   become: true
   block:
-    - name: "CIS 6.1.1 | Set ownership of /etc/passwd to root:root"
+    - name: "CIS 6.1.2 | Set ownership of /etc/passwd- to root:root"
       ansible.builtin.file:
-        path: /etc/passwd
+        path: /etc/passwd-
         owner: root
         group: root
+      when: ansible_facts['ansible_local'] is not defined or ansible_facts['ansible_local'] | length == 0
 
-    - name: "CIS 6.1.1 | Set permissions on /etc/passwd to 0644"
+    - name: "CIS 6.1.2 | Set permissions on /etc/passwd- to 0644"
       ansible.builtin.file:
-        path: /etc/passwd
+        path: /etc/passwd-
         mode: '0644'
+      when: ansible_facts['ansible_local'] is not defined or ansible_facts['ansible_local'] | length == 0
