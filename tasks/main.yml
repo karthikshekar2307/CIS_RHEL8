@@ -6210,19 +6210,36 @@
 #     group: root
 #   loop: "{{ audit_config_files.files }}"
 
-- name: "CIS 5.2.4.6 | Find audit configuration files not owned by root"
+# - name: "CIS 5.2.4.6 | Find audit configuration files not owned by root"
+#   become: true
+#   find:
+#     paths: /etc/audit/
+#     patterns: '*.conf,*.rules'
+#     file_type: file
+#     recurse: yes
+#   register: audit_config_files
+
+# - name: "CIS 5.2.4.6 | Ensure audit configuration files are owned by root"
+#   become: true
+#   file:
+#     path: "{{ item.path }}"
+#     owner: root
+#   loop: "{{ audit_config_files.files }}"
+#   when: item.uid != 0
+
+- name: "CIS 5.2.4.7 | Find audit configuration files not group-owned by root"
   become: true
   find:
     paths: /etc/audit/
     patterns: '*.conf,*.rules'
     file_type: file
     recurse: yes
-  register: audit_config_files
+  register: audit_config_files_group_check
 
-- name: "CIS 5.2.4.6 | Ensure audit configuration files are owned by root"
+- name: "CIS 5.2.4.7 | Ensure audit configuration files are group-owned by root"
   become: true
   file:
     path: "{{ item.path }}"
-    owner: root
-  loop: "{{ audit_config_files.files }}"
-  when: item.uid != 0
+    group: root
+  loop: "{{ audit_config_files_group_check.files }}"
+  when: item.gid != 0
