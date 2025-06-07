@@ -6787,34 +6787,34 @@
   register: local_users
   changed_when: false
 
+- name: "CIS 6.2.10 | Set fact for user list"
+  set_fact:
+    users: "{{ local_users.stdout_lines | map('split', ' ') | list }}"
+
 - name: "CIS 6.2.10 | Check home directory existence, ownership, and permissions"
   become: true
   block:
-    - name: "Loop through users to validate their home directories"
-      vars:
-        users: "{{ local_users.stdout_lines | map('split', ' ') | list }}"
-      block:
-        - name: "Check existence, ownership, and permissions"
-          ansible.builtin.command: stat -c "%U %a %n" "{{ item[1] }}"
-          register: homedir_stat
-          failed_when: false
-          loop: "{{ users }}"
-          loop_control:
-            label: "{{ item[0] }}"
-
-        - name: "Fix home directory ownership if not owned by the user"
-          ansible.builtin.command: chown "{{ item.item[0] }}" "{{ item.item[1] }}"
-          when: item.rc == 0 and item.stdout.split()[0] != item.item[0]
-          loop: "{{ homedir_stat.results }}"
-
-        - name: "Fix home directory permissions if more permissive than 750"
-          ansible.builtin.command: chmod 750 "{{ item.item[1] }}"
-          when: item.rc == 0 and (item.stdout.split()[1]|int) > 750
-          loop: "{{ homedir_stat.results }}"
-
-    - name: "Warn if home directory does not exist"
-      debug:
-        msg: "Home directory {{ item[1] }} for user {{ item[0] }} does not exist"
-      when: item[1] is not exists
+    - name: "Check existence, ownership, and permissions"
+      ansible.builtin.command: stat -c "%U %a %n" "{{ item[1] }}"
+      register: homedir_stat
+      failed_when: false
       loop: "{{ users }}"
+      loop_control:
+        label: "{{ item[0] }}"
+
+    - name: "Fix home directory ownership if not owned by the user"
+      ansible.builtin.command: chown "{{ item.item[0] }}" "{{ item.item[1] }}"
+      when: item.rc == 0 and item.stdout.split()[0] != item.item[0]
+      loop: "{{ homedir_stat.results }}"
+
+    - name: "Fix home directory permissions if more permissive than 750"
+      ansible.builtin.command: chmod 750 "{{ item.item[1] }}"
+      when: item.rc == 0 and (item.stdout.split()[1]|int) > 750
+      loop: "{{ homedir_stat.results }}"
+
+- name: "CIS 6.2.10 | Warn if home directory does not exist"
+  debug:
+    msg: "Home directory {{ item[1] }} for user {{ item[0] }} does not exist"
+  when: item[1] is not exists
+  loop: "{{ users }}"
 
