@@ -6296,58 +6296,111 @@
 #     state: present
 #     disable_gpg_check: yes
 
-- name: "CIS 5.3.1 | Check if AIDE is installed using rpm"
+# - name: "CIS 5.3.1 | Check if AIDE is installed using rpm"
+#   become: true
+#   command: rpm -q aide
+#   register: aide_installed
+#   changed_when: false
+#   failed_when: false
+
+# - name: "CIS 5.3.1 | Print AIDE installation status"
+#   debug:
+#     msg: >-
+#       {% if aide_installed.rc == 0 %}
+#         AIDE is installed: {{ aide_installed.stdout }}
+#       {% else %}
+#         AIDE is not installed.
+#       {% endif %}
+
+
+# - name: "CIS 5.3.1 | Install AIDE with GPG check disabled"
+#   become: true
+#   command: dnf install -y --nogpgcheck aide
+#   register: aide_install_result
+#   changed_when: "'Complete!' in aide_install_result.stdout or 'Installed' in aide_install_result.stdout"
+#   failed_when: aide_install_result.rc != 0
+
+
+# - name: "CIS 5.3.1 | Check if AIDE is installed using rpm"
+#   become: true
+#   command: rpm -q aide
+#   register: aide_installed
+#   changed_when: false
+#   failed_when: aide_installed.rc != 0
+
+
+# - name: "CIS 5.3.1 | Ensure prelinking is disabled (restore binaries)"
+#   become: true
+#   command: prelink -ua
+#   args:
+#     warn: false
+#   register: prelink_output
+#   failed_when: false
+#   changed_when: false
+
+# - name: "CIS 5.3.1 | Initialize AIDE database"
+#   become: true
+#   command: aide --init
+#   args:
+#     creates: /var/lib/aide/aide.db.new.gz
+
+# - name: "CIS 5.3.1 | Move AIDE database to default location"
+#   become: true
+#   command: mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+#   args:
+#     removes: /var/lib/aide/aide.db.new.gz
+#     creates: /var/lib/aide/aide.db.gz
+
+
+- name: "CIS 5.3.2 | Create aidecheck.service systemd unit"
   become: true
-  command: rpm -q aide
-  register: aide_installed
-  changed_when: false
-  failed_when: false
+  copy:
+    dest: /etc/systemd/system/aidecheck.service
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Aide Check
 
-- name: "CIS 5.3.1 | Print AIDE installation status"
-  debug:
-    msg: >-
-      {% if aide_installed.rc == 0 %}
-        AIDE is installed: {{ aide_installed.stdout }}
-      {% else %}
-        AIDE is not installed.
-      {% endif %}
+      [Service]
+      Type=simple
+      ExecStart=/usr/sbin/aide --check
 
+      [Install]
+      WantedBy=multi-user.target
 
-
-- name: "CIS 5.3.1 | Install AIDE with GPG check disabled"
+- name: "CIS 5.3.2 | Create aidecheck.timer systemd unit"
   become: true
-  command: dnf install -y --nogpgcheck aide
-  register: aide_install_result
-  changed_when: "'Complete!' in aide_install_result.stdout or 'Installed' in aide_install_result.stdout"
-  failed_when: aide_install_result.rc != 0
+  copy:
+    dest: /etc/systemd/system/aidecheck.timer
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Unit]
+      Description=Aide check every day at 5AM
 
+      [Timer]
+      OnCalendar=*-*-* 05:00:00
+      Unit=aidecheck.service
 
-- name: "CIS 5.3.1 | Check if AIDE is installed using rpm"
+      [Install]
+      WantedBy=multi-user.target
+
+- name: "CIS 5.3.2 | Reload systemd daemon"
   become: true
-  command: rpm -q aide
-  register: aide_installed
-  changed_when: false
-  failed_when: aide_installed.rc != 0
+  command: systemctl daemon-reexec
 
-
-- name: "CIS 5.3.1 | Ensure prelinking is disabled (restore binaries)"
+- name: "CIS 5.3.2 | Enable aidecheck.service"
   become: true
-  command: prelink -ua
-  args:
-    warn: false
-  register: prelink_output
-  failed_when: false
-  changed_when: false
+  systemd:
+    name: aidecheck.service
+    enabled: true
 
-- name: "CIS 5.3.1 | Initialize AIDE database"
+- name: "CIS 5.3.2 | Enable and start aidecheck.timer"
   become: true
-  command: aide --init
-  args:
-    creates: /var/lib/aide/aide.db.new.gz
-
-- name: "CIS 5.3.1 | Move AIDE database to default location"
-  become: true
-  command: mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
-  args:
-    removes: /var/lib/aide/aide.db.new.gz
-    creates: /var/lib/aide/aide.db.gz
+  systemd:
+    name: aidecheck.timer
+    enabled: true
+    state: started
