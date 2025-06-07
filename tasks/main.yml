@@ -6585,29 +6585,47 @@
 #         mode: '0644'
 #       when: shells_stat.stat.exists
 
-- name: "CIS 6.1.11 | Secure world-writable files and directories"
+# - name: "CIS 6.1.11 | Secure world-writable files and directories"
+#   become: true
+#   block:
+
+#     - name: "CIS 6.1.11 | Remove other write permissions from world-writable files"
+#       ansible.builtin.shell: |
+#         find / -xdev \
+#           \( -path "/run/user/*" -o -path "/proc/*" -o -path "*/containerd/*" \
+#           -o -path "*/kubelet/pods/*" -o -path "/sys/kernel/security/apparmor/*" \
+#           -o -path "/snap/*" -o -path "/sys/fs/cgroup/memory/*" -o -path "/sys/fs/selinux/*" \) -prune \
+#           -o -type f -perm -0002 -print0 | xargs -0 --no-run-if-empty chmod o-w
+#       args:
+#         executable: /bin/bash
+
+#     - name: "CIS 6.1.11 | Set sticky bit on world-writable directories without it"
+#       ansible.builtin.shell: |
+#         find / -xdev \
+#           \( -path "/run/user/*" -o -path "/proc/*" -o -path "*/containerd/*" \
+#           -o -path "*/kubelet/pods/*" -o -path "/sys/kernel/security/apparmor/*" \
+#           -o -path "/snap/*" -o -path "/sys/fs/cgroup/memory/*" -o -path "/sys/fs/selinux/*" \) -prune \
+#           -o -type d -perm -0002 ! -perm -1000 -print0 | xargs -0 --no-run-if-empty chmod a+t
+#       args:
+#         executable: /bin/bash
+
+- name: "CIS 6.1.12 | Audit unowned or ungrouped files/directories"
   become: true
-  block:
+  ansible.builtin.shell: |
+    find / -xdev \
+      \( -path "/run/user/*" -o -path "/proc/*" -o -path "*/containerd/*" \
+      -o -path "*/kubelet/pods/*" -o -path "/sys/fs/cgroup/memory/*" \) -prune \
+      -o \( -nouser -o -nogroup \) -print
+  args:
+    executable: /bin/bash
+  register: unowned_files
+  changed_when: false
 
-    - name: "CIS 6.1.11 | Remove other write permissions from world-writable files"
-      ansible.builtin.shell: |
-        find / -xdev \
-          \( -path "/run/user/*" -o -path "/proc/*" -o -path "*/containerd/*" \
-          -o -path "*/kubelet/pods/*" -o -path "/sys/kernel/security/apparmor/*" \
-          -o -path "/snap/*" -o -path "/sys/fs/cgroup/memory/*" -o -path "/sys/fs/selinux/*" \) -prune \
-          -o -type f -perm -0002 -print0 | xargs -0 --no-run-if-empty chmod o-w
-      args:
-        executable: /bin/bash
-
-    - name: "CIS 6.1.11 | Set sticky bit on world-writable directories without it"
-      ansible.builtin.shell: |
-        find / -xdev \
-          \( -path "/run/user/*" -o -path "/proc/*" -o -path "*/containerd/*" \
-          -o -path "*/kubelet/pods/*" -o -path "/sys/kernel/security/apparmor/*" \
-          -o -path "/snap/*" -o -path "/sys/fs/cgroup/memory/*" -o -path "/sys/fs/selinux/*" \) -prune \
-          -o -type d -perm -0002 ! -perm -1000 -print0 | xargs -0 --no-run-if-empty chmod a+t
-      args:
-        executable: /bin/bash
-
+- name: "CIS 6.1.12 | Print unowned or ungrouped files if any"
+  ansible.builtin.debug:
+    msg: |
+      The following unowned or ungrouped files/directories were found:
+      {{ unowned_files.stdout_lines | default([]) | join('\n') }}
+  when: unowned_files.stdout != ""
 
 
