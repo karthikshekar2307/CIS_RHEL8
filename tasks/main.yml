@@ -6301,7 +6301,17 @@
   command: rpm -q aide
   register: aide_installed
   changed_when: false
-  failed_when: aide_installed.rc != 0
+  failed_when: false
+
+- name: "CIS 5.3.1 | Print AIDE installation status"
+  debug:
+    msg: >-
+      {% if aide_installed.rc == 0 %}
+        AIDE is installed: {{ aide_installed.stdout }}
+      {% else %}
+        AIDE is not installed.
+      {% endif %}
+
 
 
 - name: "CIS 5.3.1 | Install AIDE"
