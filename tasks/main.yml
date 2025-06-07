@@ -6149,63 +6149,80 @@
 #   loop: "{{ audit_log_files_nonroot.files }}"
 #   when: item.uid != 0
 
-- name: "CIS 5.2.4.4 | Get audit log directory from auditd.conf"
-  become: true
-  command: awk -F= '/^\s*log_file\s*=\s*/ {gsub(/ /, "", $2); print $2}' /etc/audit/auditd.conf
-  register: audit_log_file_path
-  changed_when: false
+# - name: "CIS 5.2.4.4 | Get audit log directory from auditd.conf"
+#   become: true
+#   command: awk -F= '/^\s*log_file\s*=\s*/ {gsub(/ /, "", $2); print $2}' /etc/audit/auditd.conf
+#   register: audit_log_file_path
+#   changed_when: false
 
-- name: "CIS 5.2.4.4 | Set group of audit log directory to adm"
-  become: true
-  file:
-    path: "{{ audit_log_file_path.stdout | dirname }}"
-    group: adm
-    recurse: no
+# - name: "CIS 5.2.4.4 | Set group of audit log directory to adm"
+#   become: true
+#   file:
+#     path: "{{ audit_log_file_path.stdout | dirname }}"
+#     group: adm
+#     recurse: no
 
-- name: "CIS 5.2.4.4 | Ensure audit log files are group-owned by adm"
-  become: true
-  find:
-    paths: "{{ audit_log_file_path.stdout | dirname }}"
-    file_type: file
-    recurse: no
-  register: audit_log_files
+# - name: "CIS 5.2.4.4 | Ensure audit log files are group-owned by adm"
+#   become: true
+#   find:
+#     paths: "{{ audit_log_file_path.stdout | dirname }}"
+#     file_type: file
+#     recurse: no
+#   register: audit_log_files
 
-- name: "CIS 5.2.4.4 | Fix group ownership of audit log files"
-  become: true
-  file:
-    path: "{{ item.path }}"
-    group: adm
-  loop: "{{ audit_log_files.files }}"
-  when: item.gid != 4  # GID 4 is usually 'adm'
+# - name: "CIS 5.2.4.4 | Fix group ownership of audit log files"
+#   become: true
+#   file:
+#     path: "{{ item.path }}"
+#     group: adm
+#   loop: "{{ audit_log_files.files }}"
+#   when: item.gid != 4  # GID 4 is usually 'adm'
 
-- name: "CIS 5.2.4.4 | Ensure log_group = adm in /etc/audit/auditd.conf"
-  become: true
-  lineinfile:
-    path: /etc/audit/auditd.conf
-    regexp: '^(\s*#?\s*log_group\s*=\s*).*$'
-    line: 'log_group = adm'
-    backrefs: true
-    create: yes
+# - name: "CIS 5.2.4.4 | Ensure log_group = adm in /etc/audit/auditd.conf"
+#   become: true
+#   lineinfile:
+#     path: /etc/audit/auditd.conf
+#     regexp: '^(\s*#?\s*log_group\s*=\s*).*$'
+#     line: 'log_group = adm'
+#     backrefs: true
+#     create: yes
 
-- name: "CIS 5.2.4.4 | Notify reboot required to apply auditd configuration changes"
-  debug:
-    msg: "Reboot is required to apply auditd configuration changes because auditd is in immutable mode (-e 2)."
+# - name: "CIS 5.2.4.4 | Notify reboot required to apply auditd configuration changes"
+#   debug:
+#     msg: "Reboot is required to apply auditd configuration changes because auditd is in immutable mode (-e 2)."
 
 
-- name: "CIS 5.2.4.5 | Find audit configuration files"
+# - name: "CIS 5.2.4.5 | Find audit configuration files"
+#   become: true
+#   find:
+#     paths: /etc/audit/
+#     recurse: yes
+#     patterns: '*.conf,*.rules'
+#     file_type: file
+#   register: audit_config_files
+
+# - name: "CIS 5.2.4.5 | Set permissions of audit config files to 0640 or stricter"
+#   become: true
+#   file:
+#     path: "{{ item.path }}"
+#     mode: '0640'
+#     owner: root
+#     group: root
+#   loop: "{{ audit_config_files.files }}"
+
+- name: "CIS 5.2.4.6 | Find audit configuration files not owned by root"
   become: true
   find:
     paths: /etc/audit/
-    recurse: yes
     patterns: '*.conf,*.rules'
     file_type: file
+    recurse: yes
   register: audit_config_files
 
-- name: "CIS 5.2.4.5 | Set permissions of audit config files to 0640 or stricter"
+- name: "CIS 5.2.4.6 | Ensure audit configuration files are owned by root"
   become: true
   file:
     path: "{{ item.path }}"
-    mode: '0640'
     owner: root
-    group: root
   loop: "{{ audit_config_files.files }}"
+  when: item.uid != 0
