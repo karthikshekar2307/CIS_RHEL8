@@ -3327,37 +3327,37 @@
         group: root
         mode: '0600'
 
-    - name: Check if /etc/ssh/sshd_config.d exists and is a directory
-      ansible.builtin.stat:
-        path: /etc/ssh/sshd_config.d
-      register: sshd_config_d_stat
+#     - name: Check if /etc/ssh/sshd_config.d exists and is a directory
+#       ansible.builtin.stat:
+#         path: /etc/ssh/sshd_config.d
+#       register: sshd_config_d_stat
 
-    - name: Find *.conf files under /etc/ssh/sshd_config.d/
-      ansible.builtin.find:
-        paths: /etc/ssh/sshd_config.d/
-        patterns: '*.conf'
-        file_type: file
-      register: sshd_conf_files
-      when: sshd_config_d_stat.stat.isdir is defined and sshd_config_d_stat.stat.isdir
+#     - name: Find *.conf files under /etc/ssh/sshd_config.d/
+#       ansible.builtin.find:
+#         paths: /etc/ssh/sshd_config.d/
+#         patterns: '*.conf'
+#         file_type: file
+#       register: sshd_conf_files
+#       when: sshd_config_d_stat.stat.isdir is defined and sshd_config_d_stat.stat.isdir
 
-    - name: Set permissions on each file in /etc/ssh/sshd_config.d/
-      ansible.builtin.file:
-        path: "{{ item.path }}"
-        state: file
-        owner: root
-        group: root
-        mode: '0600'
-      loop: "{{ sshd_conf_files.files }}"
-      when:
-        - sshd_config_d_stat.stat.isdir is defined and sshd_config_d_stat.stat.isdir
-        - sshd_conf_files.matched > 0
+#     - name: Set permissions on each file in /etc/ssh/sshd_config.d/
+#       ansible.builtin.file:
+#         path: "{{ item.path }}"
+#         state: file
+#         owner: root
+#         group: root
+#         mode: '0600'
+#       loop: "{{ sshd_conf_files.files }}"
+#       when:
+#         - sshd_config_d_stat.stat.isdir is defined and sshd_config_d_stat.stat.isdir
+#         - sshd_conf_files.matched > 0
 
-- name: Ensure all files in /etc/ssh/sshd_config.d have 0600 permissions
-  ansible.builtin.shell: |
-    chmod 600 /etc/ssh/sshd_config.d/*
-  args:
-    executable: /bin/bash
-  when: ansible_facts['os_family'] == "RedHat"
+# - name: Ensure all files in /etc/ssh/sshd_config.d have 0600 permissions
+#   ansible.builtin.shell: |
+#     chmod 600 /etc/ssh/sshd_config.d/*
+#   args:
+#     executable: /bin/bash
+#   when: ansible_facts['os_family'] == "RedHat"
 
 - name: CIS 4.2.2 - Set permissions on SSH private host key files
   block:
