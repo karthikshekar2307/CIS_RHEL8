@@ -3818,14 +3818,14 @@
   args:
     creates: /etc/authselect/custom/custom-profile
 
-# - name: "CIS 4.4.2 - Apply custom authselect profile with security features"
-#   ansible.builtin.command: >
-#     authselect select custom/custom-profile
-#     with-faillock
-#     with-sudo
-#     without-nullok
-#     --force
-#   register: authselect_configure
+- name: "CIS 4.4.2 - Apply custom authselect profile with security features"
+  ansible.builtin.command: >
+    authselect select custom/custom-profile
+    with-faillock
+    with-sudo
+    without-nullok
+    --force
+  register: authselect_configure
 
 - name: "CIS 4.4.2 - Validate applied authselect profile"
   ansible.builtin.command: authselect current
@@ -3840,15 +3840,15 @@
   args:
     creates: /etc/authselect/custom/custom-profile
 
-# - name: "CIS 4.4.2.1 - Enable custom profile with required features"
-#   ansible.builtin.command: >
-#     authselect select custom/custom-profile
-#     with-pwhistory
-#     with-faillock
-#     without-nullok
-#     --backup=PAM_CONFIG_BACKUP
-#     --force
-#   register: authselect_select
+- name: "CIS 4.4.2.1 - Enable custom profile with required features"
+  ansible.builtin.command: >
+    authselect select custom/custom-profile
+    with-pwhistory
+    with-faillock
+    without-nullok
+    --backup=PAM_CONFIG_BACKUP
+    --force
+  register: authselect_select
 
 - name: "CIS 4.4.2.1 - Apply changes to reflect updated PAM templates"
   ansible.builtin.command: authselect apply-changes
