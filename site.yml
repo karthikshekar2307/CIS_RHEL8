@@ -1,0 +1,5 @@
+- name: Apply CIS RHEL8
+  hosts: localhost
+  become: yes
+  roles:
+    - role: ../CIS_RHEL8
