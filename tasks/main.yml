@@ -633,12 +633,12 @@
     varlog_fstype: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | first | default('ext4') }}"
     varlog_mountopts: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
 
-- name: Ensure nosuid is added to /var/log mount options at runtime
-  mount:
-    path: /var/log
-    fstype: "{{ varlog_fstype }}"
-    opts: "{{ varlog_mountopts | union(['nosuid']) | union(['nodev', 'noexec', 'relatime']) | unique | join(',') }}"
-    state: remounted
+# - name: Ensure nosuid is added to /var/log mount options at runtime
+#   mount:
+#     path: /var/log
+#     fstype: "{{ varlog_fstype }}"
+#     opts: "{{ varlog_mountopts | union(['nosuid']) | union(['nodev', 'noexec', 'relatime']) | unique | join(',') }}"
+#     state: remounted
 
 - name: Persist nosuid in /etc/fstab for /var/log
   lineinfile:
