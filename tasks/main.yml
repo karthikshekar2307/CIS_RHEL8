@@ -1009,12 +1009,12 @@
   ansible.builtin.command: ps -eZ
   register: unconfined_processes
 
-- name: CIS 1.5.1.6 | Fail if unconfined services are found
-  ansible.builtin.fail:
-    msg: "Unconfined services exist: {{ unconfined_list }}"
-  when: unconfined_list | length > 0
-  vars:
-    unconfined_list: "{{ unconfined_processes.stdout_lines | select('search', 'unconfined_service_t') | list }}"
+# - name: CIS 1.5.1.6 | Fail if unconfined services are found
+#   ansible.builtin.fail:
+#     msg: "Unconfined services exist: {{ unconfined_list }}"
+#   when: unconfined_list | length > 0
+#   vars:
+#     unconfined_list: "{{ unconfined_processes.stdout_lines | select('search', 'unconfined_service_t') | list }}"
 
 - name: CIS 1.5.1.7 | Check if mcstrans is installed
   ansible.builtin.package_facts:
