@@ -533,16 +533,16 @@
     dump: 0
     passno: 0
 
-- name: Remount /var/tmp with noexec option if already mounted
-  mount:
-    path: /var/tmp
-    fstype: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='fstype') | first | default('ext4') }}"
-    opts: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='options') | first | default([]) 
-             | union(['noexec']) 
-             | union(['nodev']) 
-             | union(['nosuid']) 
-             | unique | join(',') }}"
-    state: remounted
+# - name: Remount /var/tmp with noexec option if already mounted
+#   mount:
+#     path: /var/tmp
+#     fstype: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='fstype') | first | default('ext4') }}"
+#     opts: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/tmp') | map(attribute='options') | first | default([]) 
+#              | union(['noexec']) 
+#              | union(['nodev']) 
+#              | union(['nosuid']) 
+#              | unique | join(',') }}"
+#     state: remounted
 
 - name: Ensure /var/tmp entry in /etc/fstab has noexec, nodev, nosuid
   lineinfile:
@@ -571,12 +571,12 @@
   set_fact:
     varlog_options: "{{ ansible_facts.mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
 
-- name: Ensure /var/log is remounted with secure mount options
-  mount:
-    path: /var/log
-    fstype: "{{ varlog_fstype }}"
-    opts: "{{ varlog_options | union(['noexec', 'nodev', 'nosuid']) | unique | join(',') }}"
-    state: remounted
+# - name: Ensure /var/log is remounted with secure mount options
+#   mount:
+#     path: /var/log
+#     fstype: "{{ varlog_fstype }}"
+#     opts: "{{ varlog_options | union(['noexec', 'nodev', 'nosuid']) | unique | join(',') }}"
+#     state: remounted
 
 - name: Ensure /etc/fstab entry for /var/log has secure options
   lineinfile:
@@ -602,12 +602,12 @@
     varlog_fstype: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='fstype') | first | default('ext4') }}"
     varlog_opts: "{{ ansible_mounts | selectattr('mount', 'equalto', '/var/log') | map(attribute='options') | first | default([]) }}"
 
-- name: Ensure nodev is added to mount options at runtime
-  mount:
-    path: /var/log
-    fstype: "{{ varlog_fstype }}"
-    opts: "{{ varlog_opts | union(['nodev']) | unique | join(',') }}"
-    state: remounted
+# - name: Ensure nodev is added to mount options at runtime
+#   mount:
+#     path: /var/log
+#     fstype: "{{ varlog_fstype }}"
+#     opts: "{{ varlog_opts | union(['nodev']) | unique | join(',') }}"
+#     state: remounted
 
 - name: Persist nodev in /etc/fstab for /var/log
   lineinfile:
