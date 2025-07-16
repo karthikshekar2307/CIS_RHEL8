@@ -6751,14 +6751,6 @@
   become: true
   tags: cis_rsyslog
 
-- name: "Enable and start firewalld service"
-  systemd:
-    name: firewalld
-    enabled: true
-    state: started
-  become: true
-  tags: cis_firewalld
-
 - name: "Install firewalld using dnf with GPG checks disabled"
   command: dnf install -y firewalld --nogpgcheck
   become: true
@@ -6892,3 +6884,43 @@
   command: sysctl --system
   become: true
   tags: cis_sysctl
+
+- name: Add /tmp entry to /etc/fstab
+  mount:
+    path: /tmp
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,rw,nosuid,nodev,noexec,relatime,size=2G
+    state: mounted
+  tags:
+    - cis_1.1.2.1.1
+
+- name: Ensure /tmp is mounted with nodev option
+  mount:
+    path: /tmp
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,rw,nosuid,nodev,noexec,relatime,size=2G
+    state: mounted
+  tags:
+    - cis_1.1.2.1.2
+
+- name: Ensure /tmp is mounted with nosuid option
+  mount:
+    path: /tmp
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,rw,nosuid,nodev,noexec,relatime,size=2G
+    state: mounted
+  tags:
+    - cis_1.1.2.1.3
+
+- name: Ensure /tmp is mounted with nodev, nosuid, and noexec
+  mount:
+    path: /tmp
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,rw,nosuid,nodev,noexec,relatime,size=2G
+    state: mounted
+  tags:
+    - cis_1.1.2.1.4
