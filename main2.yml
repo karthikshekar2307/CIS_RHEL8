@@ -358,7 +358,7 @@
     mode: '1777'
 
 - name: Ensure /dev/shm is mounted as a separate tmpfs partition with secure options
-  mount:
+  ansible.posix.mount:
     path: /dev/shm
     src: tmpfs
     fstype: tmpfs
@@ -3255,8 +3255,6 @@
   ansible.builtin.command: rpm -q sudo
   register: sudo_check
   ignore_errors: true
-  args:
-    warn: false
 
 
 - name: "CIS 4.3.2 - Ensure sudo commands use pty"
@@ -4054,8 +4052,6 @@
         - name: "Check for strong hash (sha512 or yescrypt)"
           shell: |
             grep -P '^\h*password\h+(requisite|required|sufficient)\h+pam_unix\.so\h+.*\b(sha512|yescrypt)\b' {{ pam_profile_path }}/{{ item }} && echo "present"
-          args:
-            warn: false
           register: hash_check
           changed_when: false
           failed_when: false
@@ -4131,8 +4127,6 @@
     - name: "Force password reset for all non-system users (optional, recommended)"
       shell: |
         awk -F: '($3 >= {{ uid_min | default(1000) }} && $1 != "nfsnobody") {print $1}' /etc/passwd | xargs -n 1 chage -d 0
-      args:
-        warn: false
       when: force_password_reset | default(false)
 
   tags:
@@ -5849,8 +5843,6 @@
 - name: "CIS 5.3.1 | Ensure prelinking is disabled (restore binaries)"
   become: true
   command: prelink -ua
-  args:
-    warn: false
   register: prelink_output
   failed_when: false
   changed_when: false
@@ -6389,8 +6381,6 @@
 
 - name: "Unload usb-storage module if currently loaded"
   shell: rmmod usb-storage || true
-  args:
-    warn: false
   become: true
   tags: cis_1.1.2
 
